@@ -28,6 +28,7 @@ def context(prices: pd.DataFrame, rates: pd.DataFrame | None = None) -> Any:
         config={"fred_api_key": "REVIEW-DUMMY-KEY"},
         log=Mock(),
         note=Mock(),
+        report_progress=Mock(),
     )
 
 

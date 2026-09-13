@@ -26,7 +26,7 @@ from sobres.core import backtest as bt
 from sobres.core import moments
 from sobres.core import optimize as opt
 from sobres.core.conventions import infer_frequency
-from sobres.core.errors import UsageError
+from sobres.core.errors import InsufficientDataError, UsageError
 from sobres.core.rates import prior_rates, treasury_investment_yield
 from sobres.core.returns import apply_nan_policy, portfolio_returns, simple_returns
 from sobres.core.risk import RiskPanel, risk_metrics
@@ -227,7 +227,10 @@ def load_universe(p: UniverseParams, ctx: Context) -> Universe:
             f"dropped return dates {', '.join(dates) or 'none'}"
         )
     if len(returns) < 3:
-        raise UsageError("fewer than three return observations", hint="widen --start/--end")
+        raise InsufficientDataError(
+            f"{len(returns)} return observations; at least three are needed",
+            hint="widen --start/--end",
+        )
     rf, rf_source, dated_rates = resolve_risk_free(p.risk_free, p.start, end, target, ctx)
     period_rates = (
         pd.Series(rf, index=returns.index)
@@ -464,6 +467,8 @@ def validate_target(objective: str, target: float | None) -> None:
 
 
 def report_progress(ctx: Context, operation: str, done: int, total: int) -> None:
+    label = "rebalance" if operation == "backtest" else operation
+    ctx.report_progress(done / total, f"{label} {done} of {total}")
     ctx.log.info(f"{operation}.progress", done=done, total=total)
     if getattr(ctx, "interactive", False) and (
         done == 1 or done == total or done % max(1, total // 10) == 0
@@ -493,6 +498,7 @@ class MarkowitzParams(EstimatorParams):
     "Optimal weights for one objective, with the risk/return profile that produced them.",
     result=PortfolioResult,
     uses_providers=True,
+    long_running=True,
 )
 def markowitz(p: MarkowitzParams, ctx: Context) -> PortfolioResult:
     u = load_universe(p, ctx)
@@ -546,6 +552,7 @@ class FrontierParams(EstimatorParams):
     "The efficient frontier: one row per portfolio from min variance to max return.",
     result=FrontierResult,
     uses_providers=True,
+    long_running=True,
 )
 def frontier(p: FrontierParams, ctx: Context) -> FrontierResult:
     u = load_universe(p, ctx)
@@ -670,6 +677,7 @@ def parse_lookback(text: str, frequency: str) -> int:
     "Walk-forward test: re-solve at each rebalance on prior data only, versus equal weight.",
     result=BacktestReport,
     uses_providers=True,
+    long_running=True,
 )
 def backtest(p: BacktestParams, ctx: Context) -> BacktestReport:
     # Fetch enough history before --start for the first rebalance to have a full
