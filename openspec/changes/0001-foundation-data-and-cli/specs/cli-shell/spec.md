@@ -96,6 +96,8 @@ every later calculation.
 
 ### Requirement: `sobres cache` command group
 
+The CLI SHALL expose the specified behavior through its shared command registry and output renderer.
+
 #### Scenario: Inspect
 - **WHEN** `sobres cache info` runs
 - **THEN** total size on disk, entry count, and oldest entry age SHALL print
@@ -106,6 +108,8 @@ every later calculation.
 - **AND** `--yes` SHALL skip the prompt for scripted use
 
 ### Requirement: Not-advice disclaimer
+
+The CLI SHALL expose the specified behavior through its shared command registry and output renderer.
 
 #### Scenario: Report-style output
 - **WHEN** any command emits an analysis or a recommendation-shaped result in
