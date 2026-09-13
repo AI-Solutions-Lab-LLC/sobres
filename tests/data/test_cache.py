@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -49,7 +50,7 @@ def test_hit_avoids_fetch(cache: ObservationCache) -> None:
     )
     assert first.attrs["cache"]["status"] == "miss" and len(calls) == 1
     second = cache.get(
-        "p", "prices_adj_close", ["aapl"], D(2020, 1, 1), D(2020, 1, 31), _fetcher(calls)
+        "p", "prices_adj_close", ["AAPL"], D(2020, 1, 1), D(2020, 1, 31), _fetcher(calls)
     )
     assert second.attrs["cache"]["status"] == "hit" and len(calls) == 1
     pd.testing.assert_frame_equal(first, second)
@@ -149,3 +150,48 @@ def test_fetch_logged_at_debug(cache: ObservationCache, capsys: pytest.CaptureFi
     cache.get("p", "prices_adj_close", ["AAPL"], D(2020, 1, 1), D(2020, 1, 10), _fetcher([]))
     err = capsys.readouterr().err
     assert '"cache.get"' in err and '"status": "miss"' in err and '"elapsed_ms"' in err
+
+
+@pytest.mark.parametrize("withdrawal", ["nan", "omitted"])
+def test_refresh_preserves_missing_observations(cache: ObservationCache, withdrawal: str) -> None:
+    """Scenario: Missing observation replacement (0012)."""
+    original = pd.DataFrame(
+        {"AAPL": [10.0, 11.0, 12.0]}, index=pd.date_range("2024-01-02", periods=3)
+    )
+    cache.get("test", "prices", ["AAPL"], D(2024, 1, 2), D(2024, 1, 4), lambda *_: original)
+    revised = original.iloc[:2].copy()
+    revised.iloc[1, 0] = float("nan")
+    if withdrawal == "omitted":
+        revised = revised.iloc[:1]
+    result = cache.get(
+        "test",
+        "prices",
+        ["AAPL"],
+        D(2024, 1, 2),
+        D(2024, 1, 3),
+        lambda *_: revised,
+        refresh=True,
+    )
+    assert len(result) == 2
+    assert result.loc["2024-01-02", "AAPL"] == 10.0
+    assert pd.isna(result.loc["2024-01-03", "AAPL"])
+
+    def no_fetch(*_args: Any) -> pd.DataFrame:
+        raise AssertionError("the refreshed range and untouched tail must remain cached")
+
+    warm = cache.get("test", "prices", ["AAPL"], D(2024, 1, 2), D(2024, 1, 4), no_fetch)
+    assert pd.isna(warm.loc["2024-01-03", "AAPL"])
+    assert warm.loc["2024-01-04", "AAPL"] == 12.0
+
+
+def test_cold_cache_preserves_all_missing_dates(cache: ObservationCache) -> None:
+    frame = pd.DataFrame({"X": [1.0, float("nan")]}, index=pd.date_range("2024-01-02", periods=2))
+    actual = cache.get("test", "macro", ["X"], D(2024, 1, 2), D(2024, 1, 3), lambda *_: frame)
+    assert len(actual) == 2 and pd.isna(actual.iloc[1, 0])
+
+
+def test_generic_identifiers_are_case_sensitive(cache: ObservationCache) -> None:
+    calls: list[tuple[list[str], date, date]] = []
+    for symbol in ("Mixed", "MIXED"):
+        cache.get("test", "custom", [symbol], D(2024, 1, 2), D(2024, 1, 3), _fetcher(calls))
+    assert len(calls) == 2

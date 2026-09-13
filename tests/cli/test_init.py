@@ -9,6 +9,7 @@ path is a test.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -114,12 +115,13 @@ def _interactive(make_context: Callable[..., Context], wizard: _Wizard, **kw: An
     return ctx
 
 
+@pytest.mark.parametrize("secret_value", ["Z9!", "Q7$!", "SECRET9999"])
 def test_guided_wizard_walks_every_setting_and_masks_secrets(
-    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch, secret_value: str
 ) -> None:
     fred = get_setting("fred_api_key")
     monkeypatch.setattr(fred, "validate_live", lambda v: LiveResult(True, "FRED accepted the key"))
-    wizard = _Wizard({"fred_api_key": ["SECRET9999"], "log_level": ["INFO"]}, {"verify it": [True]})
+    wizard = _Wizard({"fred_api_key": [secret_value], "log_level": ["INFO"]}, {"verify it": [True]})
     ctx = _interactive(make_context, wizard)
     report = init(InitParams(offline=True), ctx)
     assert "fred_api_key" in report.changed and "log_level" in report.changed
@@ -131,7 +133,7 @@ def test_guided_wizard_walks_every_setting_and_masks_secrets(
     walked = [q for q in wizard.seen if any(q.strip().startswith(s.key) for s in all_settings())]
     assert [q.strip().split(" ")[0] for q in walked] == [s.key for s in all_settings()]
     text = ctx.config.path.read_text(encoding="utf-8")
-    assert 'fred_api_key = "SECRET9999"' in text
+    assert f'fred_api_key = "{secret_value}"' in text
     # re-run: current values are shown masked and kept when not replaced
     wizard2 = _Wizard({}, {"replace it": [False]})
     ctx2 = _interactive(make_context, wizard2)
@@ -139,7 +141,8 @@ def test_guided_wizard_walks_every_setting_and_masks_secrets(
     ctx2.stderr = err
     report2 = init(InitParams(offline=True), ctx2)
     assert report2.changed == []
-    assert "****9999" in err.getvalue() and "SECRET9999" not in err.getvalue()
+    assert "current: ****" in err.getvalue()
+    assert secret_value not in err.getvalue()
 
 
 def test_failed_live_validation_never_stores_silently(
@@ -191,3 +194,77 @@ def test_invalid_interactive_value_is_re_prompted(make_context: Callable[..., Co
 def test_ends_by_running_doctor(cli: Callable[..., Any]) -> None:
     result = cli("init", "--non-interactive", "--offline", "--format", "table")
     assert "python-version" in result.stdout and " ok," in result.stdout
+
+
+def test_real_prompt_accepts_empty_input(
+    cli: Callable[..., Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Empty optional wizard input (0012): exercise real Typer prompts."""
+    original_build = Context.build
+
+    def interactive_build(*args: Any, **kwargs: Any) -> Context:
+        context = original_build(*args, **kwargs)
+        context.interactive = True  # CliRunner's input stream is not a physical terminal.
+        return context
+
+    monkeypatch.setattr(Context, "build", interactive_build)
+    result = cli("init", "--offline", input="\n" * len(all_settings()))
+    assert result.exit_code == 0, result.output
+    assert result.stdout.count("fred_api_key (enter to skip):") == 1
+    assert "try next: sobres data prices" in result.stdout
+    assert "skipped; without it: data.macro" in result.stderr
+
+
+def test_init_propagates_failed_doctor(
+    cli: Callable[..., Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Init health status propagation (0012)."""
+    from sobres import doctor as doc
+
+    failing = doc.Check(
+        "test-failure", "runtime", lambda _: doc.CheckResult("fail", "failed", "repair it")
+    )
+    monkeypatch.setattr(doc, "_CHECKS", [*doc.all_checks(), failing])
+    result = cli("init", "--non-interactive", "--offline", "--format", "json")
+    report = json.loads(result.stdout)
+    assert report["summary"]["fail"] == 1
+    assert report["exit_code"] == result.exit_code == 1
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes")
+def test_unchanged_init_repairs_permissions(cli: Callable[..., Any], env: dict[str, str]) -> None:
+    cli("init", "--non-interactive", "--offline")
+    path = Path(env["SOBRES_CONFIG_FILE"])
+    original = path.read_bytes()
+    path.chmod(0o644)
+    result = cli("init", "--non-interactive", "--offline", "--format", "json")
+    assert result.exit_code == 0, result.stderr
+    assert path.stat().st_mode & 0o777 == 0o600
+    assert path.read_bytes() == original
+    assert json.loads(result.stdout)["summary"]["fail"] == 0
+
+
+def test_no_verify_option(cli: Callable[..., Any]) -> None:
+    """Scenario: Negative boolean options (0012)."""
+    result = cli("init", "--non-interactive", "--no-verify", "--offline", "--format", "json")
+    assert result.exit_code == 0, result.stderr
+
+
+@pytest.mark.parametrize(
+    "option, expected", [(None, True), ("--verify", True), ("--no-verify", False)]
+)
+def test_verification_boolean_reaches_handler(
+    cli: Callable[..., Any], monkeypatch: pytest.MonkeyPatch, option: str | None, expected: bool
+) -> None:
+    actual: list[bool] = []
+    original = InitParams.model_validate
+
+    def capture(*args: Any, **kwargs: Any) -> InitParams:
+        params = original(*args, **kwargs)
+        actual.append(params.verify)
+        return params
+
+    monkeypatch.setattr(InitParams, "model_validate", staticmethod(capture))
+    result = cli("init", "--non-interactive", "--offline", *([option] if option else []))
+    assert result.exit_code == 0, result.stderr
+    assert actual == [expected]

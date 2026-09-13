@@ -17,6 +17,7 @@ import pandas as pd
 from sobres.core.conventions import periods_per_year
 from sobres.core.errors import AlignmentError, InsufficientDataError
 from sobres.core.returns import annualized_return, annualized_volatility, cumulative_wealth
+from sobres.core.validation import require_finite
 
 MIN_BETA_OVERLAP = 30
 
@@ -24,7 +25,7 @@ MIN_BETA_OVERLAP = 30
 @dataclass(frozen=True)
 class Drawdown:
     max_drawdown: float
-    peak: date
+    peak: date | None
     trough: date
     recovery: date | None
 
@@ -32,12 +33,13 @@ class Drawdown:
 @dataclass(frozen=True)
 class RiskPanel:
     annualized_return: float
+    arithmetic_return: float
     volatility: float
     sharpe: float
     sortino: float
     calmar: float
     max_drawdown: float
-    drawdown_peak: date
+    drawdown_peak: date | None
     drawdown_trough: date
     drawdown_recovery: date | None
     var_95: float
@@ -64,7 +66,8 @@ def sharpe_ratio(ann_return: float, ann_risk_free: float, ann_vol: float) -> flo
 
 def downside_deviation(returns: pd.Series, frequency: str, target: float = 0.0) -> float:
     """Annualized ``sqrt(mean(min(r - target, 0)^2))`` (Sortino & van der Meer)."""
-    clean = returns.dropna().to_numpy()
+    require_finite(returns)
+    clean = returns.to_numpy()
     shortfall = np.minimum(clean - target, 0.0)
     return float(np.sqrt(np.mean(shortfall**2))) * float(np.sqrt(periods_per_year(frequency)))
 
@@ -76,7 +79,7 @@ def sortino_ratio(
     dd = downside_deviation(returns, frequency, target)
     if dd == 0:
         return float("nan")
-    return (annualized_return(returns, frequency) - ann_risk_free) / dd
+    return (annualized_return(returns, frequency, "arithmetic") - ann_risk_free) / dd
 
 
 def max_drawdown(returns: pd.Series) -> Drawdown:
@@ -85,19 +88,21 @@ def max_drawdown(returns: pd.Series) -> Drawdown:
     Recovery is the first date after the trough where wealth regains the peak,
     or ``None`` if it never does within the series.
     """
-    clean = returns.dropna()
+    require_finite(returns)
+    clean = returns
     index = pd.DatetimeIndex(clean.index)
     wealth = np.asarray(cumulative_wealth(clean).to_numpy(), dtype="float64")
-    running_peak = np.maximum.accumulate(wealth)
+    running_peak = np.maximum.accumulate(np.maximum(wealth, 1.0))
     drawdowns = wealth / running_peak - 1.0
     trough_pos = int(np.argmin(drawdowns))
     peak_value = float(running_peak[trough_pos])
-    peak_pos = int(np.argmax(wealth[: trough_pos + 1] >= peak_value))
+    matches = np.flatnonzero(wealth[: trough_pos + 1] >= peak_value)
+    peak_pos = int(matches[0]) if len(matches) else None
     after = np.where(wealth[trough_pos + 1 :] >= peak_value)[0]
     recovery = None if len(after) == 0 else index[trough_pos + 1 + int(after[0])]
     return Drawdown(
         max_drawdown=float(drawdowns[trough_pos]),
-        peak=index[peak_pos].date(),
+        peak=None if peak_pos is None else index[peak_pos].date(),
         trough=index[trough_pos].date(),
         recovery=None if recovery is None else recovery.date(),
     )
@@ -108,12 +113,14 @@ def historical_var(returns: pd.Series, level: float = 0.95) -> float:
 
     A loss is negative, so VaR(95) is the 5th percentile return.
     """
-    return float(np.quantile(returns.dropna().to_numpy(), 1.0 - level))
+    require_finite(returns)
+    return float(np.quantile(returns.to_numpy(), 1.0 - level))
 
 
 def historical_cvar(returns: pd.Series, level: float = 0.95) -> float:
     """Expected shortfall: mean of returns at or below the VaR quantile."""
-    clean = returns.dropna().to_numpy()
+    require_finite(returns)
+    clean = returns.to_numpy()
     threshold = np.quantile(clean, 1.0 - level)
     tail = clean[clean <= threshold]
     return float(tail.mean())
@@ -121,7 +128,8 @@ def historical_cvar(returns: pd.Series, level: float = 0.95) -> float:
 
 def skewness(returns: pd.Series) -> float:
     """Sample skewness, ``m_3 / m_2^{3/2}`` on population moments (Fisher-Pearson)."""
-    clean = returns.dropna().to_numpy()
+    require_finite(returns)
+    clean = returns.to_numpy()
     centred = clean - clean.mean()
     m2 = np.mean(centred**2)
     if m2 == 0:
@@ -131,7 +139,8 @@ def skewness(returns: pd.Series) -> float:
 
 def excess_kurtosis(returns: pd.Series) -> float:
     """``m_4 / m_2^2 - 3`` on population moments (zero for a normal)."""
-    clean = returns.dropna().to_numpy()
+    require_finite(returns)
+    clean = returns.to_numpy()
     centred = clean - clean.mean()
     m2 = np.mean(centred**2)
     if m2 == 0:
@@ -141,7 +150,9 @@ def excess_kurtosis(returns: pd.Series) -> float:
 
 def beta(asset: pd.Series, benchmark: pd.Series) -> float:
     """``cov(a, b) / var(b)`` over the aligned overlap; needs 30 observations."""
-    both = pd.concat([asset.rename("a"), benchmark.rename("b")], axis=1, join="inner").dropna()
+    require_finite(asset, "asset returns")
+    require_finite(benchmark, "benchmark returns")
+    both = pd.concat([asset.rename("a"), benchmark.rename("b")], axis=1, join="inner")
     if len(both) < MIN_BETA_OVERLAP:
         raise AlignmentError(
             f"beta needs at least {MIN_BETA_OVERLAP} overlapping observations, found {len(both)}",
@@ -154,28 +165,42 @@ def beta(asset: pd.Series, benchmark: pd.Series) -> float:
 
 
 def correlation_matrix(returns: pd.DataFrame) -> pd.DataFrame:
+    require_finite(returns)
     return returns.corr()
 
 
 def risk_metrics(
-    returns: pd.Series, risk_free: float, frequency: str, *, min_obs: int = 2
+    returns: pd.Series, risk_free: float | pd.Series, frequency: str, *, min_obs: int = 2
 ) -> RiskPanel:
     """The full panel for one return series. ``risk_free`` is a decimal annual rate."""
-    clean = returns.dropna()
+    require_finite(returns)
+    clean = returns
     if len(clean) < max(min_obs, 2):
         raise InsufficientDataError(
             f"{len(clean)} observations, need at least {max(min_obs, 2)} for a risk panel",
             hint="widen --start/--end",
         )
+    annual_proxy = (
+        risk_free.reindex(clean.index)
+        if isinstance(risk_free, pd.Series)
+        else pd.Series(risk_free, index=clean.index)
+    )
+    require_finite(annual_proxy, "risk-free rates")
+    periods = periods_per_year(frequency)
+    excess = clean - annual_proxy / periods
+    excess_mean = float(excess.mean()) * periods
+    excess_vol = annualized_volatility(excess, frequency)
+    rf = float(annual_proxy.mean())
     ann = annualized_return(clean, frequency)
     vol = annualized_volatility(clean, frequency)
     dd = max_drawdown(clean)
     calmar = ann / abs(dd.max_drawdown) if dd.max_drawdown < 0 else float("nan")
     return RiskPanel(
         annualized_return=ann,
+        arithmetic_return=annualized_return(clean, frequency, "arithmetic"),
         volatility=vol,
-        sharpe=sharpe_ratio(ann, risk_free, vol),
-        sortino=sortino_ratio(clean, frequency, risk_free),
+        sharpe=sharpe_ratio(excess_mean, 0.0, excess_vol),
+        sortino=sortino_ratio(clean, frequency, rf),
         calmar=calmar,
         max_drawdown=dd.max_drawdown,
         drawdown_peak=dd.peak,
@@ -187,5 +212,5 @@ def risk_metrics(
         kurtosis=excess_kurtosis(clean),
         n_obs=len(clean),
         frequency=frequency,
-        risk_free=risk_free,
+        risk_free=rf,
     )

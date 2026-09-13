@@ -7,9 +7,9 @@ of ``sobres optimize markowitz``. Nothing is written by hand to look plausible.
     python site/scripts/record_figures.py            # against the repository's fixtures
     python site/scripts/record_figures.py --live     # against the providers (network)
 
-The fixtures under ``tests/fixtures`` are synthesized random walks until live
-recordings replace them (see tests/fixtures/README.md); ``figures-meta.json``
-records which was used so the page can say so.
+The fixtures under ``tests/fixtures`` include recorded provider payloads (see
+tests/fixtures/README.md); ``figures-meta.json`` records their provenance so the
+page distinguishes recorded market observations from synthetic inputs.
 """
 
 from __future__ import annotations
@@ -160,9 +160,9 @@ def main() -> None:
                     + f" --cost-bps {BACKTEST['cost_bps']}",
                     "markowitz": "sobres " + " ".join(markowitz_args),
                 },
-                "data_source": "live providers"
-                if opts.live
-                else "the repository's recorded fixtures",
+                "data_source": (
+                    "live providers" if opts.live else "the repository's recorded fixtures"
+                ),
                 "synthetic": synthetic,
                 "note": (
                     "the fixtures are synthesized random walks in the providers' payload shapes, "

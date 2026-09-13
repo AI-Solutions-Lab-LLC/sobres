@@ -31,7 +31,13 @@ class FixtureYahooSource:
         path = self.root / f"{ticker.upper()}.csv"
         if not path.exists():
             raise UnknownTickerError(ticker, provider="yfinance")
-        frame = pd.read_csv(path, index_col=0, parse_dates=True)
+        frame = pd.read_csv(path, index_col=0)
+        # CSV timestamps retain numeric offsets, which vary over DST. Parse
+        # each independently and preserve its local date, just as the live
+        # provider does; converting through UTC would shift some market dates.
+        frame.index = pd.DatetimeIndex(
+            [pd.Timestamp(value).tz_localize(None) for value in frame.index], name="Date"
+        ).normalize()
         frame = frame.loc[str(start) : str(end)]
         meta_all = json.loads((self.root / "meta.json").read_text(encoding="utf-8"))
         meta = dict(meta_all.get("tickers", {}).get(ticker.upper(), {}))

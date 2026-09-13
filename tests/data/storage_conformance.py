@@ -101,14 +101,21 @@ class StorageConformance:
         assert storage.kv.items() == {"a": {"x": [1, 2.5, "s", None, True]}, "b": 3}
         storage.kv.set("b", 4)
         assert storage.kv.get("b") == 4
-        assert storage.kv.delete("b") is True
-        assert storage.kv.delete("b") is False
+        deleted = storage.kv.delete("b")
+        assert deleted is True
+        assert storage.kv.get("b") is None
+        deleted_again = storage.kv.delete("b")
+        assert deleted_again is False
 
     def test_transaction_rolls_back_as_a_unit(self, storage: Storage) -> None:
-        with pytest.raises(RuntimeError), storage.transaction():
-            storage.kv.set("inside", 1)
-            storage.observations.upsert_observations([_obs(2, 1.0)])
-            raise RuntimeError("abort")
+        def aborted_write() -> None:
+            with storage.transaction():
+                storage.kv.set("inside", 1)
+                storage.observations.upsert_observations([_obs(2, 1.0)])
+                raise RuntimeError("abort")
+
+        with pytest.raises(RuntimeError, match="abort"):
+            aborted_write()
         assert storage.kv.get("inside") is None
         assert storage.observations.cache_stats().entries == 0
         with storage.transaction():
