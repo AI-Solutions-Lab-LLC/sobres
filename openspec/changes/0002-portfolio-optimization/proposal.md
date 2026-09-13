@@ -11,12 +11,12 @@ status: implemented
 
 ```bash
 sobres optimize markowitz --tickers AAPL MSFT NVDA JNJ XOM GLD \
-    --start 2015-01-01 --objective max-sharpe --max-weight 0.35
+    --start 2015-01-01 --fill ffill --objective max_sharpe --max-weight 0.35
 
-sobres optimize frontier --tickers ... --points 50 --format csv > frontier.csv
+sobres optimize frontier --tickers ... --points 50 --start 2015-01-01 --fill ffill --format csv > frontier.csv
 
-sobres optimize backtest --tickers ... --objective max-sharpe \
-    --rebalance quarterly --lookback 36m --start 2015-01-01
+sobres optimize backtest --tickers ... --objective max_sharpe \
+    --rebalance quarterly --lookback 36m --start 2015-01-01 --fill ffill
 ```
 
 Optimal weights with the risk/return profile that produced them, the full efficient
@@ -75,3 +75,7 @@ the honesty mechanism, so it is part of v1's definition of done.
 | Optimizer returns a silently wrong answer on a non-PSD covariance matrix | Validate PSD before solving; repair via nearest-PSD projection and warn, or fail — never solve quietly on a broken matrix |
 | Solver dependency weight (`cvxpy`) | SLSQP via `scipy` is the default and covers every v1 objective; `cvxpy` stays an opt-in extra |
 | Annualization convention errors (252 vs 365, simple vs log) | One documented convention module; every conversion tested against a hand-computed fixture |
+
+## Review correction scope
+
+PR #8 incorporates the eight review findings, the foundation corrections/recorded fixtures, and the decisions in `review-decisions.md`. Distribution activation remains gated separately: issue #21 covers PyPI enablement; a Homebrew tap/formula requires its own distribution change. No published version is claimed by this proposal.

@@ -11,6 +11,15 @@ sobres doctor      # prove the install works, or say exactly what is wrong
 
 ## ADDED Requirements
 
+### Requirement: Base installation diagnostics
+
+Doctor SHALL distinguish required runtime clients from optional extras.
+
+#### Scenario: Base prices do not require an extra
+- **WHEN** a base installation has yfinance but no optional extras
+- **THEN** doctor SHALL NOT warn that prices cannot be fetched or require the data extra
+- **AND** if yfinance itself is missing, doctor SHALL report a failed check with a base-install repair command
+
 ### Requirement: Settings are declared once
 
 Every configurable value SHALL be one declaration in `sobres/settings.py`,
@@ -36,6 +45,8 @@ the way every command is one declaration in the registry.
 - **AND** SHALL assert that every declared setting has a doctor check
 
 ### Requirement: `sobres init`
+
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
 
 #### Scenario: Guided, in the terminal
 - **WHEN** `sobres init` runs in a TTY
@@ -86,6 +97,8 @@ the way every command is one declaration in the registry.
   the hint is a hint, not an error
 
 ### Requirement: `sobres doctor`
+
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
 
 #### Scenario: Checks are declared, like commands and settings
 - **WHEN** a diagnostic exists
@@ -146,6 +159,8 @@ the way every command is one declaration in the registry.
 
 ### Requirement: `sobres upgrade`
 
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
+
 #### Scenario: Installer is detected, not assumed
 - **WHEN** `sobres upgrade` runs
 - **THEN** it SHALL detect whether sobres was installed by pip, pipx, uv, or
@@ -163,6 +178,8 @@ the way every command is one declaration in the registry.
   after the automatic backup that spec requires
 
 ### Requirement: Onboarding is tested end to end
+
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
 
 #### Scenario: The three-command path is a test
 - **WHEN** CI's build job runs

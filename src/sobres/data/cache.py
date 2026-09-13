@@ -120,7 +120,7 @@ class ObservationCache:
         started = time.perf_counter()
         now = self._clock()
         requested = DateRange(start, end)
-        symbols = [s.upper() for s in symbols]
+        symbols = list(symbols)
         to_fetch: dict[DateRange, list[str]] = {}
         for symbol in symbols:
             key = SeriesKey(provider, dataset, symbol)
@@ -145,13 +145,20 @@ class ObservationCache:
         ) as sp:
             for rng, missing in sorted(to_fetch.items()):
                 frame = fetch(missing, rng.start, rng.end)
+                previous = self._store.read_observations(
+                    ObservationQuery(provider, dataset, missing, rng.start, rng.end)
+                )
+                # A newly absent row is a withdrawal, not permission to retain
+                # an old number. Keep its date as an explicit missing observation.
+                frame = frame.reindex(index=frame.index.union(previous.index), columns=missing)
                 rows = self._to_observations(provider, dataset, frame, missing)
                 ttl = ttl_for(dataset, rng.end, now.date())
                 self._store.upsert_observations(rows)
                 for symbol in missing:
                     key = SeriesKey(provider, dataset, symbol)
                     self._store.record_fetch(FetchRecord(key, rng, now, ttl))
-                    series_meta = dict(frame.attrs.get("series_meta", {}).get(symbol, {}))
+                    series_meta = dict(self._store.get_series_meta(key) or {})
+                    series_meta.update(frame.attrs.get("series_meta", {}).get(symbol, {}))
                     if meta:
                         series_meta.update(meta)
                     if series_meta:
@@ -202,7 +209,5 @@ class ObservationCache:
                 continue
             values = frame[symbol].to_numpy()
             for when, value in zip(index, values, strict=True):
-                if pd.isna(value):
-                    continue
                 rows.append(Observation(provider, dataset, symbol, when.date(), float(value)))
         return rows

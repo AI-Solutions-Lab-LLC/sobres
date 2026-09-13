@@ -147,9 +147,7 @@ class Context:
             return default
         import typer
 
-        answer = typer.prompt(
-            question, default=default or None, hide_input=secret, show_default=False
-        )
+        answer = typer.prompt(question, default=default, hide_input=secret, show_default=False)
         return str(answer) if answer is not None else ""
 
     def note(self, message: str) -> None:

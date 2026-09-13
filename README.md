@@ -16,7 +16,7 @@ models, econometrics, and real-world goal planning, in one tool.
 > pullers have moved to
 > [`legacy_code/`](legacy_code/) — nothing was deleted, and
 > `legacy_code/Financial Portfolio Optimization.R` is the reference implementation
-> that milestone 0002 ports and tests against. The original README is preserved at
+> that milestone 0002 ports (direct R execution remains deferred). The original README is preserved at
 > [`legacy_code/ORIGINAL-README.md`](legacy_code/ORIGINAL-README.md).
 
 ```bash
@@ -25,10 +25,10 @@ sobres optimize markowitz --tickers AAPL MSFT NVDA JNJ XOM GLD \
     --start 2015-01-01 --fill ffill --objective max_sharpe --max-weight 0.35
 
 # See the whole risk/return trade-off, not one point
-sobres optimize frontier --tickers ... --fill ffill --points 50 --format csv > frontier.csv
+sobres optimize frontier --tickers AAPL MSFT --start 2020-01-01 --fill ffill --points 50 --format csv > frontier.csv
 
 # Find out whether that optimizer actually works out-of-sample
-sobres optimize backtest --tickers ... --fill ffill --rebalance quarterly --lookback 36m
+sobres optimize backtest --tickers AAPL MSFT --start 2020-01-01 --fill ffill --rebalance quarterly --lookback 36m
 
 # Is there alpha, or is it just factor exposure?
 sobres analyze factors NVDA --model ff5
@@ -45,7 +45,7 @@ sobres ppp adjust-goal --goal fire --to PRT
 
 ## Status
 
-**v1.0.0.** The foundation (onboarding, the registry-generated CLI, the storage
+**v1.0.0 implementation; publication pending.** The foundation (onboarding, the registry-generated CLI, the storage
 port, keyless providers, the currency model, structured logging) and portfolio
 optimization: Markowitz weights, the efficient frontier, a walk-forward backtest
 and a risk panel. Persistence, the UI, the container and the remaining analytics
@@ -56,9 +56,9 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 
 | # | Milestone | Ships | State |
 |---|---|---|---|
-| [0000](openspec/changes/0000-release-engineering/) | Release engineering | CI gate, version-gated PyPI publishing | ✅ Done |
+| [0000](openspec/changes/0000-release-engineering/) | Release engineering | CI gate, version-gated PyPI publishing | 🔧 Upload rehearsal/activation pending (#21) |
 | [0001](openspec/changes/0001-foundation-data-and-cli/) | Foundation | `init`/`doctor` onboarding, command registry, storage port, providers, currency, observability, `sobres data` | ✅ Done |
-| [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization (v1)** | Returns, risk, Markowitz, frontier, backtest | ✅ Done |
+| [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization (v1)** | Returns, risk, Markowitz, frontier, backtest | 🔧 Review corrections; R execution/publication deferred |
 | [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | 📋 Planned |
 | [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | 📋 Planned |
 | [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | 📋 Planned |
@@ -83,7 +83,10 @@ sobres init                             # guided setup: keys, storage — ends b
 sobres doctor                           # every check tells you what's wrong and how to fix it
 ```
 
-That's the whole onboarding path, and it stays three commands as the tool grows.
+Homebrew requires a separate formula/tap; PyPI publishing alone does not enable
+`brew install sobres`. Homebrew distribution is deferred.
+
+That is the onboarding path, and it stays three commands as the tool grows.
 `sobres doctor --fix` applies the safe repairs; `sobres upgrade` detects how you
 installed and runs the matching upgrade. Once the web UI lands, `sobres open` starts
 it and puts it in your browser — `sobres open doctor` goes straight to a view.
@@ -122,16 +125,18 @@ normalize pence- and cent-quoted listings to the major unit.
 
 ```bash
 sobres optimize markowitz --tickers AAPL MSFT JNJ XOM GLD --start 2015-01-01 --fill ffill
-sobres optimize markowitz --tickers ... --fill ffill --objective min_variance --max-weight 0.35
-sobres optimize frontier  --tickers ... --fill ffill --points 50 --format csv > frontier.csv
-sobres optimize backtest  --tickers ... --fill ffill --rebalance quarterly --lookback 36m
+sobres optimize markowitz --tickers AAPL MSFT --start 2020-01-01 --fill ffill --objective min_variance --max-weight 0.6
+sobres optimize frontier  --tickers AAPL MSFT --start 2020-01-01 --fill ffill --points 50 --format csv > frontier.csv
+sobres optimize backtest  --tickers AAPL MSFT --start 2020-01-01 --fill ffill --rebalance quarterly --lookback 36m
 sobres optimize risk      --tickers AAPL MSFT --weights 0.6 0.4 --start 2015-01-01 --fill ffill
 ```
 
 `--fill` has no default on purpose: how provider gaps are handled changes every
 number, so you say `drop`, `ffill` or `raise`. Ledoit-Wolf shrinkage is the
-default covariance, transaction costs default to 10 bps, the risk-free rate comes
-from FRED when a key is configured (and says `0.0 fallback` when not), and every
+default covariance, transaction costs default to 10 bps per unit of cash-inclusive one-way turnover,
+and USD portfolios use a dated FRED Treasury proxy when a key is configured.
+Other currencies and missing keys use an explicit zero fallback; `--risk-free`
+overrides it with an annual simple decimal rate. Every
 in-sample result is labelled as such. A multi-currency universe needs `--base`;
 returns are converted before any moment is estimated. Read
 [why your backtest looks too good](docs/why-your-backtest-looks-too-good.md)
@@ -198,9 +203,11 @@ check, **All checks passed**, gates merges.
 
 Releasing is a version bump. Change `__version__` in
 `src/sobres/__about__.py`, add a `CHANGELOG.md` section, merge to `main` —
-the pipeline re-runs the full gate on that commit and publishes to PyPI via
-Trusted Publishing (OIDC, no stored token) with PEP 740 attestations, then tags
-and creates the GitHub release. Any push to `main` that doesn't change the
+once `RELEASE_ENABLED=true`, the pipeline re-runs the full gate on that commit
+and publishes using the organization `PYPI_PROD` token, then tags and creates
+the GitHub release. TestPyPI uses `PYPI_TEST`. Token uploads do not produce
+PEP 740 attestations. Release rehearsal and activation remain tracked in
+[issue #21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21). Any push to `main` that doesn't change the
 version publishes nothing.
 
 See **[docs/RELEASING.md](docs/RELEASING.md)** for the one-time setup and the

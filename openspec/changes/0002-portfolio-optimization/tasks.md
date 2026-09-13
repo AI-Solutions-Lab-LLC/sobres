@@ -39,7 +39,7 @@ Depends on 0001. Estimates are focused hours.
 ## Wave C — optimizer (B first) — critical path
 
 - [x] **C1. Constraint model** (1.5h)
-      `Constraints` dataclass: bounds, `max_weight`, `allow_short`, groups.
+      `Constraints` dataclass: bounds, `max_weight`, `allow_short`; group constraints explicitly deferred.
       Infeasibility detected before the solver runs (`max_weight * n < 1`).
       → `tests/core/test_constraints.py::test_infeasible_max_weight_raises_usage`
 - [x] **C2. `min_variance` + `equal_weight`** (2h)
@@ -71,7 +71,7 @@ Depends on 0001. Estimates are focused hours.
         ← *the most important test in this change*
       → `::test_weights_drift_between_rebalances`
 - [x] **D2. Transaction costs** (1.5h)
-      `turnover = 0.5 * Σ|w_new - w_drifted|`; 10 bps default.
+      `turnover = 0.5 * Σ|w_new - w_drifted|` including residual cash; 10 bps per unit turnover.
       → `::test_turnover_formula`, `::test_default_cost_is_10bps`
 - [x] **D3. Benchmark + result assembly** (2h)
       Equal-weight benchmark over the identical window; `BacktestResult`.
@@ -92,7 +92,7 @@ Depends on 0001. Estimates are focused hours.
 
 ## Wave F — validation and release
 
-- [x] **F1. R reference fixtures** (2h)
+- [ ] **F1. R reference execution (deferred)** (2h)
       Run `legacy_code/Financial Portfolio Optimization.R` on a fixed universe; check
       outputs into `tests/fixtures/r_reference/`.
       *R and the script's Google Sheet were not reachable from the implementing
@@ -101,21 +101,33 @@ Depends on 0001. Estimates are focused hours.
       six-vehicle table. Re-run the R script on that table to replace the fixture.*
       → `tests/test_r_parity.py::test_weights_match_within_1e-4`
 - [x] **F2. Textbook validation** (2h)
-      A published two- and three-asset example with known answers, end to end.
-      → `tests/test_textbook_cases.py`
+      Published two-asset min-variance/tangency answers, plus a synthetic three-asset frontier boundary check (not claimed as an independently published solution).
+      → `tests/core/test_textbook_cases.py`
 - [x] **F3. Docs: "Why your backtest looks too good"** (2h)
       Plain-language page on estimation error, in-sample vs. walk-forward, and how
       to read the gap. Linked from `sobres optimize backtest` output.
-- [x] **F4. README + `v1.0.0`** (2h) — worked example with real output; tag; PyPI.
+- [ ] **F4. README + `v1.0.0` publication** (2h) — worked example with real output; tag; PyPI.
 
 **Total: ~48h.** Critical path: B2 → B3 → C2 → C3 → C7 → D1 → E3.
 
 ## Definition of done
 
-- [x] All four `sobres optimize` subcommands work end to end (on recorded fixtures; live providers were unreachable here)
+- [x] All four `sobres optimize` subcommands have CLI integration coverage; live checks are recorded in the PR verification notes
 - [x] The no-lookahead test passes (D1)
-- [x] Weights match the R reference within `1e-4` (F1)
+- [x] Weights match independently enumerated LP vertices within `1e-4`; actual R execution remains deferred (F1)
 - [x] Max-Sharpe matches the closed-form tangency portfolio within `1e-6` (C3)
 - [x] `mypy --strict` clean; `pytest -m "not network"` green offline
 - [x] Every scenario in the spec delta has a test referencing it
 - [ ] `v1.0.0` tagged and published — happens when this merges to `main` with `RELEASE_ENABLED` armed (0000)
+
+## Review corrections (authorized follow-up)
+
+- [x] G1. Integrate foundation correctness fixes and recorded fixtures.
+- [x] G2. Fix future-rate leakage and retain per-decision provenance.
+- [x] G3. Correct initial drawdown, arithmetic ratios and cash-inclusive cost accounting.
+- [x] G4. Preserve return intervals and reject unresolved public-core gaps.
+- [x] G5. Wire CAPM benchmark and target backtests; validate before fetching.
+- [x] G6. Condition public covariance, expose the solver protocol and analytic gradients.
+- [x] G7. Return exact frontier counts, add progress and typed metric tables.
+- [x] G8. Reconcile spec/contracts/examples and retain honest deferred/release status.
+- [x] G9. Validate tests, lint, typing, packaging, strict OpenSpec and bounded live runs.
