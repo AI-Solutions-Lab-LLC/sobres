@@ -14,7 +14,7 @@ completion; complete planning does not mean all ten can begin at once.
 | [0006-landing-page](../0006-landing-page/proposal.md) | [#28](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/28) | Merged plan, implemented 0013, and the feature prerequisites in proposal.md |
 | [0007-equity-factor-analysis](../0007-equity-factor-analysis/proposal.md) | [#29](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/29) | Merged plan, implemented 0013, and the feature prerequisites in proposal.md |
 | [0008-goal-planning](../0008-goal-planning/proposal.md) | [#30](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/30) | Merged plan, implemented 0013, and the feature prerequisites in proposal.md |
-| [0009-econometrics-forecasting](../0009-econometrics-forecasting/proposal.md) | [#31](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/31) | Merged plan, implemented 0013, and the feature prerequisites in proposal.md |
+| [0009-econometrics-forecasting](../0009-econometrics-forecasting/proposal.md) | [#31](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/31) | Accept/merge the 2026-09-13 multivariable amendment in #15; implemented 0013 and feature prerequisites |
 | [0010-currency-and-ppp](../0010-currency-and-ppp/proposal.md) | [#32](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/32) | Merged plan, implemented 0013, and the feature prerequisites in proposal.md |
 
 Existing release issue [#21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21)
