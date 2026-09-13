@@ -138,3 +138,8 @@ OIDC or arm publishing as part of environment alignment. Reuse #21 rather than
 create a duplicate. Issues #18 (init), #19 (errors), #20 (factor date/refresh UX)
 are separate user behavior reports; they are not closed or implicitly fixed by
 a structural refactor. No new ready-to-implement spec is claimed for those reports.
+
+During publication, issue #22 was also observed: a new broker/live-trading direction.
+It conflicts with the inherited no-live-trading scope and has no reviewed spec in
+this plan; it needs an explicit product-scope amendment before implementation.
+CodeQL findings on the included foundation are recorded in validation.md and #34.

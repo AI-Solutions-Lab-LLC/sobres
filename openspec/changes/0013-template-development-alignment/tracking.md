@@ -27,4 +27,10 @@ The user explicitly requested including the four existing foundation commits
 from local main in the PR, so its stage is foundation integration plus planning.
 The new template-alignment implementation is still deferred until plan review.
 
-Planning PR: pending creation; the final link will be added after publication.
+Planning/integration PR: [#33](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/33) against `main`.
+Merge commit: pending maintainer review and merge.
+
+[Issue #34](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/34) tracks the
+CodeQL findings reported against the included foundation; resolve the high alert
+before considering the integration ready to merge. It is a remediation tracker,
+separate from the ten implementation-planning issues above.
