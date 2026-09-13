@@ -36,6 +36,8 @@ driver.
 
 ### Requirement: Backend conformance suite
 
+The storage port and its adapters SHALL preserve the specified persistence and failure semantics.
+
 A backend is supported when it passes one shared test suite, not when someone
 believes it works.
 
@@ -93,6 +95,8 @@ and DuckDB — the named candidate backends.
 
 ### Requirement: Migrations are backend-neutral
 
+The storage port and its adapters SHALL preserve the specified persistence and failure semantics.
+
 #### Scenario: One migration set
 - **WHEN** a migration is written
 - **THEN** it SHALL apply to every supported backend without branching on the
@@ -104,6 +108,8 @@ and DuckDB — the named candidate backends.
   transaction semantics is handled in one place
 
 ### Requirement: Transactions and failure semantics
+
+The storage port and its adapters SHALL preserve the specified persistence and failure semantics.
 
 #### Scenario: Unit of work
 - **WHEN** a repository operation spans more than one statement
@@ -120,6 +126,8 @@ and DuckDB — the named candidate backends.
   a translated error after that, rather than surface a locked-database message
 
 ### Requirement: SQLite as the default adapter
+
+The storage port and its adapters SHALL preserve the specified persistence and failure semantics.
 
 #### Scenario: Default backend
 - **WHEN** no `SOBRES_DB_URL` is configured
@@ -138,6 +146,8 @@ and DuckDB — the named candidate backends.
   rather than of the system
 
 ### Requirement: Provider protocols are the same pattern
+
+The storage port and its adapters SHALL preserve the specified persistence and failure semantics.
 
 #### Scenario: Consistency with the data providers
 - **WHEN** any external dependency that might later be swapped is introduced —

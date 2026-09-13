@@ -42,7 +42,7 @@ PYPI_URL = "https://pypi.org/pypi/sobres/json"
 MIN_PYTHON = (3, 11)
 MIN_FREE_BYTES = 200 * 1024 * 1024
 EXTRAS: dict[str, tuple[str, ...]] = {
-    "data": ("yfinance",),
+    "data": ("pandas_datareader",),
     "econ": ("statsmodels",),
     "opt": ("cvxpy",),
     "otel": ("opentelemetry.sdk",),
@@ -471,17 +471,17 @@ def _module_present(name: str) -> bool:
 
 
 def _extras(ctx: Any) -> CheckResult:
+    if not _module_present("yfinance"):
+        return CheckResult(
+            "fail",
+            "required price client yfinance is missing",
+            "run: pip install --upgrade sobres",
+        )
     installed = [
         name for name, modules in EXTRAS.items() if all(_module_present(m) for m in modules)
     ]
     missing = [name for name in EXTRAS if name not in installed]
     text = f"installed extras: {', '.join(installed) or 'none'}"
-    if "data" not in installed:
-        return CheckResult(
-            "warn",
-            text + " — 'data' is missing so prices cannot be fetched",
-            "run: pip install 'sobres[data]'",
-        )
     if missing:
         return CheckResult("ok", text + f" (available: {', '.join(missing)})")
     return CheckResult("ok", text)

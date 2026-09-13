@@ -16,7 +16,7 @@ push to main
  build  ──── sdist + wheel, twine check, version assertion
      │
      ▼
- publish ─── Trusted Publishing (OIDC), PEP 740 attestations
+ publish ─── organization API token for the selected index
      │
      ▼
  github-release ── tag v<version>, generated notes, artifacts attached
@@ -30,7 +30,7 @@ Three things in one PR:
 2. Add a `## [<version>]` section to `CHANGELOG.md`.
 3. Merge to `main`.
 
-That's it. The pipeline notices the version is not on the index and publishes it.
+Once armed, the pipeline notices the version is not on the index and publishes it.
 If you merge anything else, `decide` reports "no release" and stops — pushing to
 `main` ten times a day costs ten no-op runs, not ten failed uploads.
 
@@ -45,27 +45,19 @@ Until these are done, `decide` reports `publish=false` for PyPI and nothing is
 uploaded. This is deliberate: merging the pipeline cannot fire a publish before
 the pipeline can succeed.
 
-### 1. Configure Trusted Publishing on PyPI
+### 1. Confirm organization upload secrets
 
-No API token is stored in this repository. PyPI verifies a short-lived OIDC
-token issued by GitHub to this specific workflow.
+The agreed upload path uses the existing `AI-Solutions-Lab-LLC` Actions secrets:
+`PYPI_PROD` for PyPI and `PYPI_TEST` for TestPyPI. Confirm their repository access
+and token scope without printing their values. The workflow selects the secret
+by index name, fails if it is unavailable, and passes it to the publish action's
+`password` input. A missing test token must never fall back to the production token.
+The publish job does not request `id-token: write`, and attestations are disabled.
+See the [publish action documentation](https://github.com/pypa/gh-action-pypi-publish).
 
-Go to <https://pypi.org/manage/account/publishing/> and add a **pending
-publisher**:
-
-| Field | Value |
-|---|---|
-| PyPI project name | `sobres` |
-| Owner | `AI-Solutions-Lab-LLC` |
-| Repository name | `sobres` |
-| Workflow name | `release.yml` |
-| Environment name | `pypi` |
-
-A *pending* publisher is the right kind — the project does not exist on PyPI
-yet, and the first successful publish creates it.
-
-Repeat at <https://test.pypi.org/manage/account/publishing/> with environment
-name `testpypi` to enable rehearsals.
+Secret names and access metadata do not establish token validity. A successful
+controlled TestPyPI upload and fresh installation are required before production
+activation. This remains tracked in [issue #21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21).
 
 ### 2. Create the GitHub environments
 
@@ -172,7 +164,19 @@ hides it from new installs without breaking existing pins), then ship a patch
 version. Yanking is reversible; deleting is not, and a deleted version's number
 can never be reused.
 
-**Publish failed after a partial upload.** Re-running is safe: PyPI rejects
-files it already has, and `decide` re-checks the index first.
+**Publish failed after a partial upload.** Inspect the version files on the index.
+The decision gate skips an existing version, so a rerun does not repair missing
+artifacts. Verify and recover the exact missing artifact deliberately; never
+assume a green skipped run completed the release.
 
 **Need to stop everything.** Set `RELEASE_ENABLED` to `false`.
+
+## Verifying distribution
+
+A disabled production switch reports `reason=disabled`; an existing version
+reports `reason=already-published`. Neither means an upload occurred. After an
+authorized release, verify the public version page, wheel/sdist hashes, GitHub
+release, and a base-only installation followed by actual keyless data and
+optimization commands. Arming the variable alone does not trigger a workflow.
+PyPI supports pip/pipx installation. Homebrew needs a separate tested formula/tap
+and update automation; it is not enabled by this workflow.

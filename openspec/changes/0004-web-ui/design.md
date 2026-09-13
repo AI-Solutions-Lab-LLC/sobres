@@ -10,17 +10,17 @@ two more consumers of the same declarations:
                          │
         ┌────────────────┼──────────────────┐
         ▼                ▼                  ▼
-   cli/ (Typer)     api/ (FastAPI)     frontend/ (React)
+   adapters/cli/    adapters/api/     frontend/ (React)
    options from     routes from        forms from
    param model      param model        OpenAPI schema
         │                │                  │
         └────────────────┴──────────────────┘
                          │
-                 same handler, same result type
+                 same application service, same validated result
 ```
 
 A command is `Command(name, help, params: type[BaseModel], result: type,
-handler)`. From that:
+handler, http_exposed=False, ui_exposed=False)`. From explicitly enabled entries:
 
 | Surface | Generated | Mechanism |
 |---|---|---|
@@ -42,16 +42,16 @@ change that would break the UI therefore breaks the build, not the user.
 ## Parity as a test
 
 ```python
-@pytest.mark.parametrize("command", registry.all())
-def test_every_command_has_a_route(command, app): ...
+@pytest.mark.parametrize("command", registry.http_exposed())
+def test_every_exposed_command_has_a_route(command, app): ...
 
-@pytest.mark.parametrize("command", registry.all())
-def test_every_command_has_a_view(command, frontend_manifest): ...
+@pytest.mark.parametrize("command", registry.http_exposed())
+def test_every_exposed_command_has_a_view(command, frontend_manifest): ...
 ```
 
 The frontend build emits a manifest of which registry names it renders a view
-for. The second test reads it. Adding a command without a view fails Python CI,
-not a frontend review.
+for. The second test reads it. Adding an exposed command without a view fails Python CI. A separate test
+asserts excluded commands have no route, OpenAPI entry or actionable view.
 
 ## Long-running work
 
@@ -67,8 +67,8 @@ POST /api/v1/jobs/{id}/cancel
 
 The job record lives in 0003's `jobs` repository, so it survives a server
 restart and a page reload. A single in-process worker drains a queue; the
-process is single-user, so one worker is the right number and avoids every
-concurrency question a pool would raise.
+process is single-user, so one worker is the right number but still requires transaction, cancellation and crash-recovery tests. It is
+not a durable multi-replica hosted worker.
 
 **Progress comes from the core function's optional callback** (0001
 observability design), which the job runner turns into an event and a row
@@ -132,7 +132,7 @@ frontend/
 └── manifest.json      # registry names this build renders — read by the parity test
 ```
 
-Built assets are copied into the wheel at `sobres/api/static/` by the
+Built assets are copied into the wheel at `sobres/adapters/api/static/` by the
 release pipeline. `pip install sobres[web]` therefore needs no Node; only
 a contributor changing `frontend/` does.
 
@@ -148,9 +148,19 @@ not just in the test suite.
 | Registry from 0001 | Hand-written Typer commands, registry added in 0004 | Would mean rewriting every command here; adding surfaces to declarations is cheap, retrofitting declarations onto surfaces is not |
 | POST for every command | REST resources | One body model matches the CLI's one parameter model; no second serialization |
 | Generated TypeScript client | Hand-written API types | Drift becomes a build failure instead of a runtime one |
-| Single in-process worker | Worker pool, Celery, RQ | Single-user process; one worker answers every concurrency question by construction |
+| Single in-process worker | Worker pool, Celery, RQ | Single-user scope; concurrency and restart behavior still require explicit tests |
 | SSE | WebSockets | One direction suffices; proxies and reconnection are solved problems |
 | Deployment token | User accounts | Multi-user is out of scope; a fake account model is debt |
 | `sobres open` targets from the view manifest | A hand-maintained target list | The manifest already exists for parity; a second list would drift from it |
 | Headless prints the URL and exits 0 | Error when no browser | The URL *is* the app; failing to launch a browser is not failing the user |
 | Frontend manifest for parity | Trusting the view list | Parity must fail Python CI, where the registry is |
+
+## Alignment amendment (0013)
+
+Use `adapters/api/` with an app factory, `application/` services and explicit HTTP/UI exposure metadata. Keep `frontend/`; build assets into `src/sobres/adapters/api/static/`. Administrative CLI commands are absent from routes/forms. Browser-safe settings have an explicit allowlist. Local deployment tokens do not provide enterprise tenancy.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

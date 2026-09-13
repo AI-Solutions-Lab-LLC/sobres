@@ -1,9 +1,22 @@
 {
-  "recorded_at": null,
-  "synthesized_at": "2026-09-12T17:32:49.520505+00:00",
+  "recorded_at": "2026-09-13T18:12:18.037724+00:00",
   "provider": "yfinance",
-  "provider_version": "1.7.0 (shape)",
-  "note": "synthesized in the shape of Ticker.history(auto_adjust=False); see tests/fixtures/README.md",
+  "provider_version": "1.7.0",
+  "client": "yfinance",
+  "client_version": "1.7.0",
+  "sha256": {
+    "AAPL.csv": "34dec7c815ff04211289a48cfce235a07b0505325dcc8cff77a49472e0ed7842",
+    "GLD.csv": "4961615abe99f054698175c77d2a7f1fe8e50bbf81a94c26b7b7c82166e6a344",
+    "JNJ.csv": "845aa63a41f2d8eb46a473c691b81889297f7f3e650530519ac4e02de5edd84b",
+    "MSFT.csv": "1b3e168689fc13b9c8e7873c093247801a0e77869bf5f2bd94be8bf299e488a0",
+    "NVDA.csv": "f4cdae1ea4c8bcc88de495eea0737230821e3e4e69b67a1b7cb4bdb53bac956f",
+    "VOD.L.csv": "87157e6d5c8c47bbc2863f6631dc4fee6285d987dbc32f6097eb22063de051b8",
+    "XOM.csv": "3f15c3524c48f13c916f313f02ef3319f8eff090eff283f27992658eae568df3"
+  },
+  "source": "https://query2.finance.yahoo.com/v8/finance/chart/{ticker}",
+  "start": "2015-01-02",
+  "end": "2024-12-31",
+  "serialization": "history(auto_adjust=False, actions=False); CSV rounded to six decimals",
   "tickers": {
     "AAPL": {
       "currency": "USD",
@@ -22,17 +35,17 @@
     },
     "JNJ": {
       "currency": "USD",
-      "exchangeName": "NMS",
+      "exchangeName": "NYQ",
       "symbol": "JNJ"
     },
     "XOM": {
       "currency": "USD",
-      "exchangeName": "NMS",
+      "exchangeName": "NYQ",
       "symbol": "XOM"
     },
     "GLD": {
       "currency": "USD",
-      "exchangeName": "NMS",
+      "exchangeName": "PCX",
       "symbol": "GLD"
     },
     "VOD.L": {

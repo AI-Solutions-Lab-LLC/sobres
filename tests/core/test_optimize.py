@@ -164,12 +164,14 @@ def test_equal_weight_needs_no_solver() -> None:
 
 
 def test_nonconvergence_raises_optimization_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    from sobres.core import optimize as mod
+    from sobres.solvers import scipy as mod
 
     class _Result:
         success = False
         x = np.array([0.5, 0.5])
         message = "Iteration limit reached"
+        nfev = 1
+        nit = 1
 
     monkeypatch.setattr(mod, "minimize", lambda *a, **k: _Result())
     for objective in ("min_variance", "max_sharpe", "risk_parity", "target_risk"):
@@ -192,7 +194,7 @@ def test_concentration_warning_above_50pct() -> None:
 
 def test_frontier_generation_and_named_points() -> None:
     frontier = efficient_frontier(MU3, SIG3, n_points=10)
-    assert len(frontier.points) == 11  # 10 targets plus the max-Sharpe point
+    assert len(frontier.points) == 10  # Named points are included in the requested count
     assert sum(p.is_min_variance for p in frontier.points) == 1
     assert sum(p.is_max_sharpe for p in frontier.points) == 1
     first = frontier.points[0]

@@ -2,8 +2,8 @@
 
 The vendor library is confined to ``LiveYahooSource``; the provider itself
 works against the small ``YahooSource`` boundary so tests run on recorded
-payloads. Adjusted close is the default and the recommendation: total-return
-math on unadjusted closes reads a 2-for-1 split as a -50% day.
+payloads. Adjusted close is the default because it includes dividend adjustments;
+Yahoo's Close is already split-adjusted but does not include dividends.
 
 Currency is discovered from the vendor's own metadata, never inferred from an
 exchange suffix, and sub-unit quotations (GBp, ZAc, ILA) are normalized to the
@@ -19,7 +19,7 @@ from typing import Any, Protocol
 
 import pandas as pd
 
-from sobres.core.errors import ProviderError, UnknownTickerError
+from sobres.core.errors import ProviderError
 from sobres.data.base import (
     DEFAULT_IMPLAUSIBLE_MOVE,
     PriceField,
@@ -71,13 +71,24 @@ class LiveYahooSource:
         try:
             t = yf.Ticker(ticker)
             # yfinance's end is exclusive; the request is inclusive.
-            frame = t.history(
-                start=start.isoformat(),
-                end=(end + timedelta(days=1)).isoformat(),
-                auto_adjust=False,
-                actions=False,
-                raise_errors=True,
-            )
+            try:
+                frame = t.history(
+                    start=start.isoformat(),
+                    end=(end + timedelta(days=1)).isoformat(),
+                    auto_adjust=False,
+                    actions=False,
+                    raise_errors=True,
+                )
+            except yf.exceptions.YFPricesMissingError:
+                # A holiday/weekend range may have no bars for a valid ticker.
+                # Metadata must still establish the symbol and its currency;
+                # network and other vendor exceptions remain provider errors.
+                meta = dict(t.get_history_metadata() or {})
+                if not meta.get("currency"):
+                    raise
+                frame = pd.DataFrame(
+                    columns=list(FIELD_COLUMNS.values()), index=pd.DatetimeIndex([])
+                )
             meta = dict(t.get_history_metadata() or {})
         except Exception as exc:
             raise ProviderError(
@@ -160,7 +171,19 @@ class YFinanceProvider:
         for symbol in symbols:
             raw = self._source.history(symbol, start, end)
             if raw.frame is None or raw.frame.empty:
-                raise UnknownTickerError(symbol, provider=self.name)
+                if not raw.currency:
+                    raise ProviderError(
+                        f"empty history without currency metadata for {symbol}",
+                        provider=self.name,
+                        hint="check the symbol and provider availability",
+                    )
+                major, _ = normalize_currency_code(raw.currency, symbol=symbol)
+                columns[symbol] = pd.Series(dtype="float64", index=pd.DatetimeIndex([]))
+                series_meta[symbol] = {
+                    "currency": major,
+                    "quoted_currency": str(raw.currency),
+                }
+                continue
             column = FIELD_COLUMNS[field]
             if column not in raw.frame.columns:
                 raise ProviderError(
@@ -185,7 +208,7 @@ class YFinanceProvider:
                 "quoted_currency": str(raw.currency),
                 "last_quote": None if pd.isna(last_quote) else str(last_quote.date()),
             }
-            if end - last_quote.date() > timedelta(days=14):
+            if not pd.isna(last_quote) and end - last_quote.date() > timedelta(days=14):
                 info["delisted"] = True
                 info["reason"] = str(raw.meta.get("reason") or "no quotes after last_quote")
             if {"Adj Close", "Close"} <= set(raw.frame.columns):

@@ -13,7 +13,7 @@ The database SHALL carry a schema version and upgrade itself on open.
 
 #### Scenario: Backup before migrating
 - **WHEN** a migration is about to run against an existing database
-- **THEN** a timestamped copy SHALL be written beside it first
+- **THEN** a timestamped consistent backup SHALL be written beside it first, including committed WAL data
 - **AND** the copy's path SHALL be reported on stderr
 
 #### Scenario: Newer database than the installed tool
@@ -32,6 +32,8 @@ The database SHALL carry a schema version and upgrade itself on open.
   migration
 
 ### Requirement: Saved portfolios
+
+The system SHALL persist named weighted or unweighted portfolios and validate them before writing.
 
 #### Scenario: Save
 - **WHEN** `sobres portfolio save core --tickers AAPL MSFT --weights 0.6 0.4` runs
@@ -59,6 +61,8 @@ The database SHALL carry a schema version and upgrade itself on open.
 
 ### Requirement: Watchlists and goals
 
+The system SHALL persist watchlist membership and goal inputs without presenting stored results as current calculations.
+
 #### Scenario: Watchlist
 - **WHEN** `sobres watchlist add tech NVDA AMD` runs
 - **THEN** those symbols SHALL be added to the named watchlist, creating it if absent
@@ -71,6 +75,8 @@ The database SHALL carry a schema version and upgrade itself on open.
   replay the stored result
 
 ### Requirement: Analysis run history
+
+The system SHALL record resolved analysis inputs and results and support honest retrieval and comparison.
 
 #### Scenario: Recording a run
 - **WHEN** an analytical command is invoked with `--save-run`
@@ -100,6 +106,8 @@ The database SHALL carry a schema version and upgrade itself on open.
 
 ### Requirement: Database administration
 
+Database commands SHALL provide inspection, consistent export and non-destructive recovery while protecting user-authored rows.
+
 #### Scenario: Inspect
 - **WHEN** `sobres db info` runs
 - **THEN** the file path, schema version, total size, and per-table row counts and
@@ -127,11 +135,13 @@ The database SHALL carry a schema version and upgrade itself on open.
 
 ### Requirement: Repositories sit behind the storage port
 
+User-state repositories SHALL expose domain operations through owned ports and common behavioral contracts.
+
 #### Scenario: Backend-agnostic repositories
 - **WHEN** a repository is defined for portfolios, watchlists, goals, runs, or jobs
-- **THEN** it SHALL be a protocol in `data/storage/base.py` with its
-  implementation under `data/storage/adapters/`
-- **AND** no call site SHALL name a backend or construct a connection
+- **THEN** it SHALL be a protocol in `ports/storage.py` with its
+  implementation under `adapters/storage/`
+- **AND** application/transport call sites SHALL NOT name a backend or construct a connection; composition SHALL select it
 
 #### Scenario: New repositories join the conformance suite
 - **WHEN** a repository is added
@@ -144,16 +154,20 @@ The database SHALL carry a schema version and upgrade itself on open.
   identifiers, explicit UTC timestamps, and JSON encoded as text
 
 #### Scenario: Switching backends is configuration
-- **WHEN** `SOBRES_DB_URL` names a different registered backend
-- **THEN** every command in this change SHALL behave identically
-- **AND** no module outside `data/storage/adapters/` SHALL require modification
+- **WHEN** `SOBRES_DB_URL` names a different installed, supported operational backend
+- **THEN** shared domain commands SHALL honor the same repository contracts
+- **AND** engine-specific administration SHALL report supported operations explicitly
+- **AND** the URL change SHALL NOT claim to transfer existing data; new adapters require
+  conformance, migration, composition registration and dependency/doctor checks
 
 ### Requirement: Storage layer purity
 
+Storage adapters SHALL perform persistence only, while financial core code SHALL remain independent of database I/O.
+
 #### Scenario: Repositories perform no computation
-- **WHEN** any module under `data/storage/` is reviewed
+- **WHEN** any module under `adapters/storage/` is reviewed
 - **THEN** it SHALL contain persistence logic only
-- **AND** SHALL NOT import from `sobres.core`
+- **AND** SHALL NOT import financial computation functions from `sobres.core`; owned plain data types are permitted
 
 #### Scenario: Core remains I/O-free
 - **WHEN** any module under `core/` is reviewed
@@ -162,6 +176,8 @@ The database SHALL carry a schema version and upgrade itself on open.
   rather than remembered
 
 ### Requirement: Observability of persistence
+
+Persistence and migrations SHALL emit redacted diagnostic events through the shared adapter instrumentation.
 
 #### Scenario: Operations are logged and spanned
 - **WHEN** a repository operation runs
@@ -177,8 +193,10 @@ The database SHALL carry a schema version and upgrade itself on open.
 
 ### Requirement: Portability of the database file
 
+A consistent SQLite backup SHALL preserve complete local application state across supported machines and containers.
+
 #### Scenario: One file is the whole state
-- **WHEN** the database file is copied to another machine and
+- **WHEN** a consistent SQLite backup is restored on another machine and
   `SOBRES_DB_URL` points at it
 - **THEN** every saved portfolio, watchlist, goal, run and cached observation
   SHALL be available there
@@ -187,3 +205,34 @@ The database SHALL carry a schema version and upgrade itself on open.
 - **WHEN** the file is mounted into the container built in 0005
 - **THEN** it SHALL be used without conversion, and writes from the container
   SHALL be visible to the host CLI afterwards
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
+
+### Requirement: Adapter-owned migration and transaction semantics
+Operational adapters SHALL own immutable migrations and expose explicit atomic
+write behavior through the repository/unit-of-work contract.
+
+#### Scenario: A multi-record write fails
+- **WHEN** a unit of work fails after its first write but before commit
+- **THEN** all its user-state writes SHALL roll back and a later operation SHALL remain usable
+- **AND** the common suite SHALL assert resulting state, not adapter implementation details
+
+#### Scenario: New engine versus existing SQLite lineage
+- **WHEN** a future operational engine is introduced
+- **THEN** existing SQLite migration IDs/content SHALL remain unchanged
+- **AND** that engine's own migrations and data cutover SHALL require separate real-engine verification

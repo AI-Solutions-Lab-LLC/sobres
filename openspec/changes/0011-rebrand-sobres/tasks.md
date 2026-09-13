@@ -28,7 +28,7 @@
 
 ## C. Published surfaces
 
-- [x] **C1. Docker** *(lands with 0005)* — image name `aisolutionslab/sobres`, volume examples, and
+- [ ] **C1. Docker** *(lands with 0005)* — image name `aisolutionslab/sobres`, volume examples, and
       the health check calling `sobres doctor`. → test: `sobres deploy check`
       output contains no `quantfolio`.
 - [ ] **C2. Landing page** *(lands with 0006)* — base URL, install snippet, and every command example.
@@ -41,8 +41,8 @@
 
 ## D. Reserve the name
 
-- [ ] **D1. Publish `0.0.0`** to PyPI as `sobres` to hold the name, per 0000's
-      armed-release gate. → test: `check_release.py` reports the name as held by
+- [ ] **D1. Publish the intended reviewed version** to PyPI as `sobres`, after
+      issue #21's authentication and artifact checks and 0000's armed-release gate. → test: `check_release.py` reports the name as held by
       this project.
 
 ## Definition of done
@@ -53,3 +53,10 @@
 - [x] Every test that passed before the rename passes after it, with identical
       fixture values
 - [ ] `openspec validate` is clean
+
+## Alignment scope (0013)
+
+C1 follows 0005's `compose.yaml` and independent image enablement. C2 follows
+0006's existing `site/` and reviewed publication access. The original console
+entry point remains compatible through 0013's facade; no second rename is needed.
+Completed boxes retain their historical scope; pending publication stays unchecked.

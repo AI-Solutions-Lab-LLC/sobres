@@ -7,6 +7,8 @@ the adapters and the I/O layer, never the pure math.
 
 ### Requirement: Logs never contaminate output
 
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
+
 The most important property: a logging system that corrupts `--format json` is
 worse than no logging.
 
@@ -21,6 +23,8 @@ worse than no logging.
 - **AND** a test SHALL assert this with logging at its most verbose setting
 
 ### Requirement: Structured logging
+
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
 
 #### Scenario: Every record is structured
 - **WHEN** a log record is emitted
@@ -61,6 +65,8 @@ worse than no logging.
 
 ### Requirement: Secrets never reach a log or a span
 
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
+
 #### Scenario: Redaction
 - **WHEN** a value is logged whose key contains `key`, `token`, `secret`,
   `password`, or `authorization`
@@ -81,6 +87,8 @@ worse than no logging.
   captured stderr
 
 ### Requirement: What gets logged
+
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
 
 #### Scenario: Provider calls
 - **WHEN** the data layer serves a request
@@ -108,6 +116,8 @@ worse than no logging.
   not silently swallowed
 
 ### Requirement: Tracing
+
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
 
 #### Scenario: OpenTelemetry, opt-in
 - **WHEN** tracing is used
@@ -151,6 +161,8 @@ worse than no logging.
 
 ### Requirement: Instrumentation respects the architecture
 
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
+
 The purity rule and observability appear to conflict: `core/` performs no I/O,
 and emitting a log or a span is I/O. The conflict is resolved by where
 instrumentation sits, not by weakening either rule.
@@ -176,12 +188,14 @@ instrumentation sits, not by weakening either rule.
 - **AND** with no callback supplied, behavior SHALL be unchanged
 
 #### Scenario: Instrumentation does not change results
-- **WHEN** the same command runs at WARNING and at DEBUG, with and without
-  tracing active
+- **WHEN** the same data command runs at WARNING and at DEBUG, with and without
+  tracing active, with the clock, cache state, and inputs held fixed
 - **THEN** stdout SHALL be byte-identical
 - **AND** a test SHALL assert this, so observability can never alter a number
 
 ### Requirement: Configuration and operation
+
+Observability SHALL provide the specified diagnostics without disclosing credentials or changing result values.
 
 #### Scenario: Precedence
 - **WHEN** logging or tracing is configured
@@ -197,3 +211,16 @@ instrumentation sits, not by weakening either rule.
 - **WHEN** a dependency emits its own log records
 - **THEN** they SHALL be routed through the same handler and default to WARNING,
   so `yfinance` chatter does not appear at INFO
+
+### Requirement: Controlled output comparisons
+
+Instrumentation SHALL preserve result values, units, ordering, and error status.
+Byte comparisons SHALL hold the clock, cache state, and configuration fixed.
+
+#### Scenario: Stable data output under instrumentation
+- **WHEN** a data command runs with identical inputs, frozen clock and cache state,
+  and logging or tracing is toggled
+- **THEN** stdout SHALL be byte-identical, including every monetary value
+- **AND** health/config introspection may reflect the changed settings; wall-clock
+  timestamps, disk usage, and cold/warm cache status are operational state, not
+  numeric-result exceptions
