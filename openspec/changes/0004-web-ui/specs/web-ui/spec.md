@@ -4,6 +4,8 @@
 
 ### Requirement: Stack
 
+The web application SHALL use the specified typed client stack and distribute built assets independently of Node at runtime.
+
 #### Scenario: Chosen libraries
 - **WHEN** the frontend is built
 - **THEN** it SHALL use React with TypeScript on Vite, Tailwind CSS with
@@ -24,11 +26,14 @@
 - **THEN** pre-built static assets SHALL be included in the wheel
 - **AND** `sobres serve` SHALL work with no Node toolchain present
 
-### Requirement: Every CLI capability has a view
+### Requirement: Every exposed capability has a view
+
+Every explicitly UI-exposed capability SHALL have a generated usable view, with local-only operations excluded.
 
 #### Scenario: Full coverage
 - **WHEN** the UI is built
-- **THEN** every command in the registry SHALL have a view that can invoke it
+- **THEN** every explicitly UI-exposed command SHALL have a view that can invoke it
+- **AND** excluded local commands SHALL have no actionable form
 - **AND** the parity test from `http-api` SHALL fail the build if one does not
 
 #### Scenario: Forms are generated from the registry
@@ -50,11 +55,12 @@
 
 ### Requirement: Settings and health in the UI
 
+The UI SHALL present reviewed browser-safe settings and health projections through shared application services.
+
 #### Scenario: Settings page is generated
 - **WHEN** the settings view renders
-- **THEN** every setting declared in 0001's settings registry SHALL appear as a
-  field, with its description and how-to-obtain link, secrets masked and never
-  echoed back
+- **THEN** each explicitly browser-safe setting declared in the settings registry SHALL appear as a
+  field, with its description and how-to-obtain link, secret values never returned, and unsafe settings omitted with CLI guidance
 - **AND** saving SHALL write through the same code path as `sobres config set`
 
 #### Scenario: Live validation in the browser
@@ -66,8 +72,7 @@
 - **WHEN** the health view renders
 - **THEN** it SHALL show `sobres doctor`'s checks with the same statuses, messages,
   and next steps, from the same check registry
-- **AND** a check with a registered fix SHALL offer to run it, never touching a
-  secret
+- **AND** only a browser-allowlisted, non-secret check fix SHALL be offered; other repairs SHALL show CLI guidance
 
 #### Scenario: `sobres init --web`
 - **WHEN** `sobres init --web` runs once this change has landed
@@ -76,7 +81,7 @@
 
 ### Requirement: Launching the UI from the CLI
 
-The browser is one command away from the terminal, and never the only way in.
+The browser SHALL be reachable from the CLI while preserving a usable headless path.
 
 #### Scenario: `sobres open`
 - **WHEN** `sobres open` runs and no server is listening on the configured port
@@ -96,7 +101,7 @@ The browser is one command away from the terminal, and never the only way in.
 #### Scenario: Targets
 - **WHEN** `sobres open <target>` runs
 - **THEN** `target` SHALL accept `settings`, `doctor`, `runs`, `run <id>`,
-  `portfolio <name>`, and any registry command name, opening that view directly
+  `portfolio <name>`, and any UI-exposed registry command name, opening that view directly
 - **AND** the accepted set SHALL be derived from the frontend view manifest, so
   a view that exists is always reachable and one that does not is rejected with
   the list of those that are
@@ -123,6 +128,8 @@ The browser is one command away from the terminal, and never the only way in.
 
 ### Requirement: Dark mode
 
+The application SHALL provide complete accessible themes with a persistent user preference and dark initial appearance.
+
 #### Scenario: Dark by default
 - **WHEN** the app first loads with no stored preference
 - **THEN** it SHALL render in dark mode
@@ -143,6 +150,8 @@ The browser is one command away from the terminal, and never the only way in.
 - **THEN** it SHALL meet WCAG 2.1 AA contrast
 
 ### Requirement: Result visualization
+
+The UI SHALL visualize real analysis results with provenance, obtainable data and clear in-sample labels.
 
 #### Scenario: Interactive efficient frontier
 - **WHEN** a frontier result is displayed
@@ -173,6 +182,8 @@ The browser is one command away from the terminal, and never the only way in.
 
 ### Requirement: Animation
 
+Animation SHALL explain actual product state while preserving reduced-motion access and immediate interaction.
+
 #### Scenario: Animation serves comprehension
 - **WHEN** a result appears
 - **THEN** transitions SHALL clarify what changed — a frontier drawing along its
@@ -195,6 +206,8 @@ The browser is one command away from the terminal, and never the only way in.
 
 ### Requirement: Long-running work in the interface
 
+The UI SHALL expose persisted job state promptly and allow navigation and cancellation without losing work.
+
 #### Scenario: Immediate feedback
 - **WHEN** a user submits work
 - **THEN** the UI SHALL show the job as queued within 200 ms
@@ -208,6 +221,8 @@ The browser is one command away from the terminal, and never the only way in.
 - **THEN** the UI SHALL offer to cancel it
 
 ### Requirement: History and saved state
+
+The UI SHALL browse, compare and reuse persisted runs and manage the same portfolios as the CLI.
 
 #### Scenario: Run history is browsable
 - **WHEN** the history view opens
@@ -227,6 +242,8 @@ The browser is one command away from the terminal, and never the only way in.
 
 ### Requirement: Accessibility and responsiveness
 
+All views SHALL support keyboard navigation, accessible data alternatives and narrow-screen use.
+
 #### Scenario: Keyboard operable
 - **WHEN** a user navigates with a keyboard alone
 - **THEN** every control SHALL be reachable and operable, with a visible focus
@@ -243,6 +260,8 @@ The browser is one command away from the terminal, and never the only way in.
 
 ### Requirement: Performance budget
 
+The application SHALL enforce initial bundle and interaction budgets while loading optional visualization code on demand.
+
 #### Scenario: Bundle size is a CI gate
 - **WHEN** the frontend is built
 - **THEN** the initial JavaScript bundle SHALL be under 300 KB compressed
@@ -258,6 +277,8 @@ The browser is one command away from the terminal, and never the only way in.
 - **THEN** it SHALL respond within 100 ms for a result of up to 10,000 points
 
 ### Requirement: Not investment advice
+
+Every analysis view SHALL include the research disclaimer without persistent dismissal.
 
 #### Scenario: The disclaimer carries over
 - **WHEN** any analysis result is displayed

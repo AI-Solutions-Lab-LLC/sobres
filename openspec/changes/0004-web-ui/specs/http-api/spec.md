@@ -4,12 +4,11 @@
 
 ### Requirement: The API and UI are derived from 0001's registry
 
-0001 declares every command once and generates the CLI. This change adds two
-consumers of those declarations and changes nothing about how a command is
-declared.
+The API and UI SHALL consume the registry's explicit exposure metadata from
+0013, generating surfaces only for reviewed web-safe application services.
 
 #### Scenario: One declaration, three surfaces
-- **WHEN** a command exists in `sobres/registry.py` per 0001
+- **WHEN** a command in `sobres/registry.py` explicitly enables HTTP and UI exposure
 - **THEN** an HTTP route, an OpenAPI schema entry, and a UI form SHALL all exist
   for it without further code
 
@@ -21,12 +20,12 @@ declared.
 
 #### Scenario: Parity is tested, not trusted
 - **WHEN** the test suite runs
-- **THEN** a test SHALL enumerate the registry and assert every entry has an HTTP
-  route and a UI view registered against it
-- **AND** the build SHALL fail if any entry lacks either
+- **THEN** a test SHALL enumerate the exposure set and assert each entry has an HTTP
+  route and UI view, and that excluded commands have neither
+- **AND** the build SHALL fail if any exposed entry lacks either or an excluded entry is present
 
 #### Scenario: Adding a parameter reaches every surface
-- **WHEN** a parameter is added to a registered command
+- **WHEN** a parameter is added to an explicitly exposed registered command
 - **THEN** it SHALL appear as a CLI option, an API field, and a UI form control
 - **AND** its default SHALL be identical in all three
 
@@ -37,19 +36,23 @@ declared.
 
 ### Requirement: The API is an adapter, not a second implementation
 
+The API SHALL translate transport requests into shared application use cases without duplicating business behavior.
+
 #### Scenario: No business logic
-- **WHEN** any module under `api/` is reviewed
+- **WHEN** any module under `adapters/api/` is reviewed
 - **THEN** it SHALL contain request handling, validation, and serialization only
-- **AND** a test SHALL assert `api/**` performs no computation of its own, as is
-  already enforced for `cli/**`
+- **AND** a test SHALL assert `adapters/api/**` performs no computation of its own, as is
+  already enforced for `adapters/cli/**`
 
 #### Scenario: Identical results
 - **WHEN** the same operation is run through the CLI and through the API with
   identical parameters
 - **THEN** the results SHALL be identical
-- **AND** a test SHALL assert this for every registered command
+- **AND** a test SHALL assert this for every explicitly exposed command
 
 ### Requirement: Jobs for long-running work
+
+The API SHALL dispatch long work as persisted jobs with observable progress, failure and cancellation.
 
 #### Scenario: Work is dispatched, not awaited
 - **WHEN** an optimization, backtest, or simulation is requested
@@ -78,6 +81,8 @@ declared.
 - **AND** partial results SHALL NOT be presented as complete
 
 ### Requirement: Access control
+
+The single-user server SHALL restrict network exposure and authenticate non-loopback access with securely handled deployment tokens.
 
 #### Scenario: Loopback by default
 - **WHEN** `sobres serve` runs with no `--host`
@@ -118,6 +123,8 @@ declared.
 
 ### Requirement: Observability across the request and job boundary
 
+Request and job diagnostics SHALL preserve trace correlation without instrumenting pure financial computations.
+
 #### Scenario: Every request is a trace
 - **WHEN** a request arrives
 - **THEN** a span SHALL cover it, carrying the route, the registry command, and
@@ -147,6 +154,8 @@ declared.
 
 ### Requirement: API hygiene
 
+HTTP operations SHALL provide documented schemas, actionable error mapping and bounded exposure without leaking internal failures.
+
 #### Scenario: Documented
 - **WHEN** the server is running
 - **THEN** OpenAPI docs SHALL be served, generated from the registry
@@ -171,3 +180,46 @@ declared.
 #### Scenario: Rate limiting on a reachable deployment
 - **WHEN** the server is bound to a non-loopback address
 - **THEN** authentication attempts SHALL be rate-limited per source address
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
+
+### Requirement: Explicit HTTP exposure and shared composition
+The API SHALL expose only approved application operations and SHALL construct
+services through the same composition boundary as the CLI.
+
+#### Scenario: A local administrative command is registered
+- **WHEN** upgrade, init, browser/server launch, token administration, deployment,
+  or arbitrary local-file export/repair commands are registered
+- **THEN** no generated route, OpenAPI entry or actionable UI form SHALL exist for them
+- **AND** a generic command-dispatch endpoint SHALL NOT bypass that exclusion
+
+#### Scenario: Unsafe browser setting or doctor repair
+- **WHEN** an HTTP request attempts to modify credentials, database paths, exporter
+  destinations, or invoke a local repair outside the approved browser allowlist
+- **THEN** it SHALL be refused before invoking the underlying service
+- **AND** the CLI's authorized local administration SHALL remain available
+
+#### Scenario: Synchronous work with concurrent health request
+- **WHEN** a database-bound or CPU-heavy job runs and another client asks for health
+- **THEN** health SHALL remain responsive through bounded thread/process execution
+- **AND** blocking driver or calculation work SHALL NOT run directly on the async event loop
+
+#### Scenario: Process restarts during a job
+- **WHEN** the local single-worker process restarts with nonterminal job records
+- **THEN** it SHALL reconcile them to recoverable or failed state according to documented policy
+- **AND** SHALL NOT report unperformed work complete or leave jobs permanently running

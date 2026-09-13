@@ -1,9 +1,9 @@
 ---
 change: 0004-web-ui
 milestone: v1.2
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0003-local-persistence]
-status: implemented
-planning_depth: proposal + 2 spec deltas + design + tasks
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0003-local-persistence, 0013-template-development-alignment]
+status: proposed
+planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 
 # 0004 — Web UI
@@ -17,11 +17,11 @@ sobres serve                      # http://127.0.0.1:8787, no browser
 sobres serve --host 0.0.0.0 --port 8787   # prints a token; required to bind non-local
 ```
 
-A dark, fast single-page app with **every CLI capability** behind a form: pick or
+A dark, fast single-page app with **every explicitly web-exposed analytical capability** behind a form: pick or
 build a portfolio, optimize it, drag along the efficient frontier, run a
 walk-forward backtest and watch it progress, and read the full run history from
-0003. Nothing in the UI that the CLI cannot do, and nothing in the CLI the UI
-cannot reach.
+0003. Shared product operations have the same behavior through CLI and UI. Local
+administration and unsafe settings remain terminal-only.
 
 ## Why
 
@@ -36,14 +36,14 @@ show, and "watch the frontier solve" is the demo.
 
 ## What changes
 
-- **New capability `http-api`** — FastAPI app at `sobres/api/`, a thin adapter
-  over `core` and `data` exactly like `cli/`, holding no business logic.
+- **New capability `http-api`** — FastAPI app at `src/sobres/adapters/api/`, a thin adapter
+  over shared `application/` services, like `adapters/cli/`, holding no business logic.
 - **New capability `web-ui`** — React + TypeScript SPA under `frontend/`, built to
   static assets and served by the same process.
 - **Two new consumers of the command registry.** 0001 declares every command
   once and generates the CLI from it; this change generates the HTTP API and the
-  UI's forms from the same declarations. This is what makes "the UI has all the
-  features of the CLI" a tested invariant rather than an intention — and why the
+  UI's forms from explicitly exposed declarations. This makes parity for
+  reviewed web capabilities a tested invariant — and why the
   registry landed in 0001 rather than here: adding consumers to declarations is
   a generator each; retrofitting declarations onto hand-written commands would
   have been a rewrite of every one.
@@ -63,7 +63,7 @@ contact with a year of feature work:
 |---|---|
 | Write the UI to match the CLI, carefully | Drifts on the first hurried PR |
 | Generate the UI from the OpenAPI schema | Fixes API↔UI drift but not CLI↔API drift, which is the one that matters |
-| **One registry; CLI, API and UI all derive from it** | Adding a parameter in one place makes it appear in all three, and a parity test fails the build if any command lacks a route or a view |
+| **One registry; CLI, API and UI all derive from it** | Adding a parameter in one place makes it appear in all three, and a parity test fails if an exposed command lacks a route/view or an excluded command has one |
 
 The registry is the design decision this whole change rests on. Everything else is
 presentation.
@@ -85,9 +85,34 @@ presentation.
 
 | Risk | Mitigation |
 |---|---|
-| Business logic leaks into the API or the frontend | The registry forces every operation through a `core` call; an import-inspection test asserts `api/**` imports no `scipy`/`numpy` computation helpers of its own, matching the rule already enforced for `cli/**` |
-| The UI drifts from the CLI | A parity test enumerates the registry and fails if any command lacks an API route or a UI view |
+| Business logic leaks into the API or the frontend | Shared application services call core through injected data dependencies; architecture tests reject computation in `adapters/api/` and `adapters/cli/` |
+| The UI drifts from the CLI | A parity test asserts exact route/view equality with the explicit exposure set, including absence of local-only commands |
 | Exposing the UI on a LAN exposes someone's financial data | Binding a non-loopback address requires a token; the token is generated, not chosen; requests without it get 401; the first run prints an explicit warning about what exposure means |
 | A long backtest ties up a request and times out behind a proxy | Work runs as a job; the request returns an id immediately; progress streams over SSE and survives a page reload because state is in the database |
 | A Node build step makes the Python package hard to build | Built assets are committed to the wheel at release time by the pipeline, so `pip install` needs no Node; only contributors touching the frontend need it |
 | Animation and chart libraries bloat the bundle | A hard bundle budget is a CI gate, not a guideline |
+
+## Development alignment and review readiness (0013)
+
+Use `adapters/api/` with an app factory, `application/` services and explicit HTTP/UI exposure metadata. Keep `frontend/`; build assets into `src/sobres/adapters/api/static/`. Administrative CLI commands are absent from routes/forms. Browser-safe settings have an explicit allowlist. Local deployment tokens do not provide enterprise tenancy.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #10 at `dbdfe69ecc4783aecd848637b07cf8b16a73fa69` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge is PR #33 (`b9792d7`).
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#26](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/26).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

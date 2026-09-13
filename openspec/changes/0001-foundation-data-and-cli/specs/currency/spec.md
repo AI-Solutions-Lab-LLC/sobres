@@ -8,6 +8,8 @@ model that makes them possible has to exist before anything computes a return.
 
 ### Requirement: Every monetary series declares its currency
 
+Currency handling SHALL preserve explicit units and metadata through provider, conversion, and output boundaries.
+
 #### Scenario: Price frames carry currency
 - **WHEN** a provider returns a price frame
 - **THEN** `frame.attrs["currency"]` SHALL hold the ISO 4217 code the prices are
@@ -34,6 +36,8 @@ model that makes them possible has to exist before anything computes a return.
 - **AND** the system SHALL NOT guess
 
 ### Requirement: Unambiguous rate representation
+
+Currency handling SHALL preserve explicit units and metadata through provider, conversion, and output boundaries.
 
 The direction of a quoted rate is the most common source of silent error in FX
 code. It is settled by type, not by convention memorized per call site.
@@ -63,6 +67,8 @@ code. It is settled by type, not by convention memorized per call site.
 
 ### Requirement: Exchange-rate data
 
+Currency handling SHALL preserve explicit units and metadata through provider, conversion, and output boundaries.
+
 #### Scenario: Provider protocol
 - **WHEN** exchange rates are fetched
 - **THEN** it SHALL be through an `FxProvider` protocol, alongside the price,
@@ -73,8 +79,9 @@ code. It is settled by type, not by convention memorized per call site.
 #### Scenario: Keyless default
 - **WHEN** no provider is configured
 - **THEN** ECB euro reference rates SHALL be used, requiring no API key
-- **AND** FRED's `DEX*` series SHALL be available as an alternative for
-  USD-based pairs
+- **AND** the foundation CLI SHALL expose ECB as its FX source
+- **AND** a selectable FRED `DEX*` FX adapter is deferred to change 0010;
+  FRED series remain accessible through `data macro`
 
 #### Scenario: Non-trading days
 - **WHEN** a rate is requested for a date the FX market did not quote
@@ -94,6 +101,8 @@ code. It is settled by type, not by convention memorized per call site.
   sub-range reuse, and provenance rules as prices
 
 ### Requirement: Conversion is explicit and correct
+
+Currency handling SHALL preserve explicit units and metadata through provider, conversion, and output boundaries.
 
 #### Scenario: Converting a price series
 - **WHEN** a price series is converted to another currency
@@ -120,6 +129,8 @@ code. It is settled by type, not by convention memorized per call site.
 - **AND** results SHALL be identical to a build with no currency support
 
 ### Requirement: Currency appears in output
+
+Currency handling SHALL preserve explicit units and metadata through provider, conversion, and output boundaries.
 
 #### Scenario: Results state their currency
 - **WHEN** any monetary or return result is rendered

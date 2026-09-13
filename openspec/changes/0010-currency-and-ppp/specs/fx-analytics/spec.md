@@ -31,6 +31,8 @@ The system SHALL separate what the asset did from what the currency did.
 
 ### Requirement: Currency contribution to risk
 
+FX analytics SHALL identify currency risk without assuming uncorrelated or additively separable returns.
+
 #### Scenario: Risk decomposition
 - **WHEN** a portfolio holds assets in more than one currency
 - **THEN** the system SHALL report total volatility in base currency, the
@@ -49,6 +51,8 @@ The system SHALL separate what the asset did from what the currency did.
 - **THEN** exposure by currency SHALL be reported as a share of portfolio value
 
 ### Requirement: Hedged returns
+
+Hedged-return estimates SHALL identify the interest-rate approximation, costs and missing inputs explicitly.
 
 #### Scenario: Construction
 - **WHEN** a hedged return series is constructed
@@ -77,6 +81,8 @@ The system SHALL separate what the asset did from what the currency did.
 
 ### Requirement: Optimization in a base currency
 
+Optimization SHALL accept a declared base currency and estimate risk and return from consistently converted observations.
+
 #### Scenario: Base currency is explicit
 - **WHEN** any `sobres optimize` command receives assets in more than one currency
 - **THEN** `--base` SHALL be required
@@ -95,6 +101,8 @@ The system SHALL separate what the asset did from what the currency did.
 
 ### Requirement: FX commands
 
+The FX command group SHALL report rates, conversions, attribution and hedging through the shared currency contracts.
+
 #### Scenario: Rates
 - **WHEN** `sobres fx rates EURUSD USDJPY --start 2015-01-01` runs
 - **THEN** a date-indexed table of those pairs SHALL print, with the provider and
@@ -108,3 +116,20 @@ The system SHALL separate what the asset did from what the currency did.
 #### Scenario: No forecasting surface
 - **WHEN** the `sobres fx` group is listed
 - **THEN** no subcommand SHALL project, forecast, or recommend a future rate
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage

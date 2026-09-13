@@ -1,5 +1,5 @@
 {
- "recorded_at": "2026-09-12T19:10:46.756956+00:00",
+ "recorded_at": "2026-09-13T20:28:26.512070+00:00",
  "tickers": [
   "AAPL",
   "MSFT",
@@ -24,7 +24,7 @@
  "estimators": {
   "expected_return": "mean_historical",
   "covariance": "ledoit_wolf",
-  "shrinkage": 0.009020731975258309,
+  "shrinkage": 0.013951882198818918,
   "psd_repair": null
  },
  "commands": {
@@ -33,6 +33,6 @@
   "markowitz": "sobres optimize markowitz --tickers AAPL MSFT NVDA JNJ XOM GLD --fill drop --start 2020-01-01 --end 2024-12-31"
  },
  "data_source": "the repository's recorded fixtures",
- "synthetic": true,
- "note": "the fixtures are synthesized random walks in the providers' payload shapes, not market data; rerun with --live after recording live fixtures"
+ "synthetic": false,
+ "note": "recorded from the providers named in the provenance"
 }

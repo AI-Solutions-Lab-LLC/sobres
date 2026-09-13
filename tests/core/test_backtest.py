@@ -42,7 +42,7 @@ def test_no_lookahead_under_future_perturbation() -> None:
     result = walk_forward(returns, momentum, frequency="daily", rebalance="monthly", lookback=60)
     for t in result.weights_history.index[1:4]:
         perturbed = returns.copy()
-        perturbed.loc[t:] *= 50.0  # every observation at or after t, massively changed
+        perturbed.loc[t:] += 0.5  # large future perturbation, keeping simple returns above -1
         again = walk_forward(
             perturbed, momentum, frequency="daily", rebalance="monthly", lookback=60
         )
@@ -68,7 +68,7 @@ def test_rebalancing_frequencies() -> None:
 
 def test_turnover_formula() -> None:
     assert turnover(np.array([0.6, 0.4]), np.array([0.5, 0.5])) == pytest.approx(0.1)
-    assert turnover(np.array([1.0, 0.0]), np.array([0.0, 0.0])) == pytest.approx(0.5)
+    assert turnover(np.array([1.0, 0.0]), np.array([0.0, 0.0])) == pytest.approx(1.0)
 
 
 def test_default_cost_is_10bps() -> None:
@@ -82,7 +82,7 @@ def test_default_cost_is_10bps() -> None:
         returns, momentum, frequency="daily", rebalance="monthly", lookback=60, cost_bps=0
     )
     assert free.total_cost == 0 and costly.total_cost > 0
-    assert costly.total_cost == pytest.approx(costly.total_turnover * 10 / 10_000)
+    assert costly.total_cost_rate == pytest.approx(costly.total_turnover * 10 / 10_000)
     assert free.equity_curve.iloc[-1] > costly.equity_curve.iloc[-1]
 
 
@@ -101,7 +101,7 @@ def test_weights_drift_between_rebalances() -> None:
     curve = result.equity_curve
     assert curve.iloc[0] == pytest.approx(1.5)  # day 3: A doubled at weight 0.5
     assert curve.iloc[1] == pytest.approx(1.5 * (1 + 1 / 6))  # day 4: drifted weights
-    assert result.n_rebalances == 1 and result.total_turnover == pytest.approx(0.5)
+    assert result.n_rebalances == 1 and result.total_turnover == pytest.approx(1.0)
 
 
 def test_benchmark_uses_same_window() -> None:

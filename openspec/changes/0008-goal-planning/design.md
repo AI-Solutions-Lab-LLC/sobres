@@ -1,5 +1,9 @@
 # 0008 — Design
 
+Proposed design carried forward from PR #14; statements about tests or
+behavior describe that branch's intent and claims, not verified acceptance here.
+Reconcile through R0/R1/R2 and this amendment before implementation.
+
 ## One identity, four inverses
 
 Every goal is the future value of a balance plus a level contribution at a
@@ -53,3 +57,13 @@ mortgages, account types: out of scope per the proposal.
 | Trailing 10-year CPI | Latest year-over-year CPI | One year is noise; the target is decades away |
 | Normal periodic returns | Lognormal | Simpler to state; clipped at −99.9% per period; the bootstrap is the realistic mode |
 | `--history` tickers for the bootstrap | A built-in index series | No keyless point-in-time index history exists; the user names what they hold |
+
+## Alignment amendment (0013)
+
+Keep goal/simulation mathematics in `core/`, orchestration in `application/commands/plan.py`, inflation/history through provider ports and saved goals through storage ports. Inject clock and seed; browser and CLI use the same service. No tax, enterprise or speculative storage profile is introduced.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

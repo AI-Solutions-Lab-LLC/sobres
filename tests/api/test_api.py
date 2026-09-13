@@ -256,19 +256,22 @@ def test_cors_is_closed_by_default(api: TestClient) -> None:
     assert "access-control-allow-origin" not in {k.lower() for k in response.headers}
 
 
-def test_settings_endpoints_share_the_config_set_path(api: TestClient, env: dict[str, str]) -> None:
+@pytest.mark.parametrize("secret_value", [SENTINEL_KEY, "Z9!", "Q7$!"])
+def test_settings_endpoints_share_the_config_set_path(
+    api: TestClient, env: dict[str, str], secret_value: str
+) -> None:
     listed = api.get("/api/v1/settings").json()
     keys = {s["key"]: s for s in listed["settings"]}
     assert keys["fred_api_key"]["secret"] and keys["fred_api_key"]["has_live_validator"]
     assert keys["fred_api_key"]["obtain"].startswith("https://")
-    put = api.put("/api/v1/settings", json={"key": "fred_api_key", "value": SENTINEL_KEY})
-    assert put.status_code == 200 and SENTINEL_KEY not in put.text
+    put = api.put("/api/v1/settings", json={"key": "fred_api_key", "value": secret_value})
+    assert put.status_code == 200 and secret_value not in put.text
     again = {s["key"]: s for s in api.get("/api/v1/settings").json()["settings"]}
-    assert again["fred_api_key"]["value"] == "****" + SENTINEL_KEY[-4:]
+    assert again["fred_api_key"]["value"] == "****"
     assert again["fred_api_key"]["source"] == "file"
     from pathlib import Path
 
-    assert SENTINEL_KEY in Path(env["SOBRES_CONFIG_FILE"]).read_text(encoding="utf-8")
+    assert secret_value in Path(env["SOBRES_CONFIG_FILE"]).read_text(encoding="utf-8")
     bad = api.put("/api/v1/settings", json={"key": "log_level", "value": "LOUD"})
     assert bad.status_code == 400
     assert api.post("/api/v1/settings/log_level/verify", json={}).status_code == 400

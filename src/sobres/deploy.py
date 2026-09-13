@@ -22,7 +22,7 @@ from typing import Any
 
 from sobres.__about__ import __version__
 from sobres.api.auth import is_loopback
-from sobres.config import Config, mask_secret
+from sobres.config import Config, display_value
 from sobres.core.errors import ConfigurationError
 from sobres.data.storage.base import url_scheme
 from sobres.doctor import Check, CheckReport, CheckResult, declare_check
@@ -273,7 +273,10 @@ def env_template(config: Config, settings: Iterable[Setting] | None = None) -> s
         if setting.secret:
             configured = config.get(setting.key)
             if configured:
-                out.append(f"# currently configured ({mask_secret(configured)}); value not written")
+                out.append(
+                    f"# currently configured ({display_value(setting, configured)}); "
+                    "value not written"
+                )
             out.append(f"{setting.env}=")
         elif setting.standard:
             out.append(

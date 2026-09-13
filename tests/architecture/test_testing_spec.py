@@ -23,8 +23,10 @@ named here so the coverage test can see where responsibility lies until then.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -39,10 +41,20 @@ def test_ci_runs_offline_with_a_coverage_floor() -> None:
 
 
 def test_every_provider_has_a_recorded_fixture_with_provenance() -> None:
+    """Scenario: Recording provenance is verifiable."""
     for provider in ("yfinance", "fred", "ecb", "ken_french"):
         meta = json.loads((TESTS / "fixtures" / provider / "meta.json").read_text(encoding="utf-8"))
-        assert "recorded_at" in meta and meta["provider"] == provider
-        assert meta.get("recorded_at") or meta.get("synthesized_at")
+        assert meta["provider"] == provider
+        assert datetime.fromisoformat(meta["recorded_at"]).tzinfo is not None
+        assert meta["provider_version"] and meta["client"] and meta["client_version"]
+        assert meta["source"].startswith("https://")
+        assert "synthesized_at" not in meta
+        payloads = {
+            p.name: p for p in (TESTS / "fixtures" / provider).iterdir() if p.name != "meta.json"
+        }
+        assert set(meta["sha256"]) == set(payloads)
+        for name, path in payloads.items():
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == meta["sha256"][name], name
 
 
 def test_conformance_and_contract_suites_exist() -> None:

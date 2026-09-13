@@ -21,9 +21,11 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize
 
 from sobres.core.errors import InsufficientDataError, OptimizationError, UsageError
+from sobres.core.moments import condition_covariance
+from sobres.core.validation import require_finite
+from sobres.solvers.base import Gradient, Solver, default_solver
 
 Objective = Literal[
     "min_variance", "max_sharpe", "target_return", "target_risk", "risk_parity", "equal_weight"
@@ -50,6 +52,11 @@ class Constraints:
     min_weight: float | None = None
 
     def bounds(self, n: int) -> list[tuple[float, float]]:
+        if n < 1 or n > 100:
+            raise UsageError("optimization supports 1 to 100 assets")
+        for value in (self.max_weight, self.min_weight):
+            if value is not None and not np.isfinite(value):
+                raise UsageError("weight bounds must be finite")
         lower = -1.0 if self.allow_short else 0.0
         if self.min_weight is not None:
             lower = max(lower, self.min_weight)
@@ -59,6 +66,8 @@ class Constraints:
                 f"max_weight {upper} times {n} assets is below 1.0: the constraint is infeasible",
                 hint=f"raise --max-weight to at least {1.0 / n:.4f} or add assets",
             )
+        if lower * n > 1.0 + WEIGHT_TOLERANCE:
+            raise UsageError("minimum weights sum to more than one: infeasible bounds")
         if lower > upper:
             raise UsageError(f"min_weight {lower} exceeds max_weight {upper}")
         return [(lower, upper)] * n
@@ -118,18 +127,13 @@ def _solve(
     x0: np.ndarray,
     bounds: list[tuple[float, float]],
     constraints: list[dict[str, object]],
+    gradient: Gradient | None = None,
+    solver: Solver | None = None,
 ) -> tuple[np.ndarray, bool, str]:
-    result = minimize(
-        fun,
-        x0,
-        method="SLSQP",
-        bounds=bounds,
-        constraints=constraints,
-        options={"maxiter": 1000, "ftol": 1e-12},
-    )
-    w = np.asarray(result.x, dtype="float64")
-    feasible = bool(result.success) and abs(w.sum() - 1.0) < 1e-6
-    return w, feasible, str(result.message)
+    result = (solver or default_solver()).solve(fun, x0, bounds, constraints, gradient)
+    w = result.weights
+    feasible = result.success and np.isfinite(w).all() and abs(w.sum() - 1.0) < WEIGHT_TOLERANCE
+    return w, bool(feasible), result.message
 
 
 def _clean(w: np.ndarray, bounds: list[tuple[float, float]]) -> np.ndarray:
@@ -167,6 +171,8 @@ def optimize(
     seed: int = 0,
     estimators: Estimators | None = None,
     explicit_max_weight: bool = False,
+    solver: Solver | None = None,
+    initial: np.ndarray | None = None,
 ) -> Portfolio:
     """Solve one objective on annualized ``mu`` and ``sigma``; return a valid portfolio.
 
@@ -177,14 +183,29 @@ def optimize(
     """
     if objective not in OBJECTIVES:
         raise UsageError(f"objective must be one of {', '.join(OBJECTIVES)}, got {objective!r}")
+    require_finite(mu, "expected returns")
+    if not np.isfinite(risk_free) or (target is not None and not np.isfinite(target)):
+        raise UsageError("risk-free rate and target must be finite")
+    if seed < 0:
+        raise UsageError("seed must be a nonnegative integer")
+    if not mu.index.is_unique or not sigma.index.is_unique or not sigma.columns.is_unique:
+        raise UsageError("asset identifiers must be unique")
     cons = constraints or Constraints()
     assets = list(mu.index)
-    sigma = sigma.loc[assets, assets]
+    if set(sigma.index) != set(assets) or set(sigma.columns) != set(assets):
+        raise UsageError("covariance labels must match expected-return assets")
+    attrs = dict(sigma.attrs)
+    sigma, repair = condition_covariance(sigma.loc[assets, assets])
+    sigma.attrs = attrs
+    if repair is not None:
+        sigma.attrs["psd_repair"] = repair.__dict__
     m = mu.to_numpy(dtype="float64")
     s = sigma.to_numpy(dtype="float64")
     n = len(assets)
     bounds = cons.bounds(n)
-    sum_to_one = [{"type": "eq", "fun": lambda w: float(np.sum(w) - 1.0)}]
+    sum_to_one = [
+        {"type": "eq", "fun": lambda w: float(np.sum(w) - 1.0), "jac": lambda w: np.ones(n)}
+    ]
     equal = np.full(n, 1.0 / n)
     est = estimators or Estimators(
         expected_return=str(mu.attrs.get("estimator", "given")),
@@ -193,18 +214,31 @@ def optimize(
         psd_repair=sigma.attrs.get("psd_repair"),
     )
     status = "optimal"
+    start = equal if initial is None else initial
+
+    def solve(
+        fun: Callable[[np.ndarray], float],
+        x0: np.ndarray,
+        box: list[tuple[float, float]],
+        conditions: list[dict[str, object]],
+        gradient: Gradient | None = None,
+    ) -> tuple[np.ndarray, bool, str]:
+        return _solve(fun, x0, box, conditions, gradient, solver)
 
     def variance(w: np.ndarray) -> float:
         return float(w @ s @ w)
 
+    def variance_gradient(w: np.ndarray) -> np.ndarray:
+        return np.asarray(2.0 * s @ w, dtype="float64")
+
     if objective == "equal_weight":
         w = equal
     elif objective == "min_variance":
-        w, ok, msg = _solve(variance, equal, bounds, sum_to_one)
+        w, ok, msg = solve(variance, start, bounds, sum_to_one, variance_gradient)
         if not ok:
             raise OptimizationError(f"min_variance did not converge: {msg}")
     elif objective == "max_sharpe":
-        w = _max_sharpe(m, s, risk_free, bounds, sum_to_one, seed)
+        w = _max_sharpe(m, s, risk_free, bounds, sum_to_one, seed, solve)
     elif objective == "target_return":
         if target is None:
             raise UsageError("target_return needs --target")
@@ -214,17 +248,25 @@ def optimize(
                 f"target return {target:.4%} exceeds the attainable maximum {attainable:.4%}",
                 hint=f"choose --target at or below {attainable:.4f}",
             )
-        cons_list = [*sum_to_one, {"type": "eq", "fun": lambda w: float(w @ m - target)}]
-        w, ok, msg = _solve(variance, equal, bounds, cons_list)
+        minimum = -max_attainable_return(-m, bounds)
+        if target < minimum - 1e-9:
+            raise InsufficientDataError(
+                f"target return {target:.4%} is below attainable minimum {minimum:.4%}"
+            )
+        cons_list = [
+            *sum_to_one,
+            {"type": "eq", "fun": lambda w: float(w @ m - target), "jac": lambda w: m},
+        ]
+        w, ok, msg = solve(variance, start, bounds, cons_list, variance_gradient)
         if not ok:
             raise OptimizationError(f"target_return did not converge: {msg}")
     elif objective == "target_risk":
         if target is None:
             raise UsageError("target_risk needs --target")
-        w_min, ok, msg = _solve(variance, equal, bounds, sum_to_one)
+        w_min, ok, msg = solve(variance, start, bounds, sum_to_one, variance_gradient)
         if not ok:
             raise OptimizationError(f"target_risk did not converge: {msg}")
-        min_vol = float(np.sqrt(variance(w_min)))
+        min_vol = float(np.sqrt(max(variance(w_min), 0.0)))
         if target < min_vol - 1e-9:
             raise InsufficientDataError(
                 f"target risk {target:.4%} is below the minimum attainable "
@@ -233,15 +275,28 @@ def optimize(
             )
         cons_list = [
             *sum_to_one,
-            {"type": "ineq", "fun": lambda w: float(target**2 - w @ s @ w)},
+            {
+                "type": "ineq",
+                "fun": lambda w: float(target**2 - w @ s @ w),
+                "jac": lambda w: -2.0 * s @ w,
+            },
         ]
-        w, ok, msg = _solve(lambda w: -float(w @ m), w_min, bounds, cons_list)
+        w, ok, msg = solve(lambda w: -float(w @ m), w_min, bounds, cons_list, lambda w: -m)
         if not ok:
             raise OptimizationError(f"target_risk did not converge: {msg}")
     else:  # risk_parity
-        w = _risk_parity(s, bounds, sum_to_one, equal)
+        w = _risk_parity(s, bounds, sum_to_one, start, solve)
     w = _clean(w, bounds)
+    if abs(w.sum() - 1.0) > WEIGHT_TOLERANCE or any(
+        wi < lo - WEIGHT_TOLERANCE or wi > hi + WEIGHT_TOLERANCE
+        for wi, (lo, hi) in zip(w, bounds, strict=True)
+    ):
+        raise OptimizationError("solver returned weights outside the portfolio constraints")
     ret, vol, sharpe = _stats(w, m, s, risk_free)
+    if objective == "target_return" and target is not None and abs(ret - target) > WEIGHT_TOLERANCE:
+        raise OptimizationError("solver did not satisfy target return")
+    if objective == "target_risk" and target is not None and vol > target + WEIGHT_TOLERANCE:
+        raise OptimizationError("solver exceeded target risk")
     contributions = (w * (s @ w)) / (w @ s @ w) if vol > 0 else np.zeros(n)
     warnings: list[str] = []
     if (
@@ -275,6 +330,7 @@ def _max_sharpe(
     bounds: list[tuple[float, float]],
     sum_to_one: list[dict[str, object]],
     seed: int,
+    solve: Callable[..., tuple[np.ndarray, bool, str]],
 ) -> np.ndarray:
     n = len(m)
 
@@ -284,8 +340,17 @@ def _max_sharpe(
             return 1e6
         return -float((w @ m - rf) / np.sqrt(var))
 
+    def gradient(w: np.ndarray) -> np.ndarray:
+        variance = float(w @ s @ w)
+        if variance <= 0:
+            return np.zeros(n)
+        vol = np.sqrt(variance)
+        return np.asarray(-m / vol + (w @ m - rf) * (s @ w) / vol**3, dtype="float64")
+
     starts = [np.full(n, 1.0 / n)]
-    w_min, ok, _ = _solve(lambda w: float(w @ s @ w), starts[0], bounds, sum_to_one)
+    w_min, ok, _ = solve(
+        lambda w: float(w @ s @ w), starts[0], bounds, sum_to_one, lambda w: 2.0 * s @ w
+    )
     if ok:
         starts.append(w_min)
     rng = np.random.default_rng(seed)
@@ -301,7 +366,7 @@ def _max_sharpe(
     best_value = np.inf
     messages: list[str] = []
     for x0 in starts:
-        w, ok, msg = _solve(neg_sharpe, x0, bounds, sum_to_one)
+        w, ok, msg = solve(neg_sharpe, x0, bounds, sum_to_one, gradient)
         if not ok:
             messages.append(msg)
             continue
@@ -321,6 +386,7 @@ def _risk_parity(
     bounds: list[tuple[float, float]],
     sum_to_one: list[dict[str, object]],
     x0: np.ndarray,
+    solve: Callable[..., tuple[np.ndarray, bool, str]],
 ) -> np.ndarray:
     n = s.shape[0]
 
@@ -331,7 +397,18 @@ def _risk_parity(
         rc = w * (s @ w) / total
         return float(np.sum((rc - 1.0 / n) ** 2)) * 1e4
 
-    w, ok, msg = _solve(objective, x0, bounds, sum_to_one)
+    def gradient(w: np.ndarray) -> np.ndarray:
+        product = s @ w
+        total = float(w @ product)
+        if total <= 0:
+            return np.zeros(n)
+        numerator = w * product
+        jac = (np.diag(product) + w[:, None] * s) / total - np.outer(
+            numerator, 2.0 * product
+        ) / total**2
+        return np.asarray(2e4 * jac.T @ (numerator / total - 1.0 / n), dtype="float64")
+
+    w, ok, msg = solve(objective, x0, bounds, sum_to_one, gradient)
     if not ok:
         raise OptimizationError(f"risk_parity did not converge: {msg}")
     return w
@@ -345,6 +422,8 @@ def efficient_frontier(
     *,
     risk_free: float = 0.0,
     seed: int = 0,
+    progress: Callable[[int, int], None] | None = None,
+    solver: Solver | None = None,
 ) -> Frontier:
     """``n_points`` portfolios from the min-variance return to the max attainable.
 
@@ -352,22 +431,54 @@ def efficient_frontier(
     expected return, volatility is non-decreasing on the efficient portion —
     the invariant that catches a broken solver.
     """
-    if n_points < 2:
-        raise UsageError("the frontier needs at least two points")
+    if n_points < 2 or n_points > 500:
+        raise UsageError("the frontier needs 2 to 500 points")
     cons = constraints or Constraints()
     min_var = optimize(
-        mu, sigma, "min_variance", cons, risk_free=risk_free, explicit_max_weight=True
+        mu,
+        sigma,
+        "min_variance",
+        cons,
+        risk_free=risk_free,
+        explicit_max_weight=True,
+        solver=solver,
     )
     max_sharpe = optimize(
-        mu, sigma, "max_sharpe", cons, risk_free=risk_free, seed=seed, explicit_max_weight=True
+        mu,
+        sigma,
+        "max_sharpe",
+        cons,
+        risk_free=risk_free,
+        seed=seed,
+        explicit_max_weight=True,
+        solver=solver,
     )
     bounds = cons.bounds(len(mu))
     top = max_attainable_return(mu.to_numpy(dtype="float64"), bounds)
-    targets = np.linspace(min_var.expected_return, top, n_points)
+    named = [min_var.expected_return, max_sharpe.expected_return]
+    if n_points >= 3 or abs(named[0] - named[1]) < 1e-10:
+        named.append(top)
+    targets: list[float] = []
+    for value in sorted(named):
+        if not targets or abs(value - targets[-1]) > 1e-10:
+            targets.append(value)
+    while len(targets) < n_points:
+        if len(targets) == 1:
+            targets.append(targets[0])
+        else:
+            widths = np.diff(targets)
+            i = int(np.argmax(widths))
+            targets.insert(i + 1, (targets[i] + targets[i + 1]) / 2.0)
     points: list[FrontierPoint] = []
-    for i, target in enumerate(targets):
-        if i == 0:
+    previous: np.ndarray | None = None
+    flagged_min = flagged_sharpe = False
+    for target in targets:
+        is_min = abs(target - min_var.expected_return) < 1e-10
+        is_sharpe = abs(target - max_sharpe.expected_return) < 1e-10
+        if is_min:
             p = min_var
+        elif is_sharpe:
+            p = max_sharpe
         else:
             p = optimize(
                 mu,
@@ -377,24 +488,22 @@ def efficient_frontier(
                 risk_free=risk_free,
                 target=float(target),
                 explicit_max_weight=True,
+                solver=solver,
+                initial=previous,
             )
+        previous = np.array([p.weights[a] for a in mu.index])
         points.append(
             FrontierPoint(
-                expected_return=p.expected_return,
-                volatility=p.volatility,
-                sharpe=p.sharpe,
-                weights=p.weights,
-                is_min_variance=(i == 0),
+                p.expected_return,
+                p.volatility,
+                p.sharpe,
+                p.weights,
+                is_min and not flagged_min,
+                is_sharpe and not flagged_sharpe,
             )
         )
-    points.append(
-        FrontierPoint(
-            expected_return=max_sharpe.expected_return,
-            volatility=max_sharpe.volatility,
-            sharpe=max_sharpe.sharpe,
-            weights=max_sharpe.weights,
-            is_max_sharpe=True,
-        )
-    )
-    points.sort(key=lambda p: (p.expected_return, p.volatility))
+        flagged_min |= is_min
+        flagged_sharpe |= is_sharpe
+        if progress is not None:
+            progress(len(points), n_points)
     return Frontier(points=tuple(points), estimators=min_var.estimators, risk_free=risk_free)
