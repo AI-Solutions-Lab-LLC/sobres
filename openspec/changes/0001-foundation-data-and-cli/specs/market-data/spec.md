@@ -32,7 +32,7 @@ All price data SHALL be returned in one documented shape, regardless of source.
 - **AND** the dtype of every column SHALL be `float64`
 
 #### Scenario: A requested ticker does not exist
-- **WHEN** a ticker returns no data from the provider
+- **WHEN** the provider establishes that a requested symbol does not exist
 - **THEN** the system SHALL raise `UnknownTickerError` naming the symbol
 - **AND** SHALL NOT silently return a frame with a missing column
 
@@ -66,7 +66,8 @@ The system SHALL provide `YFinanceProvider` requiring no API key.
 - **AND** the returned frame's `attrs["field"]` SHALL record which field was used
 
 #### Scenario: Provider outage
-- **WHEN** the upstream call raises or returns an empty payload
+- **WHEN** the upstream call fails or returns an invalid payload, excluding
+  a valid empty calendar interval for a known symbol
 - **THEN** the system SHALL raise `ProviderError` carrying the provider name and
   the upstream message, and SHALL NOT emit a raw third-party traceback to stderr
 
@@ -75,13 +76,13 @@ The system SHALL provide `YFinanceProvider` requiring no API key.
 The system SHALL provide `FredProvider` for Federal Reserve economic series.
 
 #### Scenario: Key present
-- **WHEN** `FRED_API_KEY` is set and `get_series(["DGS10"])` is called
+- **WHEN** `SOBRES_FRED_API_KEY` (or its lower-precedence `FRED_API_KEY` alias) is set and `get_series(["DGS10"])` is called
 - **THEN** the provider SHALL return a frame with a `DGS10` column of `float64`
 
 #### Scenario: Key absent
-- **WHEN** `FRED_API_KEY` is unset and a FRED-backed command is invoked
+- **WHEN** both `SOBRES_FRED_API_KEY` and its `FRED_API_KEY` alias are unset and a FRED-backed command is invoked
 - **THEN** the system SHALL exit with code 3 and the message
-  `FRED_API_KEY is not set. Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html then run: sobres config set fred_api_key <KEY>`
+  `SOBRES_FRED_API_KEY is not set. Get a free key at https://fred.stlouisfed.org/docs/api/api_key.html then run: sobres config set fred_api_key <KEY>`
 - **AND** SHALL NOT emit a traceback
 
 #### Scenario: Risk-free rate helper
@@ -115,12 +116,14 @@ no API key.
 ### Requirement: SQLite-backed cache
 
 The system SHALL cache every provider response in a single SQLite database, so
-that one file is the tool's entire local state — the property that makes the
+that one database is the authoritative application/cache store — the property that makes the
 Docker deployment in 0005 a single mounted volume.
 
 #### Scenario: One database file
-- **WHEN** the system stores anything locally
-- **THEN** it SHALL be a single SQLite file, not a directory of loose artifacts
+- **WHEN** the default backend stores cached observations or application records
+- **THEN** their authoritative store SHALL be one SQLite database
+- **AND** secret configuration, logs, migration backups, and SQLite WAL/SHM sidecars
+  SHALL be documented operational exceptions, not additional application stores
 - **AND** the same file SHALL later hold the application state added in 0003
 
 #### Scenario: Database location
@@ -165,6 +168,8 @@ Docker deployment in 0005 a single mounted volume.
 
 ### Requirement: Data quality is checked on ingest
 
+The data layer SHALL preserve observation identity, validate provider data, and expose missing data and provenance explicitly.
+
 Every observation passes validation before it is cached, so a bad row is caught
 at the boundary rather than discovered as an impossible Sharpe ratio.
 
@@ -191,6 +196,8 @@ at the boundary rather than discovered as an impossible Sharpe ratio.
 
 ### Requirement: Corporate actions and history
 
+The data layer SHALL preserve observation identity, validate provider data, and expose missing data and provenance explicitly.
+
 #### Scenario: Adjusted close is total return
 - **WHEN** `field="adj_close"` is used
 - **THEN** the series SHALL reflect splits and cash dividends, so differencing
@@ -213,6 +220,8 @@ at the boundary rather than discovered as an impossible Sharpe ratio.
   provides point-in-time constituents
 
 ### Requirement: Missing data has a policy, never a default
+
+The data layer SHALL preserve observation identity, validate provider data, and expose missing data and provenance explicitly.
 
 #### Scenario: Gaps are classified
 - **WHEN** a date is missing from a series

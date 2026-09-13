@@ -2,7 +2,7 @@
 change: 0001-foundation-data-and-cli
 milestone: v1 (part 1 of 2)
 depends_on: []
-status: implemented
+status: in_progress
 ---
 
 # 0001 — Foundation: data layer and CLI shell
@@ -113,3 +113,10 @@ the codebase is small enough that the rule is free to follow.
 | "A test SHALL assert" in later specs never becomes a test | The `testing` spec defines the suites and a scenario-coverage test that fails on an unreferenced scenario once a change is marked implemented |
 | Bad provider rows produce plausible-looking wrong results | Validation on ingest; implausible moves flagged in `attrs` and surfaced beside results; missing-data handling requires an explicit policy |
 | Currency support slows or complicates the single-currency path | No rate is fetched when every input shares a currency, and results are asserted identical to a build without conversion |
+
+## Review readiness (PR #7)
+
+Change 0012 defines the ten review corrections. Foundation remains in progress until
+recorded provider fixtures replace the synthetic corpus and the D4 reuse audit is
+completed. These are not waived by passing the remediation tests. FRED FX adapter
+selection is explicitly deferred to 0010; ECB remains the foundation FX provider.

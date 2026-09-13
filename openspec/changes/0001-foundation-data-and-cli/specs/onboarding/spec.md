@@ -37,6 +37,8 @@ the way every command is one declaration in the registry.
 
 ### Requirement: `sobres init`
 
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
+
 #### Scenario: Guided, in the terminal
 - **WHEN** `sobres init` runs in a TTY
 - **THEN** it SHALL walk the settings registry in order, showing each setting's
@@ -86,6 +88,8 @@ the way every command is one declaration in the registry.
   the hint is a hint, not an error
 
 ### Requirement: `sobres doctor`
+
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
 
 #### Scenario: Checks are declared, like commands and settings
 - **WHEN** a diagnostic exists
@@ -146,6 +150,8 @@ the way every command is one declaration in the registry.
 
 ### Requirement: `sobres upgrade`
 
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
+
 #### Scenario: Installer is detected, not assumed
 - **WHEN** `sobres upgrade` runs
 - **THEN** it SHALL detect whether sobres was installed by pip, pipx, uv, or
@@ -163,6 +169,8 @@ the way every command is one declaration in the registry.
   after the automatic backup that spec requires
 
 ### Requirement: Onboarding is tested end to end
+
+The installed CLI SHALL implement the specified onboarding behavior with actionable output and reliable process status.
 
 #### Scenario: The three-command path is a test
 - **WHEN** CI's build job runs

@@ -238,3 +238,12 @@ real unknowns.
 - [x] `mypy --strict` clean
 - [x] Every scenario in both spec deltas has a test that references it
 - [x] A second identical `sobres data prices` call is served from cache in < 1s
+
+## Review follow-up
+
+- [ ] Complete change 0012 and rerun its regression and artifact checks.
+- [ ] Replace synthetic provider payloads with deliberately recorded fixtures.
+- [ ] Complete the deferred D4 reuse audit before declaring foundation complete.
+
+The earlier checked implementation tasks record delivered code, not proof that
+all acceptance scenarios pass. Proposal status remains `in_progress`.
