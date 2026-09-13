@@ -15,7 +15,7 @@ from typing import Any
 
 import pandas as pd
 
-from sobres.core.errors import ProviderError, UnknownTickerError
+from sobres.core.errors import InsufficientDataError, ProviderError, UnknownTickerError
 from sobres.data.yfinance_provider import RawHistory
 
 
@@ -66,6 +66,8 @@ class FixtureFredSource:
         self.calls.append((series_id, start, end))
         path = self.root / f"{series_id.upper()}.json"
         if not path.exists():
+            path = self.root.parent / "synthetic" / "fred" / f"{series_id.upper()}.json"
+        if not path.exists():
             raise UnknownTickerError(series_id, provider="fred")
         payload = json.loads(path.read_text(encoding="utf-8"))
         rows = payload.get("observations")
@@ -111,11 +113,34 @@ class FixtureKenFrenchSource:
         return path.read_text(encoding="utf-8")
 
 
+class FixtureDocumentSource:
+    """``<dir>/<provider>/<COUNTRY>.<ext>``: one raw document per country (WB, OECD, BIS)."""
+
+    def __init__(self, root: Path, provider: str, ext: str) -> None:
+        self.root = root / provider
+        self.provider = provider
+        self.ext = ext
+        self.calls: list[str] = []
+
+    def payload(self, country: str) -> str:
+        self.calls.append(country)
+        path = self.root / f"{country.upper()}.{self.ext}"
+        if not path.exists():
+            raise InsufficientDataError(
+                f"{self.provider} has no series for {country}",
+                hint="check the ISO 3166-1 alpha-3 code",
+            )
+        return path.read_text(encoding="utf-8")
+
+
 def fixture_source(provider: str, root: Path) -> Any:
-    sources = {
+    sources: dict[str, Any] = {
         "yfinance": FixtureYahooSource,
         "fred": FixtureFredSource,
         "ecb": FixtureEcbSource,
         "ken_french": FixtureKenFrenchSource,
+        "worldbank": lambda r: FixtureDocumentSource(r, "worldbank", "json"),
+        "oecd": lambda r: FixtureDocumentSource(r, "oecd", "csv"),
+        "bis": lambda r: FixtureDocumentSource(r, "bis", "csv"),
     }
     return sources[provider](root)

@@ -82,3 +82,14 @@ with this earlier branch's synthetic prices or factor corpus.
 The fixture source prefers a recorded `yfinance/fundamentals.json` when present;
 otherwise fixture mode reads this explicitly synthetic corpus. Live sources never
 read it. The recorded-provider manifests and their hash checks remain unchanged.
+
+## FX and PPP candidate fixtures
+
+`synthetic/fred/IR3TIB01GBM156N.json` and `GBRCPIALLMINMEI.json` contain
+constructed GBP rate/CPI data for parser and workflow tests. Fixture mode prefers
+recorded files in `fred/` and otherwise uses this separated synthetic corpus;
+live providers never read it. Main's recorded FRED manifest and payloads are intact.
+`worldbank/`, `oecd/`, and `bis/` are explicitly synthetic payload-shape fixtures
+from the 0010 candidate; their metadata does not claim live captures. They require
+separate vendor validation. `record_fixtures.py --only documents` is the deliberate
+live-recording path, not run during this synchronization.
