@@ -10,7 +10,9 @@ primary-source research/predictor catalog. README and project/readiness context
 now distinguish planned VAR/BVAR/elastic-net/boosted-tree behavior from the old
 candidate. The 0013 ownership/prerequisite rules remain intact. Issue #31 remains
 the implementation tracker, and the amended contract is propagated into stacked
-PR #16. No duplicate implementation issue, release, runtime edit or merge to main.
+PR #16. The docs-only planning PR against main is linked from #31 so this contract can
+be accepted without merging obsolete runtime code. No duplicate implementation
+issue, release, runtime edit or merge to main.
 
 Research includes influential stock VAR/shrinkage/asset-pricing papers and recent
 2025–2026 multivariate/foundation-model benchmarks. The notes separate evidence,
