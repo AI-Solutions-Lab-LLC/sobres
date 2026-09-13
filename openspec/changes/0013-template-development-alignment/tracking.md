@@ -31,6 +31,6 @@ Planning/integration PR: [#33](https://github.com/AI-Solutions-Lab-LLC/sobres/pu
 Merge commit: pending maintainer review and merge.
 
 [Issue #34](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/34) tracks the
-CodeQL findings reported against the included foundation; resolve the high alert
-before considering the integration ready to merge. It is a remediation tracker,
+CodeQL findings reported against the included foundation and the subsequent
+authorized fixes; check its recorded head SHA and GitHub results for verification. It is a remediation tracker,
 separate from the ten implementation-planning issues above.

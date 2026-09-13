@@ -10,6 +10,11 @@
 - [x] **F8. Complete currency metadata** → `tests/data/test_currency.py::test_conversion_rejects_incomplete_currency`
 - [x] **F9. Init health status** → `tests/cli/test_init.py::test_init_propagates_failed_doctor`
 - [x] **F10. Boolean options** → `tests/cli/test_init.py::test_no_verify_option`
+- [x] **F11. Fixed secret displays** → `tests/test_config.py::test_secrets_masked`,
+      `tests/cli/test_config_commands.py::test_show_masks_api_keys`, and
+      `tests/cli/test_init.py::test_guided_wizard_walks_every_setting_and_masks_secrets`
+- [x] **F12. Explicit conformance mutations and rollback assertions** →
+      `tests/data/storage_conformance.py::StorageConformance`
 - [x] **V1. Verification** — strict OpenSpec validation; offline suite/coverage;
       Black/isort, Ruff, mypy; clean wheel onboarding; live keyless smoke.
 

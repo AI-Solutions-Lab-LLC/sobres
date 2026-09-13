@@ -64,8 +64,8 @@ lint and Linux/macOS/Windows/Python-version matrix must be checked on the PR.
 Live providers were not called during this task. Selecting non-network tests
 alone does not prove socket-level network isolation; 0013 proposes that stronger gate.
 The fixture-backed smoke proves installation/parser wiring, not live vendor availability.
-No application Python files were edited during planning, so Black/isort were not
-required for this turn's file changes. No cloud or release operation was performed.
+No application Python files were edited during the original planning stage; the
+subsequent authorized CI remediation is recorded below. No cloud or release operation was performed.
 
 GitHub review: [PR #33](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/33).
 Its CI runs are additional platform evidence and were pending at publication.
@@ -80,7 +80,31 @@ CodeQL findings check failed: one high potential secret-logging path at
 warning in `tests/data/storage_conformance.py`, plus 36 informational notes.
 
 Tracked separately in [issue #34](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/34).
-The high finding is not claimed to be a reproduced exposure or a false positive.
-Resolve it before considering the foundation integration ready to merge. These
-findings belong to the included foundation code, not the Markdown alignment work;
-no suppression or code fix was added during this planning task.
+These findings belong to the included foundation code. The initial planning
+stage added no suppression or code fix.
+
+## Authorized PR #33 CI remediation
+
+The user subsequently requested fixing and monitoring PR #33 until green. SARIF
+analysis 1769259548 traced the high finding from `display_value` through the setup
+wizard's current-value display to `Context.note`. The old suffix mask exposes the
+entire credential when it has four or fewer characters. Set secrets now display
+as the constant `****`; empty secrets still display `(unset)`. The 0001 and 0012
+contracts were updated together. Regression tests cover short/long secrets,
+config set output, config show JSON/CSV/table, and idempotent setup.
+
+Storage conformance tests now execute deletions before asserting return values
+and verify absence after deletion. The aborted transaction is a separate operation
+inside `pytest.raises`, retaining the rollback assertions for both storage surfaces.
+No security query or check was disabled or suppressed.
+
+Validation of the remediation tree:
+- 423 non-network tests passed; 4 live tests deselected; 96.50% coverage.
+- Black (100 columns) and isort (Black profile, 100 columns) ran on all six edited
+  Python files; Ruff lint and formatting passed.
+- mypy passed on 44 source files; all 14 OpenSpec changes passed strict validation.
+- GitHub must validate the pushed remediation commit; its live Checks tab is the
+  authoritative status. Issue #34 records the final checked SHA and check results.
+
+The new 0013 environment/package migration remains a plan. These targeted fixes
+address the existing foundation's integration checks and do not complete 0013 tasks.

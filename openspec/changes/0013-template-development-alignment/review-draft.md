@@ -28,5 +28,6 @@ Preserve source recordings and known review findings; old task checkboxes are no
 acceptance evidence on a new base. Reverting planning restores prior documents;
 reverting included foundation code requires its own compatibility/data review.
 
-CodeQL reports findings in the included foundation; issue #34 tracks their triage.
+Issue #34 tracks the foundation CodeQL findings and the authorized remediation:
+fixed secret displays plus explicit storage-test mutations and rollback checks.
 Do not infer merge readiness from the passing local test suite alone.
