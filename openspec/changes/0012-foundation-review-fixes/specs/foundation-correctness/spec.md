@@ -12,6 +12,19 @@ every diagnostic sink, using the setting's secret declaration.
 - **THEN** the full secret SHALL be absent from stderr and the log file
 - **AND** nonsensitive setting values SHALL remain useful in diagnostics
 
+### Requirement: Secret display confidentiality
+
+Config output and the setup wizard SHALL display set secrets as the fixed marker
+`****`, with no credential characters or length exposed. Empty secrets SHALL be
+shown as `(unset)`. This replaces the earlier last-four-character display contract.
+
+#### Scenario: Secret displays reveal no credential characters
+- **WHEN** config set/show or an idempotent setup wizard displays a secret
+- **THEN** stdout and stderr SHALL contain no characters derived from that secret
+- **AND** secrets of four or fewer characters SHALL receive the same fixed marker
+- **AND** JSON, CSV, and table output SHALL follow the same rule
+- **AND** nonsecret values and persisted credentials SHALL remain unchanged
+
 ### Requirement: Opaque cached factor identifiers
 
 Shared caches SHALL preserve dataset identifiers exactly.

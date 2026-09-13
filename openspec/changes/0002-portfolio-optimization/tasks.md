@@ -1,6 +1,25 @@
 # 0002 — Tasks
 
-Depends on 0001. Estimates are focused hours.
+The checked domain tasks record PR #8's reviewed implementation; they do not
+complete the new 0013 migration. Alignment tasks remain unchecked. Future work
+uses at most two-hour units and the named verification splits from the merged plan.
+
+Depends on 0001 and, for the new layout, implemented 0013.
+
+## Alignment prerequisite — before the original waves
+
+- [ ] **R0 (1h)** Verify the issue and merged planning ancestry, then reconcile the
+  candidate branch with merged 0013 and its predecessor. Preserve the foundation's
+  real recordings and fixes. Proof: source diff, merge-base and task/scenario ledger.
+- [ ] **R1 (2h)** Apply this proposal's package/ownership amendment using 0013's
+  shared services and ports; keep public commands and financial math compatible.
+  Proof: `tests/architecture/test_layering.py` plus the existing capability's
+  CLI/contract tests on the new base; no new use cases in legacy facades.
+- [ ] **R2 (2h)** Re-run affected behavior through the installed package and any
+  exposed API/UI, all formats, dummy-secret checks and relevant real integration.
+  Proof: named tests below, full `make check`, `make build`, `make audit` and a
+  scenario-to-assertion report. Source-only UI checks or synthetic vendor fixtures
+  cannot establish browser behavior or live vendor truth.
 
 ## Wave A — return and risk primitives (parallel-safe)
 
@@ -131,3 +150,25 @@ Depends on 0001. Estimates are focused hours.
 - [x] G7. Return exact frontier counts, add progress and typed metric tables.
 - [x] G8. Reconcile spec/contracts/examples and retain honest deferred/release status.
 - [x] G9. Validate tests, lint, typing, packaging, strict OpenSpec and bounded live runs.
+
+## Verification on the future aligned layout
+
+- [ ] **A3v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `tests/core/test_risk.py`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
+- [ ] **B2v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_ledoit_wolf_is_default`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
+- [ ] **C3v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_max_sharpe_matches_closed_form_tangency`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
+- [ ] **C7v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_volatility_non_decreasing_in_return`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
+- [ ] **D1v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `tests/core/test_backtest.py::test_no_lookahead_under_future_perturbation`. Split the review unit
+      if implementation and proof cannot be reviewed together.

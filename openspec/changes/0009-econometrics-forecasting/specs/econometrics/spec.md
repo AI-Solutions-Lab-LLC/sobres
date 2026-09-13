@@ -4,6 +4,8 @@
 
 ### Requirement: Stationarity diagnostics
 
+Econometric diagnostics SHALL report complementary stationarity tests and lag correlations, including disagreement.
+
 #### Scenario: Tests reported
 - **WHEN** `sobres econ diagnose <series>` runs
 - **THEN** ADF and KPSS test statistics, p-values, and conclusions SHALL be reported
@@ -16,6 +18,8 @@
   significance bounds
 
 ### Requirement: ARIMA forecasting
+
+ARIMA forecasts SHALL state stationarity treatment, model-selection evidence, intervals and residual diagnostics.
 
 #### Scenario: Stationarity is enforced before fitting
 - **WHEN** a non-stationary series is passed to an ARIMA fit with `d` unspecified
@@ -41,6 +45,8 @@
 
 ### Requirement: Volatility forecasting
 
+Volatility forecasts SHALL provide conditional intervals and convention-based annualization and obey optimizer covariance constraints.
+
 #### Scenario: GARCH fit
 - **WHEN** `sobres econ volatility SPY --model garch` runs
 - **THEN** a GARCH(1,1) model SHALL be fitted to returns and a conditional
@@ -60,6 +66,8 @@
 
 ### Requirement: Regression with robust inference
 
+Regression output SHALL identify robust inference choices and report collinearity and residual diagnostics.
+
 #### Scenario: Robust standard errors
 - **WHEN** `sobres econ regress --robust <kind>` runs
 - **THEN** `hac`, `hc0`–`hc3`, and `none` SHALL be accepted, and the kind used SHALL
@@ -76,8 +84,40 @@
 
 ### Requirement: Dependency gating
 
+Unavailable econometrics dependencies SHALL produce an actionable installation error rather than an import traceback.
+
 #### Scenario: Missing extra
 - **WHEN** a `sobres econ` command runs without the `econ` extra installed
 - **THEN** the system SHALL exit 3 with
   `This command needs the econ extra. Install it with: pip install 'sobres[econ]'`
 - **AND** SHALL NOT emit an `ImportError` traceback
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
+
+### Requirement: Explicit provider resolution
+Econometric inputs SHALL resolve through explicit source selection or unambiguous
+catalog metadata rather than a symbol-length or digit heuristic.
+
+#### Scenario: Ambiguous source
+- **WHEN** a bare symbol has no unambiguous registered source and no source flag
+- **THEN** the command SHALL exit 2 with an example using `fred:` or `ticker:`
+- **AND** it SHALL NOT contact a guessed provider
+
+#### Scenario: Named source
+- **WHEN** `fred:CPIAUCSL` or `ticker:SPY` is supplied
+- **THEN** only the named provider SHALL supply that input and the output SHALL state the transform used

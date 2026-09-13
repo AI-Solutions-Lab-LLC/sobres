@@ -57,7 +57,8 @@ config file → built-in default.
 #### Scenario: Secrets are never echoed
 - **WHEN** `sobres config show` runs
 - **THEN** any key whose name contains `key`, `token`, or `secret` SHALL render as
-  its last 4 characters prefixed by `****`
+  the fixed marker `****` when set, or `(unset)` when empty
+- **AND** no characters from the secret SHALL be displayed, including short secrets
 
 ### Requirement: Error handling and exit codes
 

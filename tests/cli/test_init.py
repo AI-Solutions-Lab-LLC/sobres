@@ -115,12 +115,13 @@ def _interactive(make_context: Callable[..., Context], wizard: _Wizard, **kw: An
     return ctx
 
 
+@pytest.mark.parametrize("secret_value", ["Z9!", "Q7$!", "SECRET9999"])
 def test_guided_wizard_walks_every_setting_and_masks_secrets(
-    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch, secret_value: str
 ) -> None:
     fred = get_setting("fred_api_key")
     monkeypatch.setattr(fred, "validate_live", lambda v: LiveResult(True, "FRED accepted the key"))
-    wizard = _Wizard({"fred_api_key": ["SECRET9999"], "log_level": ["INFO"]}, {"verify it": [True]})
+    wizard = _Wizard({"fred_api_key": [secret_value], "log_level": ["INFO"]}, {"verify it": [True]})
     ctx = _interactive(make_context, wizard)
     report = init(InitParams(offline=True), ctx)
     assert "fred_api_key" in report.changed and "log_level" in report.changed
@@ -132,7 +133,7 @@ def test_guided_wizard_walks_every_setting_and_masks_secrets(
     walked = [q for q in wizard.seen if any(q.strip().startswith(s.key) for s in all_settings())]
     assert [q.strip().split(" ")[0] for q in walked] == [s.key for s in all_settings()]
     text = ctx.config.path.read_text(encoding="utf-8")
-    assert 'fred_api_key = "SECRET9999"' in text
+    assert f'fred_api_key = "{secret_value}"' in text
     # re-run: current values are shown masked and kept when not replaced
     wizard2 = _Wizard({}, {"replace it": [False]})
     ctx2 = _interactive(make_context, wizard2)
@@ -140,7 +141,8 @@ def test_guided_wizard_walks_every_setting_and_masks_secrets(
     ctx2.stderr = err
     report2 = init(InitParams(offline=True), ctx2)
     assert report2.changed == []
-    assert "****9999" in err.getvalue() and "SECRET9999" not in err.getvalue()
+    assert "current: ****" in err.getvalue()
+    assert secret_value not in err.getvalue()
 
 
 def test_failed_live_validation_never_stores_silently(

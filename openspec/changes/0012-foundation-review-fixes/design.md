@@ -7,6 +7,9 @@ empty calendar window is different from a nonexistent ticker.
 
 Keep redaction in the formatter and use the declared setting to recognize secret
 values held in generic key/value parameters. Never redact only the setting name.
+Human-facing config output uses a constant marker for set secrets: suffix masking
+exposes complete credentials of four or fewer characters. Centralize this in
+`display_value` for both config commands and idempotent setup.
 Use SQLite online backup to capture committed WAL state, with driver operations
 confined to the adapter. Validate complete currency metadata before any fast path.
 

@@ -63,3 +63,13 @@ All complete. Recorded so the change archives with its own checklist.
       permission and disables attestations. Decision/auth-selection tests and actionlint pass.
 - [ ] **B6. Upload verification** — controlled TestPyPI rehearsal succeeds, logs contain
       no token fragments, and the resulting wheel installs and runs. Tracked in #21.
+
+
+
+## Alignment scope (0013)
+
+Historical completed checks above refer to the original scaffold, not the current
+coverage measurement. The future formatter and harness migration is owned by
+0013; it does not reset completed release infrastructure tasks. Completed B5 code and pending B6 upload verification/
+activation use issue #21's token contract and accurate skip-reason acceptance.
+A TestPyPI upload is a separate authorized live operation after local verification.

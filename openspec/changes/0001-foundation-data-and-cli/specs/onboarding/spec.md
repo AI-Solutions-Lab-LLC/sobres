@@ -56,8 +56,8 @@ The installed CLI SHALL implement the specified onboarding behavior with actiona
 
 #### Scenario: Idempotent and re-runnable
 - **WHEN** `sobres init` runs against an existing configuration
-- **THEN** it SHALL show each current value — secrets masked to their last four
-  characters — and offer to keep or replace it
+- **THEN** it SHALL show each current value — secrets shown as the fixed
+  marker `****` when set or `(unset)` when empty — and offer to keep or replace it
 - **AND** re-running with no changes SHALL leave the configuration byte-identical
 
 #### Scenario: Optional settings can be skipped
