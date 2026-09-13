@@ -1,0 +1,24 @@
+objective: max_sharpe
+estimators: mean_historical expected returns, ledoit_wolf covariance, shrinkage 0.014
+expected return 36.5122%, volatility 23.3940%, sharpe 1.56 (risk-free 0.0000%)
+warning: GLD takes 51.1% of the portfolio: unconstrained mean-variance solutions concentrate; consider --max-weight
+source: yfinance (adj_close)
+prices are total return
+currency: USD
+window: 2020-01-03 → 2024-12-31
+cache: hit
+risk-free rate 0.0000% (0.0 fallback: no FRED key configured)
+survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents
+in-sample: estimated on the same data it is evaluated on; see `sobres optimize backtest`
+seed: 0
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ticker ┃ weight ┃ risk_contribution┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│AAPL   │ 0.0052 │            0.0042│
+│MSFT   │ 0.0000 │            0.0000│
+│NVDA   │ 0.3665 │            0.7715│
+│JNJ    │ 0.0000 │            0.0000│
+│XOM    │ 0.1172 │            0.0614│
+│GLD    │ 0.5111 │            0.1628│
+└───────┴────────┴──────────────────┘
+For research and education only. Not investment advice.
