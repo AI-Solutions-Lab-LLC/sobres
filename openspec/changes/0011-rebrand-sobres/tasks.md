@@ -15,14 +15,14 @@
 
 ## B. Runtime names
 
-- [ ] **B1. Settings prefix** *(lands with 0001, which introduces the registry)* `QUANTFOLIO_*` → `SOBRES_*` in the settings
+- [x] **B1. Settings prefix** *(lands with 0001, which introduces the registry)* `QUANTFOLIO_*` → `SOBRES_*` in the settings
       registry. → test: every declared setting's env var starts with `SOBRES_`.
-- [ ] **B2. Legacy env guard** *(lands with 0001)* — startup fails with a named replacement when any
+- [x] **B2. Legacy env guard** *(lands with 0001)* — startup fails with a named replacement when any
       `QUANTFOLIO_*` variable is set. → test: a fixture sets `QUANTFOLIO_DB_URL`
       and asserts the error names `SOBRES_DB_URL`.
-- [ ] **B3. Paths** *(lands with 0001)* — `platformdirs` app name, default DB filename `sobres.db`.
+- [x] **B3. Paths** *(lands with 0001)* — `platformdirs` app name, default DB filename `sobres.db`.
       → test: the default DB URL resolves under a `sobres` data dir.
-- [ ] **B4. Legacy data check** *(lands with 0001's doctor)* — a doctor check that finds an old `quantfolio`
+- [x] **B4. Legacy data check** *(lands with 0001's doctor)* — a doctor check that finds an old `quantfolio`
       config or data directory and prints the `mv` to run, without moving it.
       → test: the check reports actionable when a fake legacy dir exists.
 
@@ -41,15 +41,22 @@
 
 ## D. Reserve the name
 
-- [ ] **D1. Publish `0.0.0`** to PyPI as `sobres` to hold the name, per 0000's
-      armed-release gate. → test: `check_release.py` reports the name as held by
+- [ ] **D1. Publish the intended reviewed version** to PyPI as `sobres`, after
+      issue #21's authentication and artifact checks and 0000's armed-release gate. → test: `check_release.py` reports the name as held by
       this project.
 
 ## Definition of done
 
 - [x] `rg -i quantfolio` and `rg -w qf` return nothing outside `CHANGELOG.md`
       (and the 0011 change documents themselves) — `tests/test_rebrand.py`
-- [ ] `pip install -e .` then `sobres doctor` passes on a clean environment
+- [x] `pip install -e .` then `sobres doctor` passes on a clean environment
 - [x] Every test that passed before the rename passes after it, with identical
       fixture values
 - [ ] `openspec validate` is clean
+
+## Alignment scope (0013)
+
+C1 follows 0005's `compose.yaml` and independent image enablement. C2 follows
+0006's existing `site/` and reviewed publication access. The original console
+entry point remains compatible through 0013's facade; no second rename is needed.
+Completed boxes retain their historical scope; pending publication stays unchecked.

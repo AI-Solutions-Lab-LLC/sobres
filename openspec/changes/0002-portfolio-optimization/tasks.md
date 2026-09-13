@@ -1,6 +1,27 @@
 # 0002 — Tasks
 
+Planning amendment: source PR #8 at `21724ce35c6a4b3f5d89db265517bf77a38d425f`.
+All tasks are unchecked because acceptance must be reverified on the new base.
+Each unestimated task has a maximum 2h budget; split larger work before coding.
+Each original task uses the named suite in its wave plus the R2 behavior checks.
+No task authorizes publication; release activation remains a maintainer action.
+
 Depends on 0001. Estimates are focused hours.
+
+## Alignment prerequisite — before the original waves
+
+- [ ] **R0 (1h)** Verify the issue and merged planning ancestry, then reconcile the
+  candidate branch with merged 0013 and its predecessor. Preserve the foundation's
+  real recordings and fixes. Proof: source diff, merge-base and task/scenario ledger.
+- [ ] **R1 (2h)** Apply this proposal's package/ownership amendment using 0013's
+  shared services and ports; keep public commands and financial math compatible.
+  Proof: `tests/architecture/test_layering.py` plus the existing capability's
+  CLI/contract tests on the new base; no new use cases in legacy facades.
+- [ ] **R2 (2h)** Re-run affected behavior through the installed package and any
+  exposed API/UI, all formats, dummy-secret checks and relevant real integration.
+  Proof: named tests below, full `make check`, `make build`, `make audit` and a
+  scenario-to-assertion report. Source-only UI checks or synthetic vendor fixtures
+  cannot establish browser behavior or live vendor truth.
 
 ## Wave A — return and risk primitives (parallel-safe)
 
@@ -13,23 +34,31 @@ Depends on 0001. Estimates are focused hours.
       → `tests/core/test_returns.py::test_geometric_matches_hand_computed`,
         `::test_annualization_uses_convention_table`,
         `::test_nan_policy_has_no_default`
-- [ ] **A3. Risk panel** (3h)
+- [ ] **A3. Risk panel** (2h)
       `core/risk.py`: vol, Sharpe, Sortino, Calmar, max drawdown (+peak/trough/
       recovery dates), VaR/CVaR, skew, kurtosis, beta, correlation matrix.
       → `tests/core/test_risk.py` — every metric against a hand-computed 10-row
         fixture; `::test_max_drawdown_identifies_recovery_date`;
         `::test_beta_requires_30_overlapping_observations`
 
+- [ ] **A3v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `tests/core/test_risk.py`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
 ## Wave B — estimation (A2 first)
 
 - [ ] **B1. Expected returns** (2h)
       `core/moments.py`: `mean_historical`, `ewma`, `capm`.
       → `tests/core/test_moments.py::test_capm_uses_benchmark_and_risk_free`
-- [ ] **B2. Covariance** (3h)
+- [ ] **B2. Covariance** (2h)
       `sample`, `ledoit_wolf`, `ewma`, `semicovariance`; shrinkage intensity in
       `attrs`; `n_obs <= n_assets` → `InsufficientDataError`.
       → `::test_ledoit_wolf_is_default`,
         `::test_singular_case_raises_with_both_counts`
+- [ ] **B2v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_ledoit_wolf_is_default`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
 - [ ] **B3. PSD conditioning** (2h)
       Symmetrize, eigenvalue clip, trace-preserving rescale, stderr warning.
       → `tests/core/test_psd.py::test_repairs_non_psd_and_warns`,
@@ -45,10 +74,14 @@ Depends on 0001. Estimates are focused hours.
 - [ ] **C2. `min_variance` + `equal_weight`** (2h)
       SLSQP scaffold, weight-sum equality, box bounds.
       → `::test_min_variance_matches_analytic_two_asset`
-- [ ] **C3. `max_sharpe`** (3h)
+- [ ] **C3. `max_sharpe`** (2h)
       Multi-start (equal-weight, min-variance, seeded random); best feasible wins.
       → `::test_max_sharpe_matches_closed_form_tangency`,
         `::test_deterministic_across_runs`
+- [ ] **C3v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_max_sharpe_matches_closed_form_tangency`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
 - [ ] **C4. `target_return` / `target_risk`** (2h)
       → `::test_target_return_above_attainable_raises_with_max`
 - [ ] **C5. `risk_parity`** (2h)
@@ -56,20 +89,28 @@ Depends on 0001. Estimates are focused hours.
 - [ ] **C6. Solver failure + concentration warning** (1h)
       → `::test_nonconvergence_raises_optimization_error`,
         `::test_concentration_warning_above_50pct`
-- [ ] **C7. Efficient frontier** (2.5h)
+- [ ] **C7. Efficient frontier** (2h)
       N points from min-variance return to max attainable; flag min-var and
       max-Sharpe points.
       → `::test_volatility_non_decreasing_in_return`,
         `::test_named_points_flagged`
 
+- [ ] **C7v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `::test_volatility_non_decreasing_in_return`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
 ## Wave D — backtest (C first)
 
-- [ ] **D1. Walk-forward engine** (4h)
+- [ ] **D1. Walk-forward engine** (2h)
       Rebalance schedule; the slicing discipline from `design.md`; weight drift
       between rebalances.
       → `tests/core/test_backtest.py::test_no_lookahead_under_future_perturbation`
         ← *the most important test in this change*
       → `::test_weights_drift_between_rebalances`
+- [ ] **D1v. Independent verification** (2h) — verify the preceding task's
+      edge cases and known answers, extending `tests/core/test_backtest.py::test_no_lookahead_under_future_perturbation`. Split the review unit
+      if implementation and proof cannot be reviewed together.
+
 - [ ] **D2. Transaction costs** (1.5h)
       `turnover = 0.5 * Σ|w_new - w_drifted|`; 10 bps default.
       → `::test_turnover_formula`, `::test_default_cost_is_10bps`
@@ -92,9 +133,13 @@ Depends on 0001. Estimates are focused hours.
 
 ## Wave F — validation and release
 
-- [ ] **F1. R reference fixtures** (2h)
+- [ ] **F1. R reference fixtures (still needs actual R evidence)** (2h)
       Run `legacy_code/Financial Portfolio Optimization.R` on a fixed universe; check
       outputs into `tests/fixtures/r_reference/`.
+      *The original PR reported R and the script's Google Sheet unreachable from its implementing
+      environment; `scripts/r_reference.py` solves the same LP by exhaustive vertex
+      enumeration (independent of the `linprog` path the port uses) on a fixed
+      six-vehicle table. Re-run the R script on that table to replace the fixture.*
       → `tests/test_r_parity.py::test_weights_match_within_1e-4`
 - [ ] **F2. Textbook validation** (2h)
       A published two- and three-asset example with known answers, end to end.
@@ -102,16 +147,16 @@ Depends on 0001. Estimates are focused hours.
 - [ ] **F3. Docs: "Why your backtest looks too good"** (2h)
       Plain-language page on estimation error, in-sample vs. walk-forward, and how
       to read the gap. Linked from `sobres optimize backtest` output.
-- [ ] **F4. README + `v1.0.0`** (2h) — worked example with real output; tag; PyPI.
+- [ ] **F4. README + `v1.0.0`** (2h) — worked example with real output; prepare version/changelog release PR only.
 
-**Total: ~48h.** Critical path: B2 → B3 → C2 → C3 → C7 → D1 → E3.
+Estimates are per revised task; re-estimate the sequence after R0. Critical path: B2 → B3 → C2 → C3 → C7 → D1 → E3.
 
 ## Definition of done
 
-- [ ] All four `sobres optimize` subcommands work end to end on live data
+- [ ] All four `sobres optimize` subcommands work end to end (on recorded fixtures; live providers were unreachable here)
 - [ ] The no-lookahead test passes (D1)
 - [ ] Weights match the R reference within `1e-4` (F1)
 - [ ] Max-Sharpe matches the closed-form tangency portfolio within `1e-6` (C3)
 - [ ] `mypy --strict` clean; `pytest -m "not network"` green offline
 - [ ] Every scenario in the spec delta has a test referencing it
-- [ ] `v1.0.0` tagged and published
+- [ ] `v1.0.0` tagged and published — happens when this merges to `main` with `RELEASE_ENABLED` armed (0000)

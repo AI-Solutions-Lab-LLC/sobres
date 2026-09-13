@@ -59,8 +59,17 @@ All complete. Recorded so the change archives with its own checklist.
       publish an approval gate.
 - [ ] Set `RELEASE_ENABLED` to `true` — only after 0011 renames the distribution
       and B5 switches the upload to token auth.
-- [ ] Reserve `sobres` on PyPI by publishing `0.0.0` once armed.
+- [ ] Publish the intended, reviewed version after issue #21's authentication,
+      artifact and TestPyPI checks; do not upload an incidental scaffold for reservation.
 - [ ] **B5. Token-auth upload** — `release.yml` passes `secrets.PYPI_PROD` /
       `secrets.PYPI_TEST` as the upload password and drops the `id-token: write`
       permission and the attestation step. → test: a TestPyPI rehearsal uploads
       successfully and the run log contains no token fragment.
+
+## Alignment scope (0013)
+
+Historical completed checks above refer to the original scaffold, not the current
+coverage measurement. The future formatter and harness migration is owned by
+0013; it does not reset completed release infrastructure tasks. Pending B5 and
+activation use issue #21's token contract and accurate skip-reason acceptance.
+A TestPyPI upload is a separate authorized live operation after local verification.

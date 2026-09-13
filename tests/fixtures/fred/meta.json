@@ -1,0 +1,17 @@
+{
+  "recorded_at": "2026-09-13T18:11:04.640727+00:00",
+  "provider": "fred",
+  "provider_version": "unversioned",
+  "client": "httpx",
+  "client_version": "0.28.1",
+  "sha256": {
+    "CPIAUCSL.json": "be53ac3353270a5633e260ed3f4a5333f0f180bce322c7db268af4b3d99275a1",
+    "DEXUSEU.json": "c026dc8daf0456a426c5ae7fbfc4e6ae0ea712b7ce0d1a36513ecffcb217d829",
+    "DGS10.json": "49c4e8a36b1740ce70800014846c018810e2761a5a6bd9ccdd48decacb80d7d4",
+    "DTB3.json": "3195990b99066bba16b17234c57d700c239491788cc545ccbbe474c84f910762"
+  },
+  "source": "https://api.stlouisfed.org/fred/series/observations",
+  "api": "fred/series/observations file_type=json",
+  "start": "2015-01-02",
+  "end": "2024-12-31"
+}

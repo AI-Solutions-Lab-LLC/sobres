@@ -1,7 +1,7 @@
 ---
 change: 0005-docker-distribution
 milestone: v1.2
-depends_on: [0003-local-persistence, 0004-web-ui, 0000-release-engineering]
+depends_on: [0003-local-persistence, 0004-web-ui, 0000-release-engineering, 0013-template-development-alignment]
 status: proposed
 ---
 
@@ -25,7 +25,7 @@ docker run -v sobres:/data aisolutionslab/sobres db info
 And the CLI generates the deployment rather than the user hand-writing it:
 
 ```bash
-sobres deploy compose > docker-compose.yml    # generated from current config
+sobres deploy compose > compose.yaml    # generated from current config
 sobres deploy check                           # what would run, with what config
 ```
 
@@ -45,7 +45,7 @@ config resolution chain the CLI already uses keeps those the same thing.
 - **New capability `deployment`.**
 - Multi-stage `Dockerfile`: Node builds the 0004 frontend, Python builds the
   wheel, and a slim runtime stage carries neither toolchain.
-- `docker-compose.yml`, `.dockerignore`.
+- `compose.yaml`, `.dockerignore`.
 - **New CLI group `sobres deploy`** — `compose`, `check`, `env`.
 - Docker Hub publishing added to 0000's release pipeline, on the same version gate,
   for `linux/amd64` and `linux/arm64`. Authentication is `docker/login-action` with
@@ -86,3 +86,27 @@ variable set in compose behaves exactly as it does in a shell.
 | Image bloat from a Node toolchain and scientific wheels | Multi-stage build discards both toolchains; a size budget is a CI gate |
 | A user exposes the container to the internet with no token | The image's default bind is loopback, which is useless in a container — so exposing it requires `--host 0.0.0.0`, which 0004 already gates on a token; the published docs lead with the token |
 | Docker Hub and PyPI versions drift | Both publish from the same gated job on the same commit; the image tag is asserted equal to the wheel version before push |
+
+## Development alignment and review readiness (0013)
+
+Own `Dockerfile`, `compose.yaml`, `.dockerignore` and `docs/DEPLOYING.md`. Use the same wheel and application bootstrap, with non-root runtime and explicit state mounts. Adopt independent publication switches and exclude private context/state. This is a single-user container profile, not Cloud Run or enterprise deployment.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #11 at `eef53608b231e826f44edee9476aa4196bc20d77` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge commit remains pending.
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#27](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/27).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. This plan is not yet merged.

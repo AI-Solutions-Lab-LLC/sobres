@@ -1,7 +1,7 @@
 ---
 change: 0003-local-persistence
 milestone: v1.1
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization]
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0013-template-development-alignment]
 status: proposed
 ---
 
@@ -38,10 +38,10 @@ cache into a database: schema versioning, migrations, and the application tables
 ## What changes
 
 - **New capability `persistence`.**
-- `data/storage/migrations/` gains a forward-only migration set keyed on
-  `schema_version`, applied automatically on open by the adapter — one set, no
-  branching on backend.
-- `data/storage/` gains repository protocols for portfolios, watchlists, goals,
+- `adapters/storage/migrations/` retains SQLite's forward-only migration lineage,
+  keyed on `schema_version` and applied by its adapter. Future operational engines
+  own their migration implementation and must satisfy the same behavioral contracts.
+- `ports/storage.py` gains repository protocols for portfolios, watchlists, goals,
   analysis runs and job records, behind 0001's storage port. Plain data in, plain
   data out; no math, and no driver import outside the adapters.
 - The conformance suite from 0001 grows to cover the new repositories, so a
@@ -57,8 +57,9 @@ cache into a database: schema versioning, migrations, and the application tables
   explicitly out of scope (see 0004's access model).
 - **No second backend is implemented here either.** 0001 ships the port, the
   registry, and the conformance suite; this change adds repositories behind them.
-  A PostgreSQL or DuckDB adapter remains a later change — one that should be a
-  new file and a fixture-list entry, which is the whole point of the port.
+  A PostgreSQL operational adapter remains a later change requiring real-engine
+  conformance, migration and cutover/rollback evidence. DuckDB is a separate
+  analytical capability, not a substitute for transactional application state.
 - No cloud sync. Running against a remote backend becomes possible through the
   port, but nothing in this change assumes or requires it.
 - No ORM. SQLAlchemy Core sits below the repositories as the dialect layer; object
@@ -80,3 +81,27 @@ cache into a database: schema versioning, migrations, and the application tables
 | The database grows without bound as price history accumulates | `sobres db info` reports size by table; `sobres cache clear` prunes cached observations while leaving user-authored rows untouched — the two must never be conflated |
 | Repositories accrete SQLite-shaped assumptions now that there is real application state | Every repository is added to the shared conformance suite as it is written, and the portability guards from 0001 (portable types, application-generated ids, explicit UTC, JSON as text) apply to every new table |
 | Saved runs reference market data that later gets revised | A run records the inputs and the resolved parameters it used, so it stays interpretable; it is a record of an analysis, not a promise of reproducibility against a mutable index |
+
+## Development alignment and review readiness (0013)
+
+Define user-state ports in `ports/storage.py`, use cases in `application/`, and concrete SQLite migrations/repositories in `adapters/storage/`. Preserve immutable migration IDs, WAL-safe backup and transaction rollback. PostgreSQL needs its own later real-engine and data-cutover plan; DuckDB is analytics, not an operational substitute.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #9 at `20654c1249aa7de32e3c35dbaa346c6929ef5b1b` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge commit remains pending.
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#25](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/25).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. This plan is not yet merged.
