@@ -65,7 +65,7 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | Candidate in #12; alignment pending |
 | [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | Candidate in #13; alignment pending |
 | [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | Candidate in #14; alignment pending |
-| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | ARIMA, GARCH, robust regression | 📋 Planned |
+| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Multivariable VAR/BVAR, elastic-net, boosted trees; GARCH | Revised plan in #15; candidate replacement/alignment pending |
 | [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | 📋 Planned |
 | [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | 🔧 In progress |
 
@@ -177,6 +177,22 @@ Every answer comes with a simulated success probability and the 10th to 90th
 percentile outcomes; `--method bootstrap --history SPY` resamples real return
 blocks so bad-early-years paths appear. The seed is printed. Taxes are not
 modeled and the output says so.
+
+## Econometrics: revised plan
+
+[OpenSpec 0009](openspec/changes/0009-econometrics-forecasting/proposal.md) now plans
+multivariable stock-price forecasting: a regularized VAR default, Bayesian VAR,
+elastic-net and boosted trees, with researched predictor presets, held-out
+comparisons and mandatory uncertainty intervals. See its
+[research](openspec/changes/0009-econometrics-forecasting/research.md) and
+[defaults](openspec/changes/0009-econometrics-forecasting/design.md).
+
+**These new forecasting interfaces are not implemented yet.** PR #15 still
+contains the superseded ARIMA candidate, which must be replaced before revised
+0009 is accepted. Do not treat its previous green tests as evidence for the new
+models. GARCH/EGARCH/EWMA volatility, CCC covariance, stationarity diagnostics and
+robust regression remain in scope. The proposed examples live in the OpenSpec;
+this planning amendment does not change installed commands.
 
 ## Quickstart: saved state
 
