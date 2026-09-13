@@ -917,8 +917,13 @@ export interface components {
              */
             base?: string | null;
             /**
+             * Benchmark
+             * @description Benchmark ticker required for CAPM, e.g. --benchmark SPY.
+             */
+            benchmark?: string | null;
+            /**
              * Cost Bps
-             * @description One-way transaction cost in basis points.
+             * @description Fee bps per unit of one-way turnover, including initial cash.
              * @default 10
              */
             cost_bps: number;
@@ -1000,6 +1005,11 @@ export interface components {
              * @description First date, YYYY-MM-DD.
              */
             start: string;
+            /**
+             * Target
+             * @description Annual decimal target for target_return or target_risk.
+             */
+            target?: number | null;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio).
@@ -1129,6 +1139,11 @@ export interface components {
              * @description Base currency for a multi-currency universe (e.g. USD).
              */
             base?: string | null;
+            /**
+             * Benchmark
+             * @description Benchmark ticker required for CAPM, e.g. --benchmark SPY.
+             */
+            benchmark?: string | null;
             /**
              * Covariance
              * @description Covariance estimator; Ledoit-Wolf shrinkage by default.
@@ -1299,6 +1314,11 @@ export interface components {
              * @description Base currency for a multi-currency universe (e.g. USD).
              */
             base?: string | null;
+            /**
+             * Benchmark
+             * @description Benchmark ticker required for CAPM, e.g. --benchmark SPY.
+             */
+            benchmark?: string | null;
             /**
              * Covariance
              * @description Covariance estimator; Ledoit-Wolf shrinkage by default.

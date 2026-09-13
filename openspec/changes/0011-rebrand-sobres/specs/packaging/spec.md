@@ -20,7 +20,10 @@ be `sobres`, and no artifact SHALL carry the former `quantfolio` or `qf` naming.
 
 #### Scenario: Environment variables
 - **WHEN** the settings registry is enumerated
-- **THEN** every declared environment variable SHALL begin with `SOBRES_`
+- **THEN** every application-specific primary environment variable SHALL begin with `SOBRES_`
+- **AND** declared standard `OTEL_*` settings SHALL retain their upstream names
+- **AND** `FRED_API_KEY` MAY be a documented lower-precedence alias of
+  `SOBRES_FRED_API_KEY`; the primary name wins when both are set
 
 ### Requirement: Old names fail loudly, never silently
 

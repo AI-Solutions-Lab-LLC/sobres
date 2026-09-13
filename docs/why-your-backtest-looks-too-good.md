@@ -1,73 +1,83 @@
 # Why your backtest looks too good
 
-`sobres optimize markowitz` prints a Sharpe ratio. `sobres optimize backtest`
-prints a smaller one for the same tickers and the same objective. The gap
-between them is the most useful number this tool produces, and this page is
-about why it exists and how to read it.
+In-sample optimization selects weights using the same history on which it reports
+performance. Walk-forward evaluation repeatedly fits prior data and then measures
+later returns. Either Sharpe ratio can be larger: the gap reflects estimation
+error, changing market conditions, costs, and differences between estimated and
+realized statistics. It does not isolate one cause.
 
-## The in-sample number is an error maximizer
+## What the backtest measures
 
-Mean-variance optimization takes two inputs it cannot observe — expected
-returns and their covariance — and estimates both from the past. Estimation
-error in expected returns is large: a decade of daily data pins a stock's
-annual mean down to roughly ±10 percentage points. The optimizer does not know
-that. It treats every estimate as truth, leans hardest on the assets whose
-means were overestimated by luck, and reports a Sharpe ratio computed on the
-very data that produced the estimates.
+At each rebalance date, only earlier asset and CAPM benchmark returns enter the
+training window. The risk-free proxy uses the most recent observation strictly
+before that date. Weights drift with realized returns until the next rebalance.
+An equal-weight portfolio runs over the same dates and pays the same cost rate.
+The JSON result records each training window, decision rate, estimators, bounds,
+seed, warnings, and the requested settings.
 
-That number is not a forecast. It is the best any portfolio could have done on
-that history, chosen with full knowledge of it. Michaud (1989) called
-mean-variance "error maximization" for this reason, and it is why `markowitz`
-output carries an `in-sample` line.
+Sharpe uses annualized arithmetic mean excess return divided by annualized
+excess-return volatility. CAGR is reported separately. Sortino divides annualized
+arithmetic excess return by the annualized root-mean-square shortfall below the
+per-observation target, including zero shortfalls in the denominator population.
+Ratios are unitless. VaR/CVaR describe one observation, with losses negative.
+Drawdown includes initial capital; a null peak date means the initial baseline.
 
-## What the backtest does differently
+## Risk-free assumptions
 
-`backtest` never lets the optimizer see the future:
+`--risk-free 0.04` specifies a 4% annual simple rate in the computation currency.
+Without an override, USD portfolios can use FRED DTB3 with a configured key.
+DTB3 is a bank-discount quote: the implementation approximates a 91-day bill,
+a 360-day discount basis, and 365-day annual simple investment yield. Per-period
+proxy return is that annual rate divided by the frequency convention. This is
+an approximation, not a realized investable total-return series.
 
-1. At each rebalance date `t`, only returns strictly before `t` (the
-   `--lookback` window) are handed to the estimators and the solver.
-2. The resulting weights are held — drifting with realized returns — until
-   the next rebalance.
-3. Every rebalance pays `--cost-bps` on turnover. The default is 10 bps, not
-   0, because a costless backtest flatters every strategy that trades.
-4. An equal-weight portfolio, rebalanced on the same dates with the same
-   costs, runs alongside as the benchmark.
+Non-USD portfolios and missing keys use zero with an explicit warning. FRED
+observations are current historical vintages, not an archived information set:
+strict date cutoffs prevent future-date leakage but cannot undo later revisions.
+A universe selected today also has survivorship bias.
 
-The test suite asserts the first point mechanically: perturbing every
-observation at or after `t` by a large factor leaves the weights at `t`
-bit-identical.
+## Costs and missing data
 
-## How to read the gap
+The default is 10 bps per unit of one-way turnover, calculated as half the sum
+of absolute weight changes across risky assets **and residual cash**. Initial
+investment from cash has turnover 1 and costs 0.1%; a full A-to-B rotation also
+costs 0.1%. `total_cost` is actual fees paid divided by initial capital; it is not
+the terminal performance drag. `total_cost_rate` separately sums fee fractions
+charged against the changing wealth base.
 
-| You see | It usually means |
-|---|---|
-| In-sample Sharpe far above walk-forward Sharpe | Estimation error dominated; the "optimal" weights were fitted noise |
-| Walk-forward below the equal-weight benchmark | The optimizer's extra information was worth less than the turnover it cost |
-| High turnover, most of the return lost to costs | The estimates change a lot between rebalances; a longer lookback or shrinkage helps |
-| Walk-forward close to in-sample | The universe is well-behaved (few, diversified assets) or the window is short |
+Choose `--fill drop|ffill|raise` explicitly. Dropping a missing price excludes
+both adjacent return intervals, records their dates, and never treats a
+multi-day move as a one-day return. Core functions reject unresolved NaN and
+infinity. Forward fill is a modeling choice and may create zero-return periods.
+Multi-currency prices are converted before returns are calculated.
 
-## What sobres does about it by default
+## Using the controls
 
-- **Shrinkage.** Ledoit-Wolf shrinkage is the default covariance estimator,
-  not an option to discover. The shrinkage intensity is printed.
-- **The frontier, not the point.** `sobres optimize frontier` shows the whole
-  trade-off; a curve invites less false precision than a single optimum.
-- **Costs on.** 10 bps per side unless you say otherwise.
-- **Survivorship stated.** A ticker list chosen today reflects survivors.
-  Every result says so, because no free source provides point-in-time
-  constituents and the tool will not pretend to correct for it.
-- **Concentration warned.** An unconstrained max-Sharpe solution that puts more
-  than half the portfolio in one asset says so and suggests `--max-weight`.
+```bash
+sobres optimize markowitz --tickers AAPL MSFT --start 2020-01-01 --end 2020-03-31 --fill drop --returns-estimator capm --benchmark JNJ
+sobres optimize backtest --tickers AAPL MSFT --start 2020-01-01 --end 2020-03-31 --fill drop --lookback 20 --objective target_return --target 0.10
+sobres optimize frontier --tickers AAPL MSFT --start 2020-01-01 --end 2020-03-31 --fill drop --points 10 --format json
+```
 
-## References
+A target return is an annual decimal equality and may be infeasible for a
+particular training window. Target risk is an annual volatility **ceiling**.
+`--allow-short` permits negative weights within the box bounds; it does not
+model borrowing fees, margin calls, or liquidation. Risk parity seeks equal
+contributions to portfolio variance under those bounds; constraints can prevent
+exact equality. Ledoit-Wolf covariance shrinkage is the default.
 
-- Markowitz, H. (1952). Portfolio Selection. *Journal of Finance* 7(1).
-- Michaud, R. (1989). The Markowitz Optimization Enigma: Is 'Optimized'
-  Optimal? *Financial Analysts Journal* 45(1).
-- Ledoit, O. & Wolf, M. (2004). A well-conditioned estimator for
-  large-dimensional covariance matrices. *Journal of Multivariate Analysis* 88.
-- DeMiguel, V., Garlappi, L. & Uppal, R. (2009). Optimal Versus Naive
-  Diversification: How Inefficient is the 1/N Portfolio Strategy? *Review of
-  Financial Studies* 22(5). — the paper behind the equal-weight benchmark.
+Frontier output contains exactly the requested number of rows, including named
+portfolios. Two rows prioritize minimum variance and maximum Sharpe; three or
+more also include the maximum-return endpoint. Coincident optima share flags;
+a completely degenerate frontier repeats identical portfolios to retain the
+requested count. Commands support at most 100 assets and 500 frontier points.
+Ctrl-C cancels a foreground CLI calculation; stderr progress and timing do not
+change the numeric output. Cache/source timestamps and elapsed times are
+observational metadata, so byte comparisons require a fixed clock/cache state.
+
+Independent hand calculations and closed-form two-asset solutions test the
+math. The legacy LP fixture is independently enumerated in Python; actual R
+execution and an externally published three-asset weight solution are not
+claimed as completed validation.
 
 *For research and education only. Not investment advice.*

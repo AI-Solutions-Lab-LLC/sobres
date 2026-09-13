@@ -4,6 +4,8 @@
 
 ### Requirement: One image, CLI entrypoint
 
+The container SHALL run the same Sobres package through its CLI for server and one-off operations.
+
 #### Scenario: The CLI is the entrypoint
 - **WHEN** the image runs with any arguments
 - **THEN** they SHALL be passed to `sobres`
@@ -27,6 +29,8 @@
 
 ### Requirement: Data persistence in the container
 
+Container state SHALL persist outside the image through explicit writable storage without silent ephemeral fallback.
+
 #### Scenario: Database lives on a volume
 - **WHEN** the image runs with no `SOBRES_DB_URL` set
 - **THEN** the database SHALL be SQLite at `/data/sobres.db`
@@ -47,6 +51,8 @@
 - **THEN** each SHALL see the other's writes, per 0003's portability requirement
 
 ### Requirement: Runtime security posture
+
+The container SHALL run non-root with runtime-only secrets, actionable health and bounded shutdown.
 
 #### Scenario: Non-root
 - **WHEN** the container runs
@@ -101,10 +107,13 @@
 
 ### Requirement: Image publishing
 
+Image publication SHALL verify the package version and quality gates and require its own explicitly enabled release target.
+
 #### Scenario: Same gate as PyPI
-- **WHEN** a version is published to PyPI by 0000's pipeline
-- **THEN** the image SHALL be built and pushed in the same run, gated on the same
-  version check and the same green CI
+- **WHEN** a version passes the shared release quality gate and its image target is explicitly enabled
+- **THEN** the image SHALL use the same verified wheel version and green CI
+- **AND** Docker Hub and any later GHCR publishing SHALL have separate switches;
+  a PyPI release alone SHALL NOT activate an unconfigured image destination
 
 #### Scenario: Version parity is asserted
 - **WHEN** the image is built for release
@@ -133,7 +142,7 @@
 
 #### Scenario: Registry
 - **WHEN** an image is published
-- **THEN** the registry SHALL be Docker Hub
+- **THEN** the initial registry SHALL be Docker Hub; GHCR is a separately enabled optional target requiring the same checks
 - **AND** the repository SHALL be `aisolutionslab/sobres`
 
 #### Scenario: Credentials
@@ -168,6 +177,8 @@
 
 ### Requirement: Observability in the container
 
+Container diagnostics SHALL use redacted stderr output with runtime log and tracing configuration.
+
 #### Scenario: Logs are the container's stream
 - **WHEN** the container runs
 - **THEN** logs SHALL go to stderr in JSON, since stderr is not a TTY there
@@ -190,13 +201,16 @@
 
 ### Requirement: The storage backend is a container concern too
 
+Container startup SHALL validate the selected supported storage profile and keep credential-bearing URLs private.
+
 #### Scenario: The default stays SQLite on a volume
 - **WHEN** no `SOBRES_DB_URL` is supplied
 - **THEN** the container SHALL use SQLite at `/data/sobres.db`
 
 #### Scenario: An external backend needs no different image
-- **WHEN** `SOBRES_DB_URL` names another registered backend
-- **THEN** the same image SHALL use it without rebuild
+- **WHEN** `SOBRES_DB_URL` names another supported backend already installed in the image
+- **THEN** the same image SHALL use it without rebuilding application code
+- **AND** a missing adapter extra SHALL fail actionably rather than implying every backend is bundled
 - **AND** the `/data` volume SHALL become unnecessary, which
   `sobres deploy check` SHALL report rather than leave implied
 
@@ -206,6 +220,8 @@
   under 0001's redaction rules
 
 ### Requirement: The CLI generates the deployment
+
+Deployment commands SHALL generate configuration and diagnose readiness without embedding secret values.
 
 #### Scenario: Compose generation
 - **WHEN** `sobres deploy compose` runs
@@ -242,6 +258,8 @@
 
 ### Requirement: Documented deployment
 
+The documented local container installation and upgrade paths SHALL be exercised against a real built image.
+
 #### Scenario: Quickstart is real
 - **WHEN** the documented `docker run` command is executed on a clean machine
 - **THEN** it SHALL produce a reachable, working UI
@@ -252,3 +270,20 @@
 - **WHEN** a user pulls a newer image against an existing volume
 - **THEN** 0003's migrations SHALL run automatically on first open
 - **AND** the documented upgrade path SHALL include taking a backup first
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage

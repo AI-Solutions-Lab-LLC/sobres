@@ -22,9 +22,23 @@
             "description": "Base currency for a multi-currency universe (e.g. USD).",
             "title": "Base"
           },
+          "benchmark": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Benchmark ticker required for CAPM, e.g. --benchmark SPY.",
+            "title": "Benchmark"
+          },
           "cost_bps": {
             "default": 10.0,
-            "description": "One-way transaction cost in basis points.",
+            "description": "Fee bps per unit of one-way turnover, including initial cash.",
+            "maximum": 10000.0,
             "minimum": 0.0,
             "title": "Cost Bps",
             "type": "number"
@@ -154,6 +168,7 @@
           "seed": {
             "default": 0,
             "description": "Seed for the max-Sharpe random restarts.",
+            "minimum": 0.0,
             "title": "Seed",
             "type": "integer"
           },
@@ -162,6 +177,18 @@
             "format": "date",
             "title": "Start",
             "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Annual decimal target for target_return or target_risk.",
+            "title": "Target"
           },
           "tickers": {
             "anyOf": [
@@ -418,6 +445,19 @@
             "description": "Base currency for a multi-currency universe (e.g. USD).",
             "title": "Base"
           },
+          "benchmark": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Benchmark ticker required for CAPM, e.g. --benchmark SPY.",
+            "title": "Benchmark"
+          },
           "covariance": {
             "default": "ledoit_wolf",
             "description": "Covariance estimator; Ledoit-Wolf shrinkage by default.",
@@ -519,6 +559,7 @@
           "seed": {
             "default": 0,
             "description": "Seed for the max-Sharpe random restarts.",
+            "minimum": 0.0,
             "title": "Seed",
             "type": "integer"
           },
@@ -728,6 +769,19 @@
             "description": "Base currency for a multi-currency universe (e.g. USD).",
             "title": "Base"
           },
+          "benchmark": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Benchmark ticker required for CAPM, e.g. --benchmark SPY.",
+            "title": "Benchmark"
+          },
           "covariance": {
             "default": "ledoit_wolf",
             "description": "Covariance estimator; Ledoit-Wolf shrinkage by default.",
@@ -835,6 +889,7 @@
           "seed": {
             "default": 0,
             "description": "Seed for the max-Sharpe random restarts (printed for reproducibility).",
+            "minimum": 0.0,
             "title": "Seed",
             "type": "integer"
           },

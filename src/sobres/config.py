@@ -1,8 +1,8 @@
 """Configuration resolution: flag → environment → config file → default.
 
 The config file is ``<user-config-dir>/sobres/config.toml`` at mode ``0600``
-(it holds API keys). Secrets are masked to their last four characters wherever
-they are shown. Nothing here reads ``os.environ`` directly: the environment is
+(it holds API keys). Secret displays use a fixed marker without revealing any
+credential characters. Nothing here reads ``os.environ`` directly: the environment is
 passed in, which is what makes the precedence chain testable.
 """
 
@@ -61,19 +61,12 @@ def default_db_url() -> str:
     return f"sqlite:///{(user_data_dir() / DB_FILENAME).as_posix()}"
 
 
-def mask_secret(value: Any) -> str:
-    """``****`` plus the last four characters — enough to recognise, not to use."""
-    text = "" if value is None else str(value)
-    if not text:
-        return "(unset)"
-    return "****" + text[-4:]
-
-
 def display_value(setting: Setting, value: Any) -> str:
+    """Show whether a secret is set without exposing its content or length."""
     if value is None:
         return "(unset)"
     if setting.secret:
-        return mask_secret(value)
+        return "****" if str(value) else "(unset)"
     return str(value)
 
 

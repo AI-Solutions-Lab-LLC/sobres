@@ -180,6 +180,7 @@ jobs:
           /tmp/smoke/bin/sobres --version
           /tmp/smoke/bin/sobres serve --help > /dev/null
           /tmp/smoke/bin/python -c "import sobres; print(sobres.__version__)"
+          /tmp/smoke/bin/python -c "import yfinance; assert callable(yfinance.Ticker)"
 
       - name: The three-command path, in the clean environment
         # Onboarding is tested end to end: init, doctor, then one data command

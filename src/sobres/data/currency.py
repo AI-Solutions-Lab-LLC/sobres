@@ -215,6 +215,10 @@ def convert_frame(frame: pd.DataFrame, to_ccy: str, *, rates: FxRates | None) ->
     """
     currencies = frame_currencies(frame)
     target = to_ccy.upper()
+    for column in frame.columns:
+        source = currencies.get(str(column))
+        if source is None or not _CODE.fullmatch(source):
+            raise ProviderError(f"no currency declared for {column}")
     if all(c == target for c in currencies.values()):
         out = frame.copy()
         out.attrs = dict(frame.attrs)

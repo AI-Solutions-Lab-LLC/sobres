@@ -1,9 +1,9 @@
 ---
 change: 0009-econometrics-forecasting
 milestone: v1.5
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0007-equity-factor-analysis]
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0007-equity-factor-analysis, 0013-template-development-alignment, 0004-web-ui]
 status: proposed
-planning_depth: proposal + spec delta (design and tasks written when 0008 lands)
+planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 
 # 0009 — Econometrics and forecasting
@@ -25,7 +25,7 @@ honest uncertainty intervals.
 Volatility forecasting feeds directly back into 0002: a GARCH-based covariance
 estimator is a meaningfully better input to the optimizer than a rolling sample
 window, particularly during regime shifts. Macro forecasting supports the real-return
-assumptions in 0004.
+assumptions in 0008.
 
 It is last because it is the piece whose value depends most on everything below it
 being trustworthy first.
@@ -44,7 +44,7 @@ being trustworthy first.
 
 ## Non-goals
 
-- No VAR, VECM, or cointegration analysis in v1.3.
+- No VAR, VECM, or cointegration analysis in this milestone.
 - No machine-learning forecasters. A tool that ships an LSTM price predictor next to
   a Fama-French regression is telling the user something false about both.
 - No causal inference (diff-in-diff, IV, RDD). `espin086/Econometrics` holds that
@@ -59,3 +59,28 @@ being trustworthy first.
 | Auto-ARIMA overfits and reads as objective | Report the selected order **and** the information criterion, plus the top 3 candidate models, so the choice is visible rather than authoritative |
 | Non-stationary input silently produces nonsense | Stationarity is tested before fitting; non-stationary series either fail loudly or are differenced with the differencing order reported |
 | `statsmodels` and `arch` dependency weight | Both stay in the opt-in `econ` extra; commands that need them exit 3 with an install hint |
+
+## Development alignment and review readiness (0013)
+
+Keep econometric math in `core/`, source resolution and use cases in `application/commands/econ.py`; providers remain adapters. Preserve the optional econ dependency/doctor contract and forecast intervals. Use explicit source prefixes or declared catalog entries, rejecting ambiguity instead of inferring a provider from symbol length.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #15 at `88df04e01a5993c24a0857ef387e0b03c24fbacc` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge is PR #33 (`b9792d7`).
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#31](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/31).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

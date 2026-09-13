@@ -179,6 +179,36 @@ def test_export_uses_backup_api_while_open(tmp_path: Path) -> None:
         store.close()
 
 
+def test_backup_contains_committed_wal(tmp_path: Path) -> None:
+    """Scenario: Consistent migration backup (0012)."""
+    path = tmp_path / "before-migration.db"
+    writer = sqlite3.connect(path)
+    backups: list[str] = []
+    try:
+        writer.execute("PRAGMA journal_mode=WAL")
+        writer.execute("PRAGMA wal_autocheckpoint=0")
+        writer.execute("CREATE TABLE user_authored (value TEXT)")
+        writer.execute("INSERT INTO user_authored VALUES ('committed')")
+        writer.commit()
+        assert path.with_name(path.name + "-wal").stat().st_size > 0
+        store = open_storage(f"sqlite:///{path.as_posix()}", OpenOptions(on_backup=backups.append))
+        try:
+            assert len(backups) == 1
+            backup = sqlite3.connect(backups[0])
+            try:
+                assert backup.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+                assert backup.execute("SELECT value FROM user_authored").fetchall() == [
+                    ("committed",)
+                ]
+            finally:
+                backup.close()
+            assert store.schema_version() == CURRENT_VERSION
+        finally:
+            store.close()
+    finally:
+        writer.close()
+
+
 def test_slow_operation_logs_at_warning(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     from sobres.observability import configure_logging
 
