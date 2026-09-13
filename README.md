@@ -59,7 +59,7 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0000](openspec/changes/0000-release-engineering/) | Release engineering | CI gate, version-gated PyPI publishing | 🔧 Upload rehearsal/activation pending (#21) |
 | [0001](openspec/changes/0001-foundation-data-and-cli/) | Foundation | `init`/`doctor` onboarding, command registry, storage port, providers, currency, observability, `sobres data` | ✅ Done |
 | [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization (v1)** | Returns, risk, Markowitz, frontier, backtest | 🔧 Review corrections; R execution/publication deferred |
-| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | 📋 Planned |
+| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | Candidate in #9; alignment pending |
 | [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | 📋 Planned |
 | [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | 📋 Planned |
 | [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | 📋 Planned |
@@ -141,6 +141,22 @@ in-sample result is labelled as such. A multi-currency universe needs `--base`;
 returns are converted before any moment is estimated. Read
 [why your backtest looks too good](docs/why-your-backtest-looks-too-good.md)
 before trusting the Sharpe ratio.
+
+## Quickstart: saved state
+
+```bash
+sobres portfolio save core --tickers AAPL MSFT NVDA JNJ --weights 0.3 0.3 0.2 0.2
+sobres optimize markowitz --portfolio core --start 2018-01-01 --fill ffill --save-run
+sobres run list                          # newest first, with a one-line summary
+sobres run show <id> --format json       # the complete stored record
+sobres run diff <id-a> <id-b>            # two runs of the same command, side by side
+sobres watchlist add tech NVDA AMD
+sobres db info                           # path, schema version, size, rows per table
+sobres db export --to ~/backups/sobres-$(date +%F).sqlite
+```
+
+One SQLite file holds the cache and everything you save; `sobres cache clear`
+removes cached observations only and says what it preserved.
 
 **No API key is required** for the core tool. Prices come from yfinance and factor
 returns from the Ken French Data Library, both keyless. A free
