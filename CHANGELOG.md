@@ -11,6 +11,29 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+### Fixed
+- **Foundation review corrections (change 0012).** Redact secret values in generic
+  configuration commands; preserve factor identifiers and missing observations
+  through the cache; back up committed SQLite WAL data before migration; and
+  accept validated empty price windows such as weekends.
+- Include the Yahoo price client in base installations. Allow optional setup
+  answers to be empty, expose negative boolean flags, repair existing config
+  permissions, and propagate failed onboarding health checks to the exit status.
+- Reject currency conversion when any column lacks valid source currency metadata.
+
+### Added
+- **Foundation (change 0001).** The command registry and the Typer CLI
+  generated from it; the settings registry behind `sobres init`, `sobres doctor`
+  and `sobres config`; `sobres upgrade`; the storage port with its SQLite adapter,
+  forward-only migrations and a shared conformance suite; the observation cache
+  with per-dataset TTL and sub-range reuse; keyless yfinance, ECB and Ken French
+  providers plus FRED behind a free key; the currency model (`CurrencyPair`,
+  `convert`, sub-unit normalization, exact return conversion); structured
+  logging to stderr with redaction and opt-in OpenTelemetry tracing; and the
+  `sobres data`, `sobres cache`, `sobres config` and `sobres commands` groups.
+- Test scaffolding: architecture and invariant suites, recorded-fixture
+  provider tests, a scenario-coverage test, and `scripts/record_fixtures.py`.
+
 ### Changed
 - **Renamed the project to `sobres`** (change 0011). The PyPI distribution,
   the import package, and the console script are all `sobres`; the `qf` and
