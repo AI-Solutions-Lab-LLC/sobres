@@ -241,7 +241,7 @@ real unknowns.
 
 ## Review follow-up
 
-- [ ] Complete change 0012 and rerun its regression and artifact checks.
+- [x] Complete change 0012 and rerun its regression and artifact checks.
 - [ ] Replace synthetic provider payloads with deliberately recorded fixtures.
 - [ ] Complete the deferred D4 reuse audit before declaring foundation complete.
 

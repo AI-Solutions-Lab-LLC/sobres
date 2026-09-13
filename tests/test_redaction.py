@@ -8,6 +8,7 @@ from __future__ import annotations
 import io
 import json
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -83,3 +84,35 @@ def test_sentinel_credential_never_in_stderr(
     )
     assert SENTINEL_KEY not in result.stderr, name
     assert SENTINEL_KEY not in result.stdout, name
+
+
+@pytest.mark.parametrize("level", ["INFO", "DEBUG"])
+@pytest.mark.parametrize("key", ["fred_api_key", "db_url"])
+def test_secret_config_value_is_redacted(
+    cli: Callable[..., Any], tmp_path: Path, level: str, key: str
+) -> None:
+    """Scenario: Secret-valued config logging (0012)."""
+    log_file = tmp_path / "diagnostics.jsonl"
+    result = cli(
+        "--log-level",
+        level,
+        "config",
+        "set",
+        key,
+        SENTINEL_KEY,
+        env_extra={"SOBRES_LOG_FILE": str(log_file)},
+    )
+    assert result.exit_code == 0, result.stderr
+    for output in (result.stdout, result.stderr, log_file.read_text(encoding="utf-8")):
+        assert SENTINEL_KEY not in output
+    start = next(
+        json.loads(line) for line in result.stderr.splitlines() if '"command.start"' in line
+    )
+    assert start["params"]["value"] == REDACTED
+
+
+def test_nonsecret_generic_config_value_is_preserved() -> None:
+    assert (
+        scrub_mapping({"params": {"key": "log_level", "value": "INFO"}})["params"]["value"]
+        == "INFO"
+    )

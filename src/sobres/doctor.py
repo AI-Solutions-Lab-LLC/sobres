@@ -42,7 +42,7 @@ PYPI_URL = "https://pypi.org/pypi/sobres/json"
 MIN_PYTHON = (3, 11)
 MIN_FREE_BYTES = 200 * 1024 * 1024
 EXTRAS: dict[str, tuple[str, ...]] = {
-    "data": ("yfinance",),
+    "data": ("pandas_datareader",),
     "econ": ("statsmodels",),
     "opt": ("cvxpy",),
     "otel": ("opentelemetry.sdk",),

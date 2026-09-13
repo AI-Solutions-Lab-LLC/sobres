@@ -215,14 +215,18 @@ def field_schema(model: type[BaseModel]) -> list[dict[str, Any]]:
                 "name": name,
                 "type": _type_name(annotation),
                 "required": info.is_required(),
-                "default": None
-                if info.is_required()
-                else _json_default(info.get_default(call_default_factory=True)),
+                "default": (
+                    None
+                    if info.is_required()
+                    else _json_default(info.get_default(call_default_factory=True))
+                ),
                 "help": info.description or "",
                 "choices": list(_choices(annotation) or []),
-                "positional": bool((info.json_schema_extra or {}).get("positional"))
-                if isinstance(info.json_schema_extra, dict)
-                else False,
+                "positional": (
+                    bool((info.json_schema_extra or {}).get("positional"))
+                    if isinstance(info.json_schema_extra, dict)
+                    else False
+                ),
                 "multiple": _is_list(annotation),
             }
         )
@@ -381,7 +385,9 @@ def build_parameters(cmd: Command) -> tuple[list[inspect.Parameter], dict[str, A
                 default, help=help_text, show_default=not info.is_required()
             )
         elif scalar is bool:
-            param_default = typer.Option(bool(default), option_name, help=help_text)
+            param_default = typer.Option(
+                bool(default), f"{option_name}/--no-{option_name[2:]}", help=help_text
+            )
         else:
             param_default = typer.Option(
                 default, option_name, help=help_text, show_default=default is not None

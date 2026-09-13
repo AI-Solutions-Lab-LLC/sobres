@@ -1,7 +1,7 @@
 ---
 change: 0012-foundation-review-fixes
 depends_on: [0001-foundation-data-and-cli]
-status: proposed
+status: implemented
 ---
 
 # Foundation review corrections

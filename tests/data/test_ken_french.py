@@ -88,6 +88,32 @@ def test_cached_through_the_port(
     assert list(again.columns) == list(first.columns)
 
 
+@pytest.mark.parametrize("model", ["ff3", "ff5", "ff5+mom"])
+@pytest.mark.parametrize("frequency", ["daily", "monthly"])
+def test_cached_factor_values_match_direct(
+    storage: Storage, ken_french_source: FixtureKenFrenchSource, model: str, frequency: str
+) -> None:
+    """Scenario: Opaque cached factor identifiers (0012)."""
+    import pandas as pd
+
+    direct = KenFrenchProvider(source=ken_french_source).get_factors(
+        model, frequency, date(2020, 1, 1), date(2020, 6, 30)
+    )
+    provider = KenFrenchProvider(
+        source=ken_french_source, cache=ObservationCache(storage.observations)
+    )
+    for _ in range(2):
+        actual = provider.get_factors(model, frequency, date(2020, 1, 1), date(2020, 6, 30))
+        # Date-only indexes can use different pandas timestamp resolutions
+        # after SQL round-trip; every date, column, numeric dtype and value agrees.
+        pd.testing.assert_frame_equal(actual, direct, check_index_type=False, check_freq=False)
+        assert actual["Mkt-RF"].notna().all()
+    subset = provider.get_factors(model, frequency, date(2020, 3, 1), date(2020, 4, 30))
+    pd.testing.assert_frame_equal(
+        subset, direct.loc["2020-03-01":"2020-04-30"], check_index_type=False, check_freq=False
+    )
+
+
 def test_unzip_csv_rules() -> None:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as z:

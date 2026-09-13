@@ -105,6 +105,33 @@ def test_factors_notes_decimal_convention(cli: Callable[..., Any]) -> None:
     assert "decimal returns" in result.stdout
 
 
+def test_factor_known_answer_survives_cli_cache(cli: Callable[..., Any]) -> None:
+    """The existing July 1926 known-answer row survives cold and warm CLI paths."""
+    for expected_cache in ("miss", "hit"):
+        result = cli(
+            "data",
+            "factors",
+            "--model",
+            "ff3",
+            "--frequency",
+            "monthly",
+            "--start",
+            "1926-07-01",
+            "--end",
+            "1926-07-31",
+            "--format",
+            "json",
+        )
+        assert result.exit_code == 0, result.stderr
+        payload = json.loads(result.stdout)
+        assert payload["provenance"]["cache"] == expected_cache
+        assert len(payload["rows"]) == 1
+        row = payload["rows"][0]
+        assert row["index"] == "1926-07-31"
+        for column, percent in {"Mkt-RF": 2.96, "SMB": -2.56, "HML": -2.43, "RF": 0.22}.items():
+            assert row[column] == pytest.approx(percent / 100)
+
+
 def test_fx_empty_window_is_a_usage_error(cli: Callable[..., Any]) -> None:
     result = cli("data", "fx", "EURUSD", "--start", "1990-01-01", "--end", "1990-01-10")
     assert result.exit_code in (2, 4)
