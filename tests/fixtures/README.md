@@ -72,3 +72,13 @@ They are tied to the **202607 CRSP revision**. The old synthetic corpus used
 documents historical revisions and the change from CRSP FIZ to CIZ data in 2025.
 Investigate failures against the new raw response and its provenance before
 updating a known-answer assertion.
+
+## Factor-analysis fundamentals fixture
+
+`synthetic/yfinance/fundamentals.json` is the 0007 candidate's synthetic `Ticker.info`
+shape fixture, distinct from the recorded price payloads above. It proves parsing,
+not vendor truth or point-in-time fundamentals. Do not replace the main recordings
+with this earlier branch's synthetic prices or factor corpus.
+The fixture source prefers a recorded `yfinance/fundamentals.json` when present;
+otherwise fixture mode reads this explicitly synthetic corpus. Live sources never
+read it. The recorded-provider manifests and their hash checks remain unchanged.

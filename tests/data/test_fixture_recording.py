@@ -12,6 +12,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
+import pandas as pd
 import pytest
 
 from scripts import record_fixtures
@@ -68,3 +69,31 @@ def test_recording_http_failure_never_prints_key(
     assert key not in captured.out + captured.err
     assert "FRED recording failed" in captured.err
     assert not (tmp_path / "fred" / "meta.json").exists()
+
+
+def test_yahoo_recording_binds_fundamentals_to_the_main_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Recording provenance is verifiable."""
+    from sobres.data import yfinance_provider
+
+    raw = SimpleNamespace(
+        frame=pd.DataFrame({"Close": [100.0]}, index=pd.to_datetime(["2020-01-02"])),
+        meta={"currency": "USD", "symbol": "AAPL"},
+    )
+    source = SimpleNamespace(
+        history=lambda *args: raw,
+        fundamentals=lambda ticker: {"quoteType": "EQUITY", "marketCap": 123.0},
+    )
+    monkeypatch.setattr(yfinance_provider, "LiveYahooSource", lambda: source)
+    monkeypatch.setattr(record_fixtures, "ROOT", tmp_path)
+    monkeypatch.setattr(record_fixtures, "TICKERS", ("AAPL",))
+    record_fixtures.record_yfinance(date(2020, 1, 1), date(2020, 1, 3))
+    directory = tmp_path / "yfinance"
+    payload = (directory / "fundamentals.json").read_bytes()
+    fundamentals = json.loads(payload)
+    manifest = json.loads((directory / "meta.json").read_text(encoding="utf-8"))
+    assert fundamentals["tickers"]["AAPL"]["marketCap"] == 123.0
+    assert fundamentals["recorded_at"] and fundamentals["provider_version"]
+    assert "sha256" not in fundamentals  # the manifest hashes this payload, not itself
+    assert manifest["sha256"]["fundamentals.json"] == hashlib.sha256(payload).hexdigest()

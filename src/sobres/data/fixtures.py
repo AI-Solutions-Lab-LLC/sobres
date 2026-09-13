@@ -43,6 +43,17 @@ class FixtureYahooSource:
         meta = dict(meta_all.get("tickers", {}).get(ticker.upper(), {}))
         return RawHistory(frame=frame, currency=meta.get("currency"), meta=meta)
 
+    def fundamentals(self, ticker: str) -> dict[str, Any] | None:
+        """Recorded fundamentals, or the explicitly separated synthetic fixture corpus."""
+        path = self.root / "fundamentals.json"
+        if not path.exists():
+            path = self.root.parent / "synthetic" / "yfinance" / "fundamentals.json"
+        if not path.exists():
+            return None
+        docs = json.loads(path.read_text(encoding="utf-8")).get("tickers", {})
+        info = docs.get(ticker.upper())
+        return dict(info) if info else None
+
 
 class FixtureFredSource:
     """``<dir>/fred/<SERIES>.json`` — the API's JSON response body."""
