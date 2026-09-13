@@ -47,6 +47,8 @@ Publishing SHALL be driven by the version declared in
 
 ### Requirement: Publishing is armed explicitly
 
+Publishing SHALL remain disabled until a maintainer configures and enables the release target.
+
 #### Scenario: Disarmed by default
 - **WHEN** the repository variable `RELEASE_ENABLED` is not `true`
 - **THEN** no publish to PyPI SHALL occur
@@ -122,6 +124,8 @@ every repository in it; no repository SHALL store its own copy.
 
 ### Requirement: Artifacts are verified before upload
 
+The pipeline SHALL verify distribution metadata, buildability and clean installation before upload.
+
 #### Scenario: The built wheel actually works
 - **WHEN** distributions are built
 - **THEN** the wheel SHALL be installed into a clean virtual environment and
@@ -140,6 +144,8 @@ every repository in it; no repository SHALL store its own copy.
 
 ### Requirement: A shipped version is a documented version
 
+Every released version SHALL have a matching changelog section verified before publication.
+
 #### Scenario: Changelog gate
 - **WHEN** a publish is about to be authorized
 - **THEN** `CHANGELOG.md` SHALL contain a section heading for that version
@@ -152,6 +158,8 @@ every repository in it; no repository SHALL store its own copy.
 
 ### Requirement: Releases are recorded on GitHub
 
+Each published version SHALL have an idempotently created version tag and GitHub release.
+
 #### Scenario: Tag and release
 - **WHEN** a publish to PyPI succeeds
 - **THEN** a `v<version>` tag and a GitHub release with generated notes SHALL be
@@ -162,6 +170,8 @@ every repository in it; no repository SHALL store its own copy.
 - **THEN** the step SHALL succeed without creating a duplicate
 
 ### Requirement: Supply-chain scanning
+
+Dependency auditing SHALL gate changes, with static analysis and dependency updates configured as specified below.
 
 #### Scenario: Dependency audit gates merges
 - **WHEN** CI runs
@@ -179,6 +189,8 @@ every repository in it; no repository SHALL store its own copy.
 - **AND** runtime major-version bumps SHALL be excluded, as deliberate decisions
 
 ### Requirement: Local parity
+
+Contributors SHALL be able to run the corresponding CI checks and inspect release decisions locally.
 
 #### Scenario: Same checks before commit
 - **WHEN** a contributor installs the pre-commit hooks

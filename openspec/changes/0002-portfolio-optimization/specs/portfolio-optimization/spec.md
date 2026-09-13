@@ -34,6 +34,8 @@ The system SHALL convert price series to returns under one documented convention
 
 ### Requirement: One currency per computation
 
+Portfolio computations SHALL use one declared currency, converting mixed inputs before estimation.
+
 #### Scenario: Single currency needs no ceremony
 - **WHEN** every asset in a computation shares a currency
 - **THEN** it SHALL proceed with no rate fetch and no conversion
@@ -167,6 +169,8 @@ The system SHALL solve constrained mean-variance problems.
 
 ### Requirement: Efficient frontier
 
+The system SHALL compute a feasible frontier with ordered risk/return points and identified reference portfolios.
+
 #### Scenario: Frontier generation
 - **WHEN** `efficient_frontier(mu, sigma, n_points=50)` is called
 - **THEN** 50 portfolios SHALL be returned spanning min-variance return to max
@@ -219,6 +223,8 @@ The system SHALL evaluate an optimization strategy out-of-sample.
 
 ### Requirement: `sobres optimize` command group
 
+The optimization command group SHALL expose the four operations with validated inputs and consistent output.
+
 #### Scenario: Markowitz
 - **WHEN** `sobres optimize markowitz --tickers AAPL MSFT --start 2015-01-01` runs
 - **THEN** a weights table SHALL print with the portfolio's expected return,
@@ -243,3 +249,20 @@ The system SHALL evaluate an optimization strategy out-of-sample.
 - **WHEN** `--weights` is supplied with a count differing from `--tickers`, or not
   summing to 1.0 within `1e-6`
 - **THEN** `UsageError` SHALL be raised naming the discrepancy
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
