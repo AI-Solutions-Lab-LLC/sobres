@@ -16,7 +16,7 @@ from pydantic import Field
 
 from sobres.cli.commands.doctor import DoctorReport, build_report
 from sobres.cli.context import Context
-from sobres.config import display_value, read_config_file, write_config_file
+from sobres.config import display_value, ensure_secret_mode, read_config_file, write_config_file
 from sobres.core.errors import ConfigurationError
 from sobres.doctor import run_checks
 from sobres.registry import Params, register
@@ -178,6 +178,8 @@ def init(p: InitParams, ctx: Context) -> InitReport:
             changed.append(setting.key)
     if changed or not ctx.config.path.exists():
         write_config_file(ctx.config.path, values)
+    else:
+        ensure_secret_mode(ctx.config.path)
     # Re-resolve so storage setup and doctor see what was just written.
     fresh = Context.build(
         environ=ctx.environ,
@@ -194,6 +196,7 @@ def init(p: InitParams, ctx: Context) -> InitReport:
     finally:
         fresh.close()
     report = build_report(reports, strict=False)
+    ctx.pending_exit_code = report.exit_code
     first = (
         "sobres data macro DGS10 --start 2020-01-01"
         if values.get("fred_api_key")

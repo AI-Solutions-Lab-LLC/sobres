@@ -23,6 +23,7 @@ from sobres.data.fred_provider import (
     parse_observations,
     validate_api_key,
 )
+from sobres.data.storage.base import Storage
 from tests.data.contracts import contract_test_macro_provider
 
 PROVIDERS = {"fred": lambda src: FredProvider("key", source=src)}
@@ -53,7 +54,46 @@ def test_key_present_returns_float64_column(fred_source: FixtureFredSource) -> N
         ["DGS10"], date(2020, 1, 1), date(2020, 1, 31)
     )
     assert str(frame.dtypes["DGS10"]) == "float64"
-    assert frame["DGS10"].isna().sum() == 1  # New Year's Day is "." in the payload
+    # The recorded response marks both New Year's Day and MLK Day with ".".
+    assert list(frame.index[frame["DGS10"].isna()].strftime("%Y-%m-%d")) == [
+        "2020-01-01",
+        "2020-01-20",
+    ]
+    assert frame.loc["2020-01-02", "DGS10"] == pytest.approx(1.88)
+
+
+def test_mixed_frequency_preserves_native_dates(
+    fred_source: FixtureFredSource, storage: Storage
+) -> None:
+    """D4 reuse audit: preserve the outer union used in NewsWaveMetrics.
+
+    Scenario: Recorded payloads. CPI is monthly; DGS10 has daily observations.
+    Each individual recorded series must survive the combined cold/warm path.
+    """
+    import pandas as pd
+
+    from sobres.data.cache import ObservationCache
+
+    direct = FredProvider("fixture", source=fred_source)
+    start, end = date(2020, 1, 1), date(2020, 3, 31)
+    series_ids = ["DGS10", "CPIAUCSL"]
+    individual = {name: direct.get_series([name], start, end)[name] for name in series_ids}
+    provider = FredProvider(
+        "fixture", source=fred_source, cache=ObservationCache(storage.observations)
+    )
+    for _ in range(2):
+        frame = provider.get_series(series_ids, start, end)
+        # 23 January + 20 February + 22 March weekdays, plus CPI on Feb 1 / Mar 1.
+        assert len(frame) == 67
+        for name, series in individual.items():
+            pd.testing.assert_series_equal(
+                frame[name].dropna(), series.dropna(), check_index_type=False, check_freq=False
+            )
+        assert list(frame.index[frame["CPIAUCSL"].notna()].strftime("%Y-%m-%d")) == [
+            "2020-01-01",
+            "2020-02-01",
+            "2020-03-01",
+        ]
 
 
 def test_risk_free_converted_to_decimal(fred_source: FixtureFredSource) -> None:

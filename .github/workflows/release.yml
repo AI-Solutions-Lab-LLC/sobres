@@ -34,6 +34,7 @@ jobs:
       version: ${{ steps.check.outputs.version }}
       publish: ${{ steps.check.outputs.publish }}
       target: ${{ steps.check.outputs.target }}
+      reason: ${{ steps.check.outputs.reason }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -56,6 +57,7 @@ jobs:
             echo "|---|---|"
             echo "| Version | \`${{ steps.check.outputs.version }}\` |"
             echo "| Target | \`${{ steps.check.outputs.target }}\` |"
+            echo "| Reason | ${{ steps.check.outputs.reason }} |"
             echo "| Publish | \`${{ steps.check.outputs.publish }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -124,23 +126,28 @@ jobs:
     environment:
       name: ${{ needs.decide.outputs.target }}
       url: ${{ needs.decide.outputs.target == 'pypi' && format('https://pypi.org/project/sobres/{0}/', needs.decide.outputs.version) || format('https://test.pypi.org/project/sobres/{0}/', needs.decide.outputs.version) }}
-    permissions:
-      # Trusted Publishing (OIDC). No API token is stored anywhere in this repo.
-      id-token: write
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: release-dist
           path: dist/
 
+      - name: Check upload credential
+        env:
+          HAS_UPLOAD_TOKEN: ${{ secrets[needs.decide.outputs.target == 'testpypi' && 'PYPI_TEST' || 'PYPI_PROD'] != '' }}
+        run: |
+          if [ "$HAS_UPLOAD_TOKEN" != "true" ]; then
+            echo "::error::Required organization upload secret is unavailable for this index."
+            exit 1
+          fi
+
       - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: ${{ needs.decide.outputs.target == 'testpypi' && 'https://test.pypi.org/legacy/' || '' }}
+          password: ${{ secrets[needs.decide.outputs.target == 'testpypi' && 'PYPI_TEST' || 'PYPI_PROD'] }}
           print-hash: true
-          # PEP 740 attestations are signed with the same OIDC identity, so a
-          # consumer can verify which workflow in which repo built the artifact.
-          attestations: true
+          attestations: false
 
   # ---------------------------------------------------------------------------
   # The container image: same commit, same version gate, the exact wheel that
@@ -264,12 +271,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: No release for this push
+        env:
+          REASON: ${{ needs.decide.outputs.reason }}
+          VERSION: ${{ needs.decide.outputs.version }}
+          TARGET: ${{ needs.decide.outputs.target }}
         run: |
-          echo "Version ${{ needs.decide.outputs.version }} is already on the index."
-          echo "Bump the version in src/sobres/__about__.py to cut a release."
+          if [ "$REASON" = "disabled" ]; then
+            message="Publishing is disabled (RELEASE_ENABLED != true). No upload was attempted."
+          else
+            message="Version ${VERSION} already exists on ${TARGET}. No upload is needed."
+          fi
+          echo "$message"
           {
             echo "### No release"
             echo ""
-            echo "Version \`${{ needs.decide.outputs.version }}\` already exists on the index."
-            echo "Bump \`src/sobres/__about__.py\` and add a \`CHANGELOG.md\` entry to publish."
+            echo "$message"
           } >> "$GITHUB_STEP_SUMMARY"

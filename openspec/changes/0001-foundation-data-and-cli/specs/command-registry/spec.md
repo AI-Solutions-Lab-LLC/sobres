@@ -8,6 +8,8 @@ that 0004 adds surfaces rather than rewriting commands.
 
 ### Requirement: One declaration per command
 
+The command registry SHALL define the public command contract once and generate the specified surface behavior from it.
+
 #### Scenario: Declaration shape
 - **WHEN** a command is registered
 - **THEN** it SHALL declare a dotted name (`data.prices`, `optimize.markowitz`),
@@ -34,6 +36,8 @@ that 0004 adds surfaces rather than rewriting commands.
 
 ### Requirement: Parameter models are the validation layer
 
+The command registry SHALL define the public command contract once and generate the specified surface behavior from it.
+
 #### Scenario: Validation before the handler
 - **WHEN** invalid input reaches any surface
 - **THEN** the parameter model SHALL reject it before the handler runs
@@ -53,6 +57,8 @@ that 0004 adds surfaces rather than rewriting commands.
 
 ### Requirement: Results are typed
 
+The command registry SHALL define the public command contract once and generate the specified surface behavior from it.
+
 #### Scenario: Result types are frozen dataclasses or pydantic models
 - **WHEN** a handler returns
 - **THEN** its result SHALL be a declared type, never a bare `DataFrame` or dict
@@ -65,6 +71,8 @@ that 0004 adds surfaces rather than rewriting commands.
 - **AND** no command SHALL format its own output
 
 ### Requirement: Introspection
+
+The command registry SHALL define the public command contract once and generate the specified surface behavior from it.
 
 #### Scenario: The registry is queryable
 - **WHEN** `sobres commands --format json` runs
@@ -79,6 +87,8 @@ that 0004 adds surfaces rather than rewriting commands.
   module that fails to import is caught rather than silently absent
 
 ### Requirement: Stability
+
+The command registry SHALL define the public command contract once and generate the specified surface behavior from it.
 
 #### Scenario: Names are an interface
 - **WHEN** a command or parameter is renamed

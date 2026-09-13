@@ -48,7 +48,7 @@ def test_annualized_return_and_volatility_match_hand_computation() -> None:
 
 def test_sharpe_is_excess_return_over_volatility() -> None:
     panel = risk_metrics(SERIES, 0.02, "monthly")
-    assert panel.sharpe == pytest.approx((panel.annualized_return - 0.02) / panel.volatility)
+    assert panel.sharpe == pytest.approx((sum(R) / len(R) * N - 0.02) / panel.volatility)
     assert sharpe_ratio(0.1, 0.02, 0.2) == pytest.approx(0.4)
     assert math.isnan(sharpe_ratio(0.1, 0.0, 0.0))
 
@@ -58,7 +58,7 @@ def test_sortino_uses_downside_deviation_only() -> None:
     dd = math.sqrt(sum(b**2 for b in below) / 10) * math.sqrt(N)
     assert downside_deviation(SERIES, "monthly") == pytest.approx(dd)
     panel = risk_metrics(SERIES, 0.0, "monthly")
-    assert panel.sortino == pytest.approx(panel.annualized_return / dd)
+    assert panel.sortino == pytest.approx((sum(R) / len(R) * N) / dd)
     assert panel.sortino > panel.sharpe  # downside deviation < total volatility here
     assert math.isnan(sortino_ratio(pd.Series([0.01, 0.02]), "monthly", 0.0))
 

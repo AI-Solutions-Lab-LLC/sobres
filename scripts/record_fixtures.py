@@ -13,9 +13,11 @@ the provider/library version. The offline suite parses exactly these files.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import UTC, date, datetime
+from importlib.metadata import version
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
@@ -35,15 +37,28 @@ KEN_FRENCH_FILES = (
 def _meta(provider: str, **extra: object) -> str:
     return (
         json.dumps(
-            {"recorded_at": datetime.now(UTC).isoformat(), "provider": provider, **extra}, indent=2
+            {
+                "recorded_at": datetime.now(UTC).isoformat(),
+                "provider": provider,
+                "provider_version": (
+                    version("yfinance") if provider == "yfinance" else "unversioned"
+                ),
+                "client": "yfinance" if provider == "yfinance" else "httpx",
+                "client_version": version("yfinance" if provider == "yfinance" else "httpx"),
+                "sha256": {
+                    path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                    for path in sorted((ROOT / provider).iterdir())
+                    if path.is_file() and path.name != "meta.json"
+                },
+                **extra,
+            },
+            indent=2,
         )
         + "\n"
     )
 
 
 def record_yfinance(start: date, end: date) -> None:
-    import yfinance as yf
-
     from sobres.data.yfinance_provider import LiveYahooSource
 
     out = ROOT / "yfinance"
@@ -71,10 +86,29 @@ def record_yfinance(start: date, end: date) -> None:
         if info:
             fundamentals[ticker] = {k: info.get(k) for k in keys}
     (out / "fundamentals.json").write_text(
-        _meta("yfinance", provider_version=yf.__version__, tickers=fundamentals), encoding="utf-8"
+        json.dumps(
+            {
+                "recorded_at": datetime.now(UTC).isoformat(),
+                "provider": "yfinance",
+                "provider_version": version("yfinance"),
+                "source": "yfinance.Ticker.info",
+                "tickers": fundamentals,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
     )
     (out / "meta.json").write_text(
-        _meta("yfinance", provider_version=yf.__version__, tickers=tickers), encoding="utf-8"
+        _meta(
+            "yfinance",
+            source="https://query2.finance.yahoo.com/v8/finance/chart/{ticker}",
+            start=start.isoformat(),
+            end=end.isoformat(),
+            serialization="history(auto_adjust=False, actions=False); CSV rounded to six decimals",
+            tickers=tickers,
+        ),
+        encoding="utf-8",
     )
 
 
@@ -95,26 +129,46 @@ def record_fred(start: date, end: date, api_key: str) -> None:
             },
             timeout=30,
         )
-        response.raise_for_status()
+        if response.status_code != 200:
+            # HTTPStatusError includes the request URL and its API key.
+            raise RuntimeError(f"FRED recording failed (HTTP {response.status_code})")
         payload = response.json()
         (out / f"{series_id}.json").write_text(
             json.dumps(payload, indent=1) + "\n", encoding="utf-8"
         )
     (out / "meta.json").write_text(
-        _meta("fred", api="fred/series/observations file_type=json"), encoding="utf-8"
+        _meta(
+            "fred",
+            source="https://api.stlouisfed.org/fred/series/observations",
+            api="fred/series/observations file_type=json",
+            start=start.isoformat(),
+            end=end.isoformat(),
+        ),
+        encoding="utf-8",
     )
 
 
 def record_ecb(start: date, end: date) -> None:
+    import httpx
+
     from sobres.data.ecb_provider import LiveEcbSource
 
     out = ROOT / "ecb"
     out.mkdir(parents=True, exist_ok=True)
-    source = LiveEcbSource()
-    for currency in ECB_CURRENCIES:
-        (out / f"{currency}.csv").write_text(source.csv(currency, start, end), encoding="utf-8")
+    # Recording a decade is larger than an interactive data request.
+    with httpx.Client(timeout=60.0) as client:
+        source = LiveEcbSource(client)
+        for currency in ECB_CURRENCIES:
+            (out / f"{currency}.csv").write_text(source.csv(currency, start, end), encoding="utf-8")
     (out / "meta.json").write_text(
-        _meta("ecb", api="EXR/D.<CCY>.EUR.SP00.A?format=csvdata"), encoding="utf-8"
+        _meta(
+            "ecb",
+            source="https://data-api.ecb.europa.eu/service/data/EXR",
+            api="EXR/D.<CCY>.EUR.SP00.A?format=csvdata",
+            start=start.isoformat(),
+            end=end.isoformat(),
+        ),
+        encoding="utf-8",
     )
 
 
@@ -126,24 +180,53 @@ def record_ken_french() -> None:
     source = LiveKenFrenchSource()
     for stem in KEN_FRENCH_FILES:
         (out / f"{stem}.CSV").write_text(source.csv_text(stem), encoding="utf-8")
-    (out / "meta.json").write_text(_meta("ken_french"), encoding="utf-8")
+    (out / "meta.json").write_text(
+        _meta(
+            "ken_french",
+            source="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp",
+            provider_version=(out / f"{KEN_FRENCH_FILES[0]}.CSV")
+            .read_text(encoding="utf-8")
+            .splitlines()[0],
+        ),
+        encoding="utf-8",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
+    from sobres.config import resolve
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--start", type=date.fromisoformat, default=date(2015, 1, 2))
     parser.add_argument("--end", type=date.fromisoformat, default=date(2024, 12, 31))
-    parser.add_argument("--fred-api-key", default=None, help="needed to record FRED")
+    parser.add_argument(
+        "--fred-api-key",
+        default=None,
+        help="defaults to the declared FRED setting; prefer sobres init",
+    )
     parser.add_argument("--only", nargs="*", choices=["yfinance", "fred", "ecb", "ken_french"])
     args = parser.parse_args(argv)
+    if args.end < args.start:
+        parser.error("--end must be on or after --start")
     wanted = set(args.only or ["yfinance", "fred", "ecb", "ken_french"])
     if "yfinance" in wanted:
         record_yfinance(args.start, args.end)
     if "fred" in wanted:
-        if not args.fred_api_key:
-            print("FRED needs --fred-api-key; skipping", file=sys.stderr)
+        key = args.fred_api_key or resolve().get("fred_api_key")
+        if not key:
+            print(
+                "FRED needs SOBRES_FRED_API_KEY or a configured fred_api_key; skipping",
+                file=sys.stderr,
+            )
         else:
-            record_fred(args.start, args.end, args.fred_api_key)
+            try:
+                record_fred(args.start, args.end, str(key))
+            except Exception as exc:
+                # Transport errors may also contain a URL with the key.
+                print(
+                    f"FRED recording failed ({type(exc).__name__}); check key/network",
+                    file=sys.stderr,
+                )
+                return 1
     if "ecb" in wanted:
         record_ecb(args.start, args.end)
     if "ken_french" in wanted:

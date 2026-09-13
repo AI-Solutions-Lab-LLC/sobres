@@ -9,7 +9,6 @@ translated into the 0001 taxonomy before they leave.
 from __future__ import annotations
 
 import contextlib
-import shutil
 import time
 import uuid
 from collections.abc import Callable, Iterator, Sequence
@@ -254,9 +253,9 @@ class SqliteStorage:
     def _backup_before_migration(self) -> None:
         if self.path is None or not self.path.exists():
             return
-        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
         backup = self.path.with_name(f"{self.path.name}.bak-{stamp}")
-        shutil.copy2(self.path, backup)
+        self.export_to(backup)
         self._log.warning("storage.backup", path=str(backup))
         if self._options.on_backup is not None:
             self._options.on_backup(str(backup))

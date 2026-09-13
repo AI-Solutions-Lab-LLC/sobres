@@ -25,84 +25,77 @@ forecasts, and plan real-world money goals (retirement, house, car, college).
 The CLI is the first surface. The library underneath it is designed so a web API
 or notebook can sit on top later without moving any logic.
 
-## The one architectural rule
+## Architecture: current implementation and proposed target
 
-```
-              ┌──────────────────────────────────────────────┐
-              │            registry.py  (0001)               │  one declaration
-              │   every command: params, types, defaults      │  per capability
-              └───────┬──────────────────┬───────────────────┘
-                      │                  │
-              ┌───────▼──────────────────▼───────────────────┐
-  adapters →  │  cli/ (Typer)   api/ (FastAPI)   frontend/   │  no business logic
-              │      ↑ logs and spans are emitted here        │
-              ├──────────────────────────────────────────────┤
-  math     →  │  core/  pure, I/O-free, deterministic        │  no network, no disk,
-              │         optional progress callback            │  no logging
-              ├──────────────────────────────────────────────┤
-  I/O      →  │  data/  providers ─┐                          │  no math
-              │         storage/base.py  ← port               │
-              │         storage/adapters/  ← only place a     │
-              │              database driver is imported      │
-              └──────────────────────────────────────────────┘
-```
+The foundation merged through PR #33 (`b9792d7`) currently uses `core/`, `data/`, `cli/`, a settings
+registry and a registry that also builds Typer commands. PR #8
+merged optimization into the foundation stack branch (`7f59d01`), not main; see the [0013 audit](changes/0013-template-development-alignment/alignment-audit.md).
+Do not claim that the following layout exists until 0013 is implemented.
 
-- `core/**` — pure functions and frozen dataclasses. Given the same inputs, always
-  the same outputs. No `requests`, no `open()`, no `datetime.now()` reaching in
-  unannounced (clock is injected).
-- `data/**` — every byte that crosses the network. Returns plain `pandas` objects
-  with a documented shape. Caches to disk. Knows nothing about optimization.
-- `cli/**`, `api/**`, `frontend/**` — parse, call `core`, format. Three renderings
-  of one set of capabilities, all generated from `registry.py` — declared in 0001,
-  consumed by the API and UI from 0004 — so a parameter added in one place
-  appears in all three. A parity test fails the build if any registered command
-  lacks an API route or a UI view.
+The merged AISL template supplies repository tooling and shared agent procedures.
+Its context blueprint motivates this **proposed Sobres application expansion**:
 
-This rule is what makes the tool testable: the math is tested against fixtures with
-no network, and the providers are tested against recorded payloads. It is also what
-makes the UI cheap — it is a third adapter, not a second implementation.
-
-## Package layout (target)
-
-```
+```text
 src/sobres/
-├── __about__.py
-├── config.py               # settings: cache dir, API keys from env, defaults
-├── core/
-│   ├── returns.py          # price → returns, annualization, compounding
-│   ├── risk.py             # vol, downside dev, VaR/CVaR, max drawdown, beta
-│   ├── moments.py          # expected returns + covariance estimators
-│   ├── optimize.py         # Markowitz MVO, efficient frontier, risk parity
-│   ├── factors.py          # CAPM, Fama-French 3/5, momentum regressions
-│   ├── timeseries.py       # ARIMA/GARCH wrappers, stationarity tests
-│   ├── goals.py            # retirement / house / car / education solvers
-│   ├── simulate.py         # Monte Carlo + bootstrap engines
-│   └── backtest.py         # walk-forward rebalancing evaluation
-├── registry.py             # 0001: every command declared once; CLI generated from it
-├── observability/          # logging + tracing setup, redaction
-├── data/
-│   ├── base.py             # PriceProvider / FactorProvider / MacroProvider protocols
-│   ├── cache.py            # observation cache w/ per-dataset TTL, over the port
-│   ├── storage/
-│   │   ├── base.py         # repository protocols + backend registry
-│   │   ├── migrations/     # one backend-neutral migration set
-│   │   └── adapters/       # the ONLY place a DB driver is imported
-│   │       └── sqlite.py
-│   ├── yfinance_provider.py
-│   ├── fred_provider.py
-│   └── ken_french.py
-├── cli/
-│   ├── main.py             # root Typer app
-│   ├── render.py           # table | json | csv renderers
-│   └── commands/
-│       ├── data.py, analyze.py, optimize.py, plan.py, econ.py
-│       ├── portfolio.py, run.py, db.py      # 0003
-│       └── serve.py, deploy.py              # 0004, 0005
-└── api/                    # 0004: FastAPI adapter + job runner + SSE
-
-frontend/                   # 0004: React SPA (built assets ship in the wheel)
-site/                       # 0006: animated landing page → GitHub Pages
+  __about__.py / py.typed          unchanged package identity and version source
+  registry.py / results.py        transport-neutral declarations and result types
+  settings.py                     one settings registry, secret metadata and precedence
+  bootstrap.py                    concrete adapter selection and lifecycle
+  core/                           pure math, data types, conventions and frame rules
+  ports/{providers,storage}.py     owned protocols; no driver or framework types
+  application/                    use cases, cache/currency coordination, health
+    commands/                     declarations and handlers shared by transports
+  adapters/
+    cli/                          Typer parsing, prompts and rendering
+    api/                          0004 optional FastAPI app; static/ holds built assets
+    providers/                    vendor I/O, parsing and fixture sources
+    storage/                      SQLite and adapter-owned immutable migrations
+    config.py                     config-file I/O
+  observability/                  adapter diagnostics; no core instrumentation
+  cli/ / data/ / config.py         temporary forwarding compatibility paths only
+frontend/                         0004 React SPA, separate locked build
+site/                             0006 single product home page
+compose.yaml / Dockerfile         0005 container profile
 ```
+
+Dependencies flow transport → application → core/ports. Concrete I/O stays in
+adapters and composition; pure computations never read disk/network/settings or
+emit logs. Application code can coordinate I/O through injected ports but cannot
+import concrete adapters. Keep all public `sobres.core` APIs and existing command
+names, defaults, aliases, formats and exit codes compatible. New features use the
+new paths after migration; old paths become facades, not parallel implementations.
+
+The detailed [0013 map](changes/0013-template-development-alignment/design.md)
+assigns every current module and test family, compatibility checks and rollout.
+`tests/core/` remains known-answer math; `tests/application/` proves use cases;
+`tests/contracts/` defines provider/storage behavior; `tests/integration/` covers
+actual adapters, migrations and backup. CLI/API, architecture, invariant,
+packaging, recorded-fixture and deliberately live-network tests remain distinct.
+
+## Development contract (proposed by 0013)
+
+Shared entry: `AGENTS.md`; Claude imports it, Codex uses linked individual skills
+and explicitly reads applicable shared rules. Preserve Sobres' review skill and
+rules while consolidating instructions. Private `context-lake/` is optional and
+pinned; contributors, CI and package consumers work without it. Local project
+standards remain sufficient and public artifacts exclude context/state/secrets.
+
+Issue → merged planning PR → small implementation PRs. A local request to prepare
+a plan does not require publishing an issue until publication is requested, and
+it does not authorize implementation. Each task is at most about two hours with
+its test; ordinarily group 1–3 tasks per PR, explaining larger atomic changes.
+
+Use explicit clone-local environments, pinned development tools and the documented
+Make equivalents on supported platforms. Black/isort at 100 are the formatting
+authorities; retain compatible Ruff lint and strict mypy. Preserve 90% branch
+coverage, offline tests, cross-platform CI, strict spec validation, workflow lint,
+base-artifact install/onboarding and dependency audit. These commands become
+available with 0013 implementation, not merely by merging these documents.
+
+Registry generation remains mandatory for CLI commands. API/UI generation is
+restricted to explicitly reviewed exposure metadata: excluded administration
+commands have no route/schema/form. Shared analysis services have parity; browser
+settings/health use narrow allowlists and do not expose arbitrary local operations.
 
 ## Command surface (target)
 
@@ -159,7 +152,7 @@ pip install sobres  →  sobres init  →  sobres doctor
 
 **Settings are declared once**, like commands. Each carries its env var, whether
 it is a secret, how to obtain it, and an optional live validator; `sobres init`,
-`sobres doctor`, `sobres config`, and the 0004 settings page all derive from the
+`sobres doctor`, `sobres config`, and the browser-safe 0004 settings projection derive from the
 declaration. A test asserts every env var the code reads is a declared setting.
 
 **Doctor's checks are declared once**, too — a `Check` registry with `run` and
@@ -169,34 +162,33 @@ setting and provider has one. Every failing line carries its next step. `sobres
 deploy check` and the container health check call doctor rather than
 re-implementing health.
 
-## Storage: a port, with SQLite behind it
+## Storage: owned ports, with SQLite behind them
 
 Persistence is reachable only through repository protocols in
-`data/storage/base.py`, phrased in domain terms — observations, date ranges,
+`ports/storage.py` after 0013 (currently `data/storage/base.py`), phrased in domain terms — observations, date ranges,
 portfolios — never as SQL execution. A port phrased as SQL is a SQL port, and
 swapping it would still be a rewrite.
 
 `SOBRES_DB_URL` selects the adapter, defaulting to
-`sqlite:///<user-data-dir>/sobres.db`. **No database driver is imported
-outside `data/storage/adapters/`**, and a test enforces it.
+`sqlite:///<user-data-dir>/sobres.db`. **Database drivers stay inside `adapters/storage/` after 0013** (currently
+`data/storage/adapters/`), enforced by architecture tests.
 
 SQLAlchemy Core (the expression language, not the ORM) sits *below* the
-protocols as the dialect layer, with Alembic for migrations. Call sites never see
+protocols as the dialect layer, with adapter-owned migrations. Call sites never see
 a `Session`, a `Table`, or a `Row`, so even that choice stays reversible.
 
-The schema stays inside the capability intersection of **SQLite, PostgreSQL, and
-DuckDB**: portable column types, application-generated identifiers, explicit UTC
-timestamps, JSON stored as text, and no backend-specific SQL in shared code.
-
-**Only the SQLite adapter is implemented.** The port, the registry, and a shared
-**conformance suite** ship with it. The suite is the part that makes a second
-backend cheap — it states the contract in executable form while there is exactly
-one implementation, and adding a backend means a new adapter file plus one
-fixture-list entry.
+SQLite is the only implemented operational backend. Use portable owned data
+contracts, stable IDs and UTC timestamps; SQL and released migration details stay
+behind adapters. Shared behavioral conformance covers transactions, failures,
+concurrency and restoration. PostgreSQL requires its own implementation, actual
+engine tests and explicit export/import/cutover/rollback before portability is
+claimed. DuckDB, cache and vectors are separate capabilities, not interchangeable
+operational repositories. Changing a URL does not migrate user data.
 
 With SQLite, one file is the entire local state — cache, portfolios, goals, runs,
 jobs. That is a property of the default backend, not of the system: it is what
-lets Docker mount one volume and a backup be one copy.
+lets Docker mount one volume. Take consistent backups through the SQLite backup
+API, including committed WAL data; copying a live main database file is insufficient.
 
 API keys are the exception: they stay in the config file at mode `0600` and never
 enter the database.
@@ -268,12 +260,16 @@ Each is one OpenSpec change under `openspec/changes/`.
 | 0009 | `econometrics-forecasting` | ARIMA/GARCH forecasting, stationarity, macro overlays |
 | 0010 | `currency-and-ppp` | FX attribution and hedging, PPP comparison, PPP-adjusted goals |
 | 0011 | `rebrand-sobres` | Rename through the code: import package, console script, env vars, image, pages URL |
+| 0012 | `foundation-review-fixes` | Foundation correctness and regression contracts, implemented in the local foundation |
+| 0013 | `template-development-alignment` | Shared dev harness/checks, optional context, compatible application layout and active-plan reconciliation |
 
 0001 → 0002 is the v1.0.0 release. 0003 → 0006 turn it into a deployable product
 with a UI. 0007–0009 then add analytics to a UI that already exists, rather than
 retrofitting one at the end. 0010 makes the whole tool international, last because
-it is the change that touches every earlier one. Each change depends only on what
-came before it.
+it is the change that touches every earlier one. Before resuming the open implementation stack, merge the amended plan and
+implement 0013. Each feature retains its domain prerequisites; transport parity
+requires 0004, container distribution 0005, and the common migration 0013.
+See each proposal for exact dependencies rather than inferring them from numbers.
 
 0011 is out of band: it renames the project and can land at any point, though the
 longer it waits the more published artifacts carry the old name.
@@ -318,8 +314,8 @@ Credentials, by index and registry:
 2. **No key, no problem.** The tool works out of the box on free sources.
 3. **Reproducible.** Same inputs + same cached data + same seed → identical output.
 4. **Cite the math.** Each core function's docstring names the formula and a source.
-5. **The UI never diverges from the CLI.** Both are generated from one registry,
-   and a parity test fails the build if they drift.
+5. **Exposed UI operations never diverge from the CLI.** Both use shared services
+   and explicit registry exposure; parity also rejects routes for excluded commands.
 6. **Swappable things sit behind ports.** Data providers, the storage backend,
    and the solver are protocols in this codebase's namespace; their library types
    never appear in signatures outside their adapter.
@@ -333,3 +329,13 @@ Credentials, by index and registry:
 10. **Every release is versioned, gated, and recorded.** Nothing reaches an index
     or a registry except through the pipeline in 0000, from a green `main`, with a
     CHANGELOG section and a git tag. No manual upload, ever.
+
+## Template and context decisions
+
+Baseline: merged AISL project-template main at 52e8426 and its reviewed lake pin
+`de42bd55f7b2268443fa4e46c13e74f99bdab144`. The [audit](changes/0013-template-development-alignment/alignment-audit.md)
+records full revisions, every open PR, adopted local decisions and deferred profiles.
+Context review documents are proposed, not blanket approval for cloud/enterprise
+services. Keep 0000's organization-token publishing contract (existing issue #21)
+as an explicit template exception; current OIDC workflow/docs still need correction.
+0005/0006 publication is independently enabled only after artifact/access review.
