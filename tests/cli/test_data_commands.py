@@ -106,7 +106,7 @@ def test_factors_notes_decimal_convention(cli: Callable[..., Any]) -> None:
 
 
 def test_factor_known_answer_survives_cli_cache(cli: Callable[..., Any]) -> None:
-    """The existing July 1926 known-answer row survives cold and warm CLI paths."""
+    """July 1926 (recorded 202607 CRSP revision) survives cold and warm CLI paths."""
     for expected_cache in ("miss", "hit"):
         result = cli(
             "data",
@@ -128,7 +128,7 @@ def test_factor_known_answer_survives_cli_cache(cli: Callable[..., Any]) -> None
         assert len(payload["rows"]) == 1
         row = payload["rows"][0]
         assert row["index"] == "1926-07-31"
-        for column, percent in {"Mkt-RF": 2.96, "SMB": -2.56, "HML": -2.43, "RF": 0.22}.items():
+        for column, percent in {"Mkt-RF": 2.89, "SMB": -2.42, "HML": -2.75, "RF": 0.22}.items():
             assert row[column] == pytest.approx(percent / 100)
 
 

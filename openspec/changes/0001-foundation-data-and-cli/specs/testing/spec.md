@@ -85,6 +85,17 @@ Automated tests SHALL exercise the specified observable invariants and report mi
 - **AND** the fixture SHALL carry the date and provider version it was recorded
   from
 
+#### Scenario: Recorded market dates survive timezone changes
+- **WHEN** recorded daily Yahoo bars contain different UTC offsets across daylight saving time
+- **THEN** replay SHALL preserve each exchange-local calendar date and include both requested endpoints
+- **AND** it SHALL return the same prices as the live provider's date normalization
+
+#### Scenario: Recording provenance is verifiable
+- **WHEN** provider payloads are recorded
+- **THEN** metadata SHALL identify the source, client version, recording time, request window where applicable, and SHA-256 of each payload
+- **AND** offline checks SHALL reject a changed payload whose recorded digest no longer matches
+- **AND** known-answer tests SHALL identify the recorded vendor revision rather than assume historical observations never change
+
 #### Scenario: Re-recording is deliberate
 - **WHEN** a fixture is regenerated
 - **THEN** it SHALL be a reviewable diff in its own commit, never an incidental
