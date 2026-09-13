@@ -35,12 +35,36 @@ def test_adjusted_close_is_the_default(yahoo_source: FixtureYahooSource) -> None
     close = provider.get_prices(["AAPL"], date(2020, 8, 1), date(2020, 9, 30), field="close")
     assert adj.attrs["field"] == "adj_close" and close.attrs["field"] == "close"
     assert close.attrs["return_kind"] == "price return"
-    # The fixture carries a 4:1 split on 2020-08-31: the raw close halves twice,
-    # the adjusted series does not.
+    # Yahoo Close is already split-adjusted. Neither field has a fictitious
+    # 75% loss at AAPL's 2020-08-31 split. Adj Close additionally adjusts dividends.
+    # Source: https://github.com/ranaroussi/yfinance/issues/687
     raw_move = close["AAPL"].pct_change().loc["2020-08-31"]
     adj_move = adj["AAPL"].pct_change().loc["2020-08-31"]
-    assert raw_move < -0.5 and abs(adj_move) < 0.2
-    assert [f["rule"] for f in close.attrs["flags"]] == ["implausible-move"]
+    assert abs(raw_move) < 0.2 and abs(adj_move) < 0.2
+    assert not any(f["rule"] == "implausible-move" for f in close.attrs["flags"])
+    # Recorded Close values on either side of the split, in split-adjusted USD.
+    assert close.loc["2020-08-28", "AAPL"] == pytest.approx(124.807503)
+    assert close.loc["2020-08-31", "AAPL"] == pytest.approx(129.039993)
+    # AAPL's 2020-08-07 dividend makes adjusted return exceed price return.
+    assert adj["AAPL"].pct_change().loc["2020-08-07"] > close["AAPL"].pct_change().loc["2020-08-07"]
+    raw = yahoo_source.history("AAPL", date(2020, 8, 1), date(2020, 9, 30)).frame
+    assert list(adj["AAPL"]) == list(raw["Adj Close"])
+    assert list(close["AAPL"]) == list(raw["Close"])
+
+
+def test_recorded_dates_survive_dst_and_include_endpoints(yahoo_source: FixtureYahooSource) -> None:
+    """Scenario: Recorded market dates survive timezone changes."""
+    for ticker, start, end in (
+        ("AAPL", date(2020, 3, 6), date(2020, 3, 9)),
+        ("VOD.L", date(2020, 3, 27), date(2020, 3, 30)),
+    ):
+        raw = yahoo_source.history(ticker, start, end)
+        assert list(raw.frame.index.date) == [start, end]
+        actual = YFinanceProvider(source=yahoo_source).get_prices([ticker], start, end)
+        assert list(actual.index.date) == [start, end]
+        assert list(actual[ticker]) == pytest.approx(
+            list(raw.frame["Adj Close"] / (100 if ticker == "VOD.L" else 1))
+        )
 
 
 def test_unknown_ticker_raises_naming_symbol(yahoo_source: FixtureYahooSource) -> None:

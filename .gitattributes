@@ -1,0 +1,2 @@
+# Recorded payload digests cover exact bytes, including vendor line endings.
+tests/fixtures/** -text

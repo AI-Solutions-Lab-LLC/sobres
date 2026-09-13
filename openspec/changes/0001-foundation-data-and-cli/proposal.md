@@ -2,7 +2,7 @@
 change: 0001-foundation-data-and-cli
 milestone: v1 (part 1 of 2)
 depends_on: []
-status: in_progress
+status: implemented
 ---
 
 # 0001 — Foundation: data layer and CLI shell
@@ -116,7 +116,8 @@ the codebase is small enough that the rule is free to follow.
 
 ## Review readiness (PR #7)
 
-Change 0012 defines the ten review corrections. Foundation remains in progress until
-recorded provider fixtures replace the synthetic corpus and the D4 reuse audit is
-completed. These are not waived by passing the remediation tests. FRED FX adapter
-selection is explicitly deferred to 0010; ECB remains the foundation FX provider.
+Change 0012 implements the ten review corrections. All four provider fixture sets
+were recorded live on 2026-09-13, and the D4 reuse audit is complete. See
+`docs/foundation-completion.md` for verification and `docs/foundation-reuse-audit.md`
+for the comparison. FRED FX adapter selection remains explicitly deferred to 0010;
+ECB remains the foundation FX provider.
