@@ -178,7 +178,7 @@ FRED_API_KEY = declare(
         secret=True,
         required=False,
         obtain="https://fred.stlouisfed.org/docs/api/api_key.html",
-        affects=("data.macro", "data.fx (fred source)"),
+        affects=("data.macro",),
         validate_live=_validate_fred_key,
     )
 )

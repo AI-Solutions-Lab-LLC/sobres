@@ -92,9 +92,24 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [1.0.0] - 2026-09-12
 
-The first release: the foundation plus portfolio optimization. From here the
+Planned first release (not yet published): the foundation plus portfolio optimization. From here the
 CLI's command surface, its `--format json` shapes and the `sobres.core` public
 functions are the compatibility surface.
+### Fixed
+- **PR #8 review corrections.** Prior-only decision rates, initial-capital drawdown,
+  gap-preserving return intervals, CAPM benchmarks, target backtests, finite input
+  validation, public covariance repair, exact frontier counts, typed risk output,
+  cash-inclusive fees, solver protocol and analytic derivatives.
+- Align release upload authentication with organization tokens and report disabled
+  publishing accurately; production activation remains pending issue #21.
+- **Foundation review corrections (change 0012).** Redact secret values in generic
+  configuration commands; preserve factor identifiers and missing observations
+  through the cache; back up committed SQLite WAL data before migration; and
+  accept validated empty price windows such as weekends.
+- Include the Yahoo price client in base installations. Allow optional setup
+  answers to be empty, expose negative boolean flags, repair existing config
+  permissions, and propagate failed onboarding health checks to the exit status.
+- Reject currency conversion when any column lacks valid source currency metadata.
 
 ### Added
 - **Portfolio optimization (change 0002).** `sobres optimize markowitz`

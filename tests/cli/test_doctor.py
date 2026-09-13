@@ -283,13 +283,30 @@ def test_disk_space_and_extras_and_python(
     monkeypatch.setattr(shutil, "disk_usage", raising)
     assert run_checks(ctx, only=["disk-space"])[0].status == "skip"
     monkeypatch.setattr(doc, "EXTRAS", {"data": ("definitely_not_installed_module",)})
-    assert run_checks(ctx, only=["extras"])[0].status == "warn"
+    assert run_checks(ctx, only=["extras"])[0].status == "ok"
     monkeypatch.setattr(doc, "EXTRAS", {"data": ("json",), "web": ("nope_module",)})
     assert "available: web" in run_checks(ctx, only=["extras"])[0].message
     monkeypatch.setattr(doc, "EXTRAS", {"data": ("json",)})
     assert run_checks(ctx, only=["extras"])[0].status == "ok"
     monkeypatch.setattr(sys, "version_info", (3, 9, 0))
     assert run_checks(ctx, only=["python-version"])[0].status == "fail"
+
+
+def test_base_prices_do_not_require_an_extra(
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Base prices do not require an extra."""
+    ctx = make_context()
+    monkeypatch.setattr(doc, "_module_present", lambda name: name == "yfinance")
+    report = run_checks(ctx, only=["extras"])[0]
+    assert report.status == "ok"
+    assert "installed extras: none" in report.message
+    assert "cannot be fetched" not in report.message
+    monkeypatch.setattr(doc, "_module_present", lambda name: False)
+    report = run_checks(ctx, only=["extras"])[0]
+    assert report.status == "fail"
+    assert "yfinance" in report.message
+    assert report.fix_hint == "run: pip install --upgrade sobres"
 
 
 def test_config_file_check_paths(make_context: Callable[..., Context], env: dict[str, str]) -> None:

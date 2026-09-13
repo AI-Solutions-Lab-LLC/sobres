@@ -1,5 +1,9 @@
 # 0007 — Design
 
+Proposed design carried forward from PR #13; statements about tests or
+behavior describe that branch's intent and claims, not verified acceptance here.
+Reconcile through R0/R1/R2 and this amendment before implementation.
+
 ## Regression on numpy, HAC by hand
 
 `statsmodels` stays in the `econ` extra. The OLS fit, classical standard errors
@@ -52,3 +56,13 @@ stores keys upper-cased, and restores the caller's casing on the way out
 | `RF` from the factor file | FRED bill | Would mix two risk-free series in one regression |
 | Monthly default | Daily default | Factors are monthly; daily fits over-weight microstructure noise |
 | Fundamentals uncached | Cache as observations | They are not time-series observations; caching would imply point-in-time values they are not |
+
+## Alignment amendment (0013)
+
+Keep OLS/HAC computation in `core/factors.py`, use cases in `application/commands/analyze.py` and vendor parsing in `adapters/providers/`. Carry forward the branch design of numpy-based regression with independent known-answer and statsmodels comparison tests; statsmodels stays out of base dependencies. Reconcile its cache changes with the corrected foundation.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

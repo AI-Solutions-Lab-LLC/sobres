@@ -34,7 +34,7 @@ for (const button of $$<HTMLButtonElement>("button[data-copy]")) {
 // ---- figures' text alternatives and sources (present whether or not a chart renders)
 const tickers = meta.tickers.join(" ");
 const frontierSource = `${tickers}, ${meta.frontier_window[0]} to ${meta.frontier_window[1]}, ${meta.estimators.expected_return} returns, ${meta.estimators.covariance} covariance. Data: ${meta.data_source}.`;
-const equitySource = `${tickers}, ${backtest.oos_start} to ${backtest.oos_end}, lookback ${meta.backtest.lookback}, ${meta.backtest.rebalance} rebalancing, ${backtest.cost_bps} bps a side, ${backtest.n_rebalances} rebalances. Data: ${meta.data_source}. Hypothetical.`;
+const equitySource = `${tickers}, ${backtest.oos_start} to ${backtest.oos_end}, lookback ${meta.backtest.lookback}, ${meta.backtest.rebalance} rebalancing, ${backtest.cost_bps} bps per unit of cash-inclusive one-way turnover, ${backtest.n_rebalances} rebalances. Data: ${meta.data_source}. Hypothetical.`;
 const set = (selector: string, text: string) => {
   const el = $(selector);
   if (el) el.textContent = text;

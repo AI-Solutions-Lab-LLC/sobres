@@ -1,5 +1,9 @@
 # 0010 — Design
 
+Proposed design carried forward from PR #16; statements about tests or
+behavior describe that branch's intent and claims, not verified acceptance here.
+Reconcile through R0/R1/R2 and this amendment before implementation.
+
 ## The identity, kept exact
 
 `core/fx.py::decompose_return` returns local, fx, cross and total per period
@@ -15,7 +19,7 @@ contribution is visibly a function of correlation, never presented as additive.
 
 A hedged return is `r_local + (i_base − i_foreign) / periods`, the forward
 premium of a rolling short-dated forward. Short rates come from FRED 3-month
-series per currency (`SHORT_RATE_SERIES` in `cli/commands/fx.py`); a missing
+series per currency (declared short-rate series metadata in the application FX service); a missing
 leg raises `InsufficientDataError` naming the currency and series, and no
 unhedged result is substituted. Every hedged figure — `fx hedge` and the
 optimizer's `--hedged` — carries the caveat that this excludes transaction
@@ -60,3 +64,13 @@ and exchange-rate-risk caveats.
 | Fixed ISO3 table | `pycountry` | A dependency for a lookup that must fail loudly on near matches anyway |
 | Vintage in `series_meta` | A second PPP table | One store, no sidecars (0003) |
 | Grep-based "no forecasting surface" test | Review | The rule is code, per the project's test discipline |
+
+## Alignment amendment (0013)
+
+Keep financial FX/PPP calculations in `core/`; currency orchestration and commands in `application/`, provider protocols in `ports/providers.py`, World Bank/OECD/BIS implementations in `adapters/providers/`. Carry vintages through cache; register settings and doctor checks. FRED FX adapter selection deferred by foundation must be explicitly resolved without changing the keyless ECB default.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

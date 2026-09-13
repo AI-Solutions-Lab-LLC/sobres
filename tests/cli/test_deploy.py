@@ -246,20 +246,22 @@ def test_compose_is_generated_from_resolved_configuration_without_secrets(
     assert LEGACY_NAME not in text.lower()
 
 
+@pytest.mark.parametrize("secret_value", [SENTINEL_KEY, "Z9!", "Q7$!"])
 def test_env_template_lists_every_variable_and_no_secret_value(
     cli: Callable[..., Any],
+    secret_value: str,
 ) -> None:
     from sobres.settings import all_settings
 
-    result = cli("deploy", "env", env_extra={"SOBRES_FRED_API_KEY": SENTINEL_KEY})
+    result = cli("deploy", "env", env_extra={"SOBRES_FRED_API_KEY": secret_value})
     assert result.exit_code == 0
     for setting in all_settings():
         if setting.key != "container":
             assert f"{setting.env}=" in result.stdout, setting.env
             assert setting.description.strip().splitlines()[0][:30] in result.stdout
     assert "# default: WARNING" in result.stdout
-    assert SENTINEL_KEY not in result.stdout and "SOBRES_FRED_API_KEY=\n" in result.stdout
-    assert "****" + SENTINEL_KEY[-4:] in result.stdout  # recognisable, not usable
+    assert secret_value not in result.stdout and "SOBRES_FRED_API_KEY=\n" in result.stdout
+    assert "# currently configured (****); value not written" in result.stdout
 
 
 def test_preflight_reports_the_deployment_and_calls_out_exposure(

@@ -1,6 +1,16 @@
 {
-  "recorded_at": null,
-  "synthesized_at": "2026-09-12T17:32:49.676417+00:00",
+  "recorded_at": "2026-09-13T18:12:19.500097+00:00",
   "provider": "ken_french",
-  "note": "synthesized in the Data Library's multi-table CSV layout; the July 1926 FF3 row carries the published values; see tests/fixtures/README.md"
+  "provider_version": "This file was created using the 202607 CRSP database.",
+  "client": "httpx",
+  "client_version": "0.28.1",
+  "sha256": {
+    "F-F_Momentum_Factor.CSV": "af286d7898c42fc5c92a8c3604ca9105cc45a1ad9dd34b489173a880d4387458",
+    "F-F_Momentum_Factor_daily.CSV": "239fc2281551431fb9d2ca6446854dad29ce004cddcc207aa92afb1ab97b881b",
+    "F-F_Research_Data_5_Factors_2x3.CSV": "ca5b6baf0ff5607b5c17e74ba96c1ff832fbb0e9f9044f60816bcdf69b36ff39",
+    "F-F_Research_Data_5_Factors_2x3_daily.CSV": "2f450abb2186daf467db134a0955c8cc6b88059d78a0c4045033ed98b6b283eb",
+    "F-F_Research_Data_Factors.CSV": "347bdcabb60863073a120111b40cb21b1a0682d6a82e919df057bdbea15e3a73",
+    "F-F_Research_Data_Factors_daily.CSV": "b324d858f6ba2065ca8bb6e5d421f71ae33d42d59c1e942b3b07fa82bc23849a"
+  },
+  "source": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
 }

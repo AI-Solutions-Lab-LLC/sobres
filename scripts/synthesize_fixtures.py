@@ -116,7 +116,9 @@ def write_yfinance(rng: np.random.Generator) -> None:
         for t, (_, _, _, currency, dy) in TICKERS.items()
         if t != "GLD"
     }
-    (out / "fundamentals.json").write_text(
+    synthetic_out = ROOT / "synthetic" / "yfinance"
+    synthetic_out.mkdir(parents=True, exist_ok=True)
+    (synthetic_out / "fundamentals.json").write_text(
         json.dumps(
             {
                 "recorded_at": None,
@@ -445,7 +447,7 @@ def write_ppp(rng: np.random.Generator) -> None:
         + "\n",
         encoding="utf-8",
     )
-    fred = ROOT / "fred"
+    fred = ROOT / "synthetic" / "fred"
     monthly = pd.date_range(START, END, freq="MS")
     extra = {
         "IR3TIB01GBM156N": np.clip(0.5 + np.cumsum(rng.normal(0, 0.05, len(monthly))), 0.05, None),

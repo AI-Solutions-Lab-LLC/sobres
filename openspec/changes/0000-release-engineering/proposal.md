@@ -68,4 +68,20 @@ added after the code is written never catches what it would have prevented.
 | A bad version reaches PyPI, where it can never be replaced | `verify` re-runs the whole CI gate on the release commit; the wheel is installed in a clean environment and executed before upload; the `pypi` environment can require a human approval |
 | The release gate drifts from the PR gate as CI grows | `release.yml` calls `ci.yml` via `workflow_call`; there is one definition of "green" |
 | A required check is silently skipped and reads as passing | The `all-green` aggregator treats `skipped` and `cancelled` as failures, and it is the only required status check |
-| The distribution name is unavailable on PyPI at release time | `sobres` was unclaimed as of 2026-09-12 (PyPI returns 404). `check_release.py` fails closed if the name is claimed by anyone else before the first upload, and the name is reserved by publishing `0.0.0` early |
+| The distribution name is unavailable on PyPI at release time | `sobres` was unclaimed as of 2026-09-12 (PyPI returns 404). `check_release.py` fails closed if the name is claimed by anyone else before the first upload, and first publication uses the explicitly reviewed release artifact from issue #21 |
+
+## Alignment amendment: unfinished release work
+
+The merged infrastructure is historical; remaining release work is tracked by
+[issue #21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21).
+Keep the agreed organization-token contract as an explicit exception to the
+project-template OIDC default. PR #8 includes the organization-token workflow and accurate disabled/already-
+published reporting. This synchronized branch preserves those changes from its
+accepted merge; upload verification and activation still belong to issue #21. Environment arming and an actual index rehearsal
+remain separate owner actions, not consequences of this planning amendment.
+
+Future tooling/harness changes follow [0013](../0013-template-development-alignment/proposal.md),
+retaining 90% coverage and reusable release verification. The dependency is on
+already merged infrastructure, not on every owner action completing before 0013.
+No automatic `0.0.0` reservation upload is authorized; #21 requires an intended,
+reviewed release artifact. Do not replace the existing release issue with a duplicate.

@@ -113,3 +113,11 @@ the codebase is small enough that the rule is free to follow.
 | "A test SHALL assert" in later specs never becomes a test | The `testing` spec defines the suites and a scenario-coverage test that fails on an unreferenced scenario once a change is marked implemented |
 | Bad provider rows produce plausible-looking wrong results | Validation on ingest; implausible moves flagged in `attrs` and surfaced beside results; missing-data handling requires an explicit policy |
 | Currency support slows or complicates the single-currency path | No rate is fetched when every input shares a currency, and results are asserted identical to a build without conversion |
+
+## Review readiness (PR #7)
+
+Change 0012 implements the ten review corrections. All four provider fixture sets
+were recorded live on 2026-09-13, and the D4 reuse audit is complete. See
+`docs/foundation-completion.md` for verification and `docs/foundation-reuse-audit.md`
+for the comparison. FRED FX adapter selection remains explicitly deferred to 0010;
+ECB remains the foundation FX provider.

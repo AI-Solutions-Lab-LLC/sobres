@@ -17,7 +17,6 @@ from sobres.config import (
     default_db_url,
     display_value,
     has_secret_mode,
-    mask_secret,
     read_config_file,
     resolve,
     user_config_dir,
@@ -51,10 +50,10 @@ def test_env_alias_is_accepted_below_primary(tmp_path: Path) -> None:
     assert cfg.get(FRED_API_KEY.key) == "primary"
 
 
-def test_secrets_masked() -> None:
-    assert mask_secret("abcdef1234") == "****1234"
-    assert mask_secret("") == "(unset)"
-    assert display_value(FRED_API_KEY, "abcdef1234") == "****1234"
+@pytest.mark.parametrize("value", ["Z", "Z9!", "Q7$!", "abcdef1234", "", None])
+def test_secrets_masked(value: str | None) -> None:
+    """Scenario: Secret displays reveal no credential characters."""
+    assert display_value(FRED_API_KEY, value) == ("****" if value else "(unset)")
     assert display_value(LOG_LEVEL, "INFO") == "INFO"
     assert display_value(LOG_LEVEL, None) == "(unset)"
 

@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from sobres.core.conventions import periods_per_year
+from sobres.core.validation import require_finite
 
 NanPolicy = Literal["drop", "zero"]
 NAN_POLICIES: tuple[str, ...] = ("drop", "zero")
@@ -63,6 +64,7 @@ def cumulative_wealth(
     returns: pd.DataFrame | pd.Series, initial: float = 1.0
 ) -> pd.DataFrame | pd.Series:
     """Growth of ``initial`` through the return series: ``initial · ∏(1 + r)``."""
+    require_finite(returns)
     out = initial * (1.0 + returns).cumprod()
     out.attrs = dict(returns.attrs)
     return out
@@ -75,7 +77,8 @@ def annualized_return(
 
     Geometric is the default because it is what an investor actually earns.
     """
-    clean = returns.dropna()
+    require_finite(returns)
+    clean = returns
     n = len(clean)
     if n == 0:
         raise ValueError("annualized_return needs at least one observation")
@@ -92,7 +95,8 @@ def annualized_return(
 
 def annualized_volatility(returns: pd.Series, frequency: str) -> float:
     """Sample standard deviation scaled by ``sqrt(periods per year)``."""
-    clean = returns.dropna()
+    require_finite(returns)
+    clean = returns
     if len(clean) < 2:
         raise ValueError("annualized_volatility needs at least two observations")
     return float(clean.std(ddof=1)) * float(np.sqrt(periods_per_year(frequency)))
@@ -104,7 +108,9 @@ def portfolio_returns(returns: pd.DataFrame, weights: pd.Series | dict[str, floa
     if w.isna().any():
         missing = list(w.index[w.isna()])
         raise ValueError(f"no weight for {missing}")
-    out = returns.fillna(0.0) @ w
+    require_finite(returns)
+    require_finite(w, "weights")
+    out = returns @ w
     out.name = "portfolio"
     out.attrs = dict(returns.attrs)
     return out

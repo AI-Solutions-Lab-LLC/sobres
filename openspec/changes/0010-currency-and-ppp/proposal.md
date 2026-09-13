@@ -1,9 +1,9 @@
 ---
 change: 0010-currency-and-ppp
 milestone: v1.6
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0008-goal-planning]
-status: implemented
-planning_depth: proposal + spec deltas + design + tasks
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0008-goal-planning, 0013-template-development-alignment, 0004-web-ui]
+status: proposed
+planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 
 # 0010 — Exchange rates and purchasing power parity
@@ -97,3 +97,28 @@ building breadth on an unproven base.
 | A national CPI basket does not match one household's spending | Output states that PPP reflects a national basket; goal restatement is presented as a scale factor with its basis named, not as a personalized budget |
 | Hedged returns presented as achievable | Hedged figures are labelled as an interest-rate-differential approximation excluding transaction costs and basis, with the assumption stated in the output |
 | International data thins out for smaller markets | Coverage gaps raise `InsufficientDataError` naming the country and series rather than silently shortening a window |
+
+## Development alignment and review readiness (0013)
+
+Keep financial FX/PPP calculations in `core/`; currency orchestration and commands in `application/`, provider protocols in `ports/providers.py`, World Bank/OECD/BIS implementations in `adapters/providers/`. Carry vintages through cache; register settings and doctor checks. FRED FX adapter selection deferred by foundation must be explicitly resolved without changing the keyless ECB default.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #16 at `dc2ba7a31a322e73c2c5401aed77e07c4d6b41f1` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge is PR #33 (`b9792d7`).
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#32](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/32).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

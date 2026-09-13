@@ -50,6 +50,8 @@ The system SHALL regress an asset's excess returns on published factor returns.
 
 ### Requirement: Single-stock analysis
 
+Stock analysis SHALL combine available price, risk and current fundamentals with explicit data limitations.
+
 #### Scenario: Stock dashboard
 - **WHEN** `sobres analyze stock NVDA` runs
 - **THEN** the output SHALL include price summary, annualized return and volatility,
@@ -68,8 +70,27 @@ The system SHALL regress an asset's excess returns on published factor returns.
 
 ### Requirement: Multi-ticker factor comparison
 
+Factor comparisons SHALL report one consistent row per ticker in the supplied order.
+
 #### Scenario: Comparison table
 - **WHEN** `sobres analyze factors --tickers AAPL MSFT NVDA --model ff5` runs
 - **THEN** one row per ticker SHALL print with its factor loadings, alpha,
   alpha t-statistic, and R²
 - **AND** rows SHALL be ordered as supplied, so output is diffable across runs
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage

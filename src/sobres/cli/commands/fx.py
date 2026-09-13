@@ -17,6 +17,7 @@ from sobres.cli.commands.optimize import UniverseParams, resolve_symbols
 from sobres.cli.context import Context
 from sobres.core import fx as fxm
 from sobres.core.errors import InsufficientDataError, UsageError
+from sobres.core.rates import prior_rates, treasury_investment_yield
 from sobres.core.returns import apply_nan_policy, simple_returns
 from sobres.core.risk import risk_metrics
 from sobres.data.currency import CurrencyPair, FxRates, convert, frame_currencies, fx_returns
@@ -166,11 +167,8 @@ class Attribution(FxReport, RecordsResult):
 
     def header_lines(self) -> list[str]:
         r = self.risk
-        corr = ", ".join(
-            f"{k} {v:+.2f}"
-            for k, v in r["correlations"].items()
-            if v == v  # skip NaN
-        )
+        # Exclude undefined correlations from the human-facing summary.
+        corr = ", ".join(f"{k} {v:+.2f}" for k, v in r["correlations"].items() if v == v)
         exposure = ", ".join(f"{k} {v:.1%}" for k, v in r["exposures"].items())
         return [
             f"returns measured in {self.base}; total = local + fx + (local times fx), "
@@ -195,6 +193,8 @@ def _local_and_fx(
     from sobres.data.gaps import apply_fill_policy
 
     filled = apply_fill_policy(prices, p.fill)
+    if p.fill == "drop":
+        filled = filled.reindex(prices.index)
     local = pd.DataFrame(apply_nan_policy(simple_returns(filled), "drop"))
     frequency = "daily"
     from sobres.core.conventions import infer_frequency
@@ -328,7 +328,10 @@ def short_rates(
                 hint="the hedge cannot be constructed without both legs; an unhedged result is "
                 "not returned in its place",
             ) from exc
-        series = frame[series_id].dropna() / 100.0
+        observed = frame[series_id].dropna()
+        series = (
+            treasury_investment_yield(observed / 100.0) if series_id == "DTB3" else observed / 100.0
+        )
         if series.empty:
             raise InsufficientDataError(
                 f"no observations of {ccy} short-term rates (FRED {series_id}) over the window",
@@ -380,9 +383,17 @@ def hedge(p: HedgeParams, ctx: Context) -> HedgeComparison:
     port_h = pd.Series(hedged[tickers].to_numpy() @ w.to_numpy(), index=hedged.index)
     from sobres.cli.commands.optimize import resolve_risk_free
 
-    rf, _source = resolve_risk_free(p.risk_free, p.start, p.end or ctx.today(), ctx)
-    panel_u = risk_metrics(port_u, rf, frequency)
-    panel_h = risk_metrics(port_h, rf, frequency)
+    rf, _source, dated_rates = resolve_risk_free(
+        p.risk_free, p.start, p.end or ctx.today(), p.base, ctx
+    )
+    period_rates = (
+        pd.Series(rf, index=port_u.index)
+        if p.risk_free is not None
+        else prior_rates(dated_rates, pd.DatetimeIndex(port_u.index))
+    )
+    rf = float(period_rates.mean())
+    panel_u = risk_metrics(port_u, period_rates, frequency)
+    panel_h = risk_metrics(port_h, period_rates, frequency)
     rows = []
     for key, hv in panel_h.as_dict().items():
         if key in ("frequency", "risk_free"):

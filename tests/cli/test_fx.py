@@ -11,8 +11,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from datetime import date
+from types import SimpleNamespace
 from typing import Any
 
+import pandas as pd
+import pytest
+
+from sobres.cli.commands.fx import short_rates
+from sobres.cli.context import Context
 from sobres.registry import all_commands
 from tests.conftest import SENTINEL_KEY
 
@@ -288,7 +295,10 @@ def test_fx_risk_reaches_the_covariance_matrix(cli: Callable[..., Any]) -> None:
             "json",
         )
     )
-    vol = lambda doc: next(r["value"] for r in doc["rows"] if r["metric"] == "volatility")  # noqa: E731
+
+    def vol(doc: dict[str, Any]) -> float:
+        return float(next(r["value"] for r in doc["rows"] if r["metric"] == "volatility"))
+
     assert vol(usd) != vol(gbp)  # the currency co-movement is in the moments, so the base matters
 
 
@@ -302,3 +312,43 @@ def test_no_forecasting_surface() -> None:
     for c in all_commands():
         if c.name.startswith(("fx.", "ppp.")):
             assert not any(w in c.help.lower() for w in ("forecast", "predict", "recommend"))
+
+
+def test_hedged_capm_keeps_the_reviewed_benchmark_path(cli: Callable[..., Any]) -> None:
+    """Scenario: Hedged optimization."""
+    doc = _json(
+        cli(
+            "optimize",
+            "markowitz",
+            *UNIVERSE,
+            "--hedged",
+            "--returns-estimator",
+            "capm",
+            "--benchmark",
+            "MSFT",
+            "--format",
+            "json",
+            env_extra=KEY,
+        )
+    )
+    assert doc["currency"] == "USD"
+    assert {row["ticker"] for row in doc["rows"]} == {"AAPL", "VOD.L"}
+    assert any("hedged returns" in note for note in doc["provenance"]["notes"])
+
+
+def test_hedge_rates_use_the_shared_treasury_quote_convention(
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Construction."""
+    ctx = make_context()
+    source = SimpleNamespace(
+        get_series=lambda series, start, end: pd.DataFrame(
+            {series[0]: [5.0]}, index=pd.to_datetime(["2020-01-02"])
+        )
+    )
+    monkeypatch.setattr(ctx, "macro_provider", lambda: source)
+    rates = short_rates(ctx, ["USD", "GBP"], date(2020, 1, 1), date(2020, 1, 3))
+    price_per_face = 1.0 - 0.05 * 91.0 / 360.0
+    expected = (1.0 / price_per_face - 1.0) * 365.0 / 91.0
+    assert rates["USD"].iloc[0] == pytest.approx(expected, abs=1e-12)  # floating-point formula
+    assert rates["GBP"].iloc[0] == 0.05
