@@ -102,7 +102,9 @@ A negative result is valid output, not a reason to change test dates or defaults
 Missing required predictors must fail visibly rather than silently reduce the model.
 
 Tracker: [#31](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/31);
-planning/candidate PR: [#15](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/15).
+Candidate PR: [#15](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/15).
+The docs-only planning PR against main is linked from #31; merge that amendment
+independently before replacing the older candidate implementation.
 Carry this amended contract into dependent #16. New source/extra dependencies need
 settings and doctor coverage. #36 separately owns automatic risk-free policy;
 ordinary price returns here are not excess returns, and the macro short-rate
