@@ -114,7 +114,7 @@ settings/health use narrow allowlists and do not expose arbitrary local operatio
 | `sobres plan retire --income ... --expenses ...` | FIRE number + date |
 | `sobres plan house --price ... --down-pct ...` | Savings path to a down payment |
 | `sobres plan goal --target ... --by 2032-01-01` | Generic funding solver |
-| `sobres econ forecast CPIAUCSL --model arima` | Time-series forecast |
+| `sobres econ forecast ticker:AAPL --model var --horizon 20` | Planned multivariable price distribution; see revised 0009 |
 | `sobres fx rates EURUSD` / `sobres fx convert 1000 --from USD --to EUR` | Exchange rates and conversion |
 | `sobres fx attribution --tickers ... --base USD` | Split return into asset vs currency |
 | `sobres fx hedge --tickers ... --compare unhedged` | What hedging would have cost |
@@ -257,7 +257,7 @@ Each is one OpenSpec change under `openspec/changes/`.
 | 0006 | `landing-page` | Animated dark GitHub Pages site |
 | 0007 | `equity-factor-analysis` | Single-stock analysis, CAPM, Fama-French 3/5 + momentum |
 | 0008 | `goal-planning` | Retirement/FIRE, house, car, education, Monte Carlo |
-| 0009 | `econometrics-forecasting` | ARIMA/GARCH forecasting, stationarity, macro overlays |
+| 0009 | `econometrics-forecasting` | Multivariable VAR/BVAR, elastic-net/boosted trees, GARCH volatility; revised plan pending implementation |
 | 0010 | `currency-and-ppp` | FX attribution and hedging, PPP comparison, PPP-adjusted goals |
 | 0011 | `rebrand-sobres` | Rename through the code: import package, console script, env vars, image, pages URL |
 | 0012 | `foundation-review-fixes` | Foundation correctness and regression contracts, implemented in the local foundation |
