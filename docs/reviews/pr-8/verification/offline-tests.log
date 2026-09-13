@@ -1,0 +1,80 @@
+........................................................................ [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 40%]
+........................................................................ [ 54%]
+........................................................................ [ 67%]
+........................................................................ [ 81%]
+........................................................................ [ 94%]
+...........................                                              [100%]
+=============================== warnings summary ===============================
+tests/architecture/test_scenarios.py::test_every_scenario_has_a_test
+  /private/tmp/sobres-pr8-fixes/tests/architecture/test_scenarios.py:55: UserWarning: 268 scenario(s) in proposed changes have no test yet
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.12.13-final-0 _______________
+
+Name                                             Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------------------------
+src/sobres/__about__.py                              1      0      0      0   100%
+src/sobres/__init__.py                               2      0      0      0   100%
+src/sobres/cli/__init__.py                           0      0      0      0   100%
+src/sobres/cli/commands/__init__.py                  3      0      2      0   100%
+src/sobres/cli/commands/cache.py                    26      0      2      0   100%
+src/sobres/cli/commands/commands.py                 11      0      0      0   100%
+src/sobres/cli/commands/config.py                   38      0      2      0   100%
+src/sobres/cli/commands/data.py                     64      2      8      2    94%   101, 117
+src/sobres/cli/commands/doctor.py                   52      1     10      1    97%   59
+src/sobres/cli/commands/init.py                    113      4     48      3    96%   92-93, 134->137, 156-157
+src/sobres/cli/commands/optimize.py                364     19     78     16    92%   77, 81, 83, 109, 157->161, 184, 225, 239-241, 254, 415, 417, 425, 570, 572, 598, 600-601, 662
+src/sobres/cli/commands/upgrade.py                  34      0     10      0   100%
+src/sobres/cli/context.py                          100      5     18      3    93%   92, 139-141, 147, 159
+src/sobres/cli/main.py                              97      3     28      2    96%   121, 150, 167
+src/sobres/cli/metric_table.py                      29      1     16      1    96%   39
+src/sobres/cli/render.py                            90     10     44      3    86%   33, 40, 48, 109-115
+src/sobres/config.py                               132      3     30      0    98%   92-93, 180
+src/sobres/core/__init__.py                          0      0      0      0   100%
+src/sobres/core/allocate.py                         46      0     12      0   100%
+src/sobres/core/backtest.py                        134      6     32      4    94%   92, 135, 157-158, 182, 184
+src/sobres/core/conventions.py                      18      0      4      0   100%
+src/sobres/core/errors.py                           39      0      2      0   100%
+src/sobres/core/moments.py                         116      3     28      4    95%   82, 86, 193, 205->207
+src/sobres/core/optimize.py                        217     12     86     13    92%   56, 59, 70, 72, 153->160, 188, 190, 192, 253, 286, 294, 297, 299
+src/sobres/core/rates.py                            22      2      6      2    86%   26, 36
+src/sobres/core/returns.py                          66      0     14      0   100%
+src/sobres/core/risk.py                            123      0     14      0   100%
+src/sobres/core/validation.py                       10      1      4      1    86%   27
+src/sobres/data/__init__.py                          2      0      0      0   100%
+src/sobres/data/align.py                            34      0     14      0   100%
+src/sobres/data/base.py                             88      0     28      0   100%
+src/sobres/data/cache.py                           109      2     44      2    97%   163, 209
+src/sobres/data/currency.py                        156      2     56      1    99%   238, 277
+src/sobres/data/ecb_provider.py                     87      1     20      1    98%   120
+src/sobres/data/fixtures.py                         65      2     10      2    95%   62, 99
+src/sobres/data/fred_provider.py                   108      2     24      2    97%   144, 171
+src/sobres/data/gaps.py                             48      0     18      0   100%
+src/sobres/data/ken_french.py                      106      1     28      1    99%   125
+src/sobres/data/providers.py                        12      1      0      0    92%   52
+src/sobres/data/storage/__init__.py                  2      0      0      0   100%
+src/sobres/data/storage/adapters/__init__.py         1      0      0      0   100%
+src/sobres/data/storage/adapters/migrations.py      13      0      0      0   100%
+src/sobres/data/storage/adapters/schema.py          37      0     10      0   100%
+src/sobres/data/storage/adapters/sqlite.py         310      6     70      7    97%   129-131, 243, 248->exit, 266->264, 275->274, 522, 525
+src/sobres/data/storage/base.py                    107      3      6      0    97%   68, 259-260
+src/sobres/data/yfinance_provider.py               118      2     32      4    96%   88, 153, 163->162, 214->220
+src/sobres/doctor.py                               275      9     86      3    96%   297, 409->412, 445->449, 469-470, 512-515, 519, 523
+src/sobres/observability/__init__.py                 3      0      0      0   100%
+src/sobres/observability/logging.py                 64      0     12      0   100%
+src/sobres/observability/redaction.py               32      0     10      0   100%
+src/sobres/observability/tracing.py                120      3     30      2    97%   122-129, 155->exit
+src/sobres/registry.py                             241      5     82      4    97%   44, 154-155, 254, 271->273, 383
+src/sobres/results.py                              108      1     22      1    98%   124
+src/sobres/settings.py                              95      4     24      2    95%   70, 101, 167-169
+src/sobres/solvers/__init__.py                       0      0      0      0   100%
+src/sobres/solvers/base.py                          18      0      0      0   100%
+src/sobres/solvers/scipy.py                          8      0      0      0   100%
+--------------------------------------------------------------------------------------------
+TOTAL                                             4314    116   1124     87    96%
+Required test coverage of 90% reached. Total coverage: 96.08%
+531 passed, 4 deselected, 1 warning in 21.21s

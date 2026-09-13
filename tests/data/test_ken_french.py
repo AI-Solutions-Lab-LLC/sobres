@@ -46,15 +46,15 @@ def test_ff5_columns_exact(ken_french_source: FixtureKenFrenchSource) -> None:
 
 
 def test_known_month_matches_published_value(ken_french_source: FixtureKenFrenchSource) -> None:
-    """July 1926, the first row of the Fama-French 3-factor file: Mkt-RF 2.96%."""
+    """July 1926 in the recorded 202607 CRSP revision; see fixtures/README.md."""
     frame = KenFrenchProvider(source=ken_french_source).get_factors(
         "ff3", "monthly", date(1926, 7, 1), date(1926, 7, 31)
     )
     row = frame.iloc[0]
     assert frame.index[0] == __import__("pandas").Timestamp("1926-07-31")
-    assert row["Mkt-RF"] == pytest.approx(2.96 / 100)
-    assert row["SMB"] == pytest.approx(-2.56 / 100)
-    assert row["HML"] == pytest.approx(-2.43 / 100)
+    assert row["Mkt-RF"] == pytest.approx(2.89 / 100)
+    assert row["SMB"] == pytest.approx(-2.42 / 100)
+    assert row["HML"] == pytest.approx(-2.75 / 100)
     assert row["RF"] == pytest.approx(0.22 / 100)
 
 

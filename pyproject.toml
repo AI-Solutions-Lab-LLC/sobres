@@ -51,6 +51,7 @@ dev = [
   "sobres[all]",
   "pytest>=8.2",
   "pytest-cov>=5.0",
+  "PyYAML>=6.0",  # parse workflow contracts in release tests
   "hypothesis>=6.100",
   "ruff>=0.5",
   "mypy>=1.10",
@@ -112,6 +113,10 @@ extend-exclude = ["*.md", "legacy_code"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Math tests quote formulas with Greek letters in comments and docstrings.
+"tests/core/*" = ["RUF002", "RUF003"]
 
 [tool.mypy]
 # No pinned python_version: check under the interpreter that runs mypy. Third-party stubs

@@ -2,8 +2,8 @@
 
 The vendor library is confined to ``LiveYahooSource``; the provider itself
 works against the small ``YahooSource`` boundary so tests run on recorded
-payloads. Adjusted close is the default and the recommendation: total-return
-math on unadjusted closes reads a 2-for-1 split as a -50% day.
+payloads. Adjusted close is the default because it includes dividend adjustments;
+Yahoo's Close is already split-adjusted but does not include dividends.
 
 Currency is discovered from the vendor's own metadata, never inferred from an
 exchange suffix, and sub-unit quotations (GBp, ZAc, ILA) are normalized to the
