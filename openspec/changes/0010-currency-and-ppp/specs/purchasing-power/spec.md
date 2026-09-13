@@ -4,6 +4,8 @@
 
 ### Requirement: Absolute and relative PPP are distinct
 
+The system SHALL keep absolute price-level factors distinct from relative changes.
+
 Conflating them is the most common error in applied PPP work, so the API keeps
 them separate and each output names which it used.
 
@@ -33,6 +35,8 @@ them separate and each output names which it used.
 
 ### Requirement: Real exchange rates and valuation gaps
 
+PPP analytics SHALL distinguish real exchange rates and valuation gaps with explicit quote direction.
+
 #### Scenario: Real exchange rate
 - **WHEN** a real exchange rate is computed
 - **THEN** it SHALL be the nominal rate adjusted by the ratio of the two price
@@ -57,6 +61,8 @@ them separate and each output names which it used.
 
 ### Requirement: PPP is never presented as a forecast
 
+PPP output SHALL describe valuation comparisons without projecting exchange-rate convergence or trading signals.
+
 #### Scenario: Mandatory framing
 - **WHEN** any PPP result is displayed
 - **THEN** it SHALL state that PPP is a long-run relationship with little
@@ -73,6 +79,8 @@ them separate and each output names which it used.
   productivity differences, non-traded goods, and trade barriers
 
 ### Requirement: PPP-adjusted goal planning
+
+PPP-adjusted planning SHALL restate a goal with explicit price-level assumptions and omitted personal circumstances.
 
 #### Scenario: Restating a goal
 - **WHEN** `sobres ppp adjust-goal --goal fire --to PRT` runs
@@ -105,6 +113,8 @@ them separate and each output names which it used.
   them, and SHALL NOT assume a constant future rate
 
 ### Requirement: PPP data sourcing
+
+PPP data SHALL retain source, benchmark and vintage metadata and report insufficient coverage explicitly.
 
 #### Scenario: Provider protocol
 - **WHEN** PPP or price-level data is fetched

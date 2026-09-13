@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from sobres.config import mask_secret
+from sobres.config import display_value
 from sobres.doctor import all_checks
 from sobres.settings import ENV_PREFIX, Setting, all_settings, declare, is_secret_key
 
@@ -97,7 +97,13 @@ def test_secret_name_rule_and_masking() -> None:
         is_secret_key("fred_api_key") and is_secret_key("auth_token") and is_secret_key("x_secret")
     )
     assert not is_secret_key("log_level")
-    assert mask_secret("abcdefgh") == "****efgh"
+    assert (
+        display_value(
+            Setting(key="auth_token", env="SOBRES_AUTH_TOKEN", description="d", secret=True),
+            "abcdefgh",
+        )
+        == "****"
+    )
 
 
 def test_declare_rejects_duplicates() -> None:

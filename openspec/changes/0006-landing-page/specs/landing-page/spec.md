@@ -4,6 +4,8 @@
 
 ### Requirement: Stack and hosting
 
+The landing page SHALL be a static build with shared design tokens and explicitly enabled, checked publication.
+
 #### Scenario: Chosen libraries
 - **WHEN** the site is built
 - **THEN** it SHALL use Vite with TypeScript in strict mode, Tailwind CSS for
@@ -12,8 +14,9 @@
 - **AND** it SHALL be a static build with no server-side component
 
 #### Scenario: Published automatically
-- **WHEN** a commit lands on `main` that changes `site/`
-- **THEN** GitHub Actions SHALL build and deploy it to GitHub Pages
+- **WHEN** a commit lands on `main` that changes `site/` and publication was explicitly configured with `PAGES_ENABLED=true`
+- **THEN** GitHub Actions SHALL build, verify and deploy only the site output to GitHub Pages
+- **AND** PRs or disabled publication SHALL build/check without deployment
 - **AND** the deploy job SHALL hold `pages: write` and `id-token: write` while the
   workflow default remains `contents: read`, per 0000's least-privilege rule
 
@@ -27,6 +30,8 @@
   and the product are visibly one thing
 
 ### Requirement: Dark theme
+
+The landing page SHALL paint an accessible dark theme without a light flash.
 
 #### Scenario: Dark by design
 - **WHEN** the page loads
@@ -42,6 +47,8 @@
 - **THEN** it SHALL paint on its dark background, with no light flash
 
 ### Requirement: Animation
+
+Animation SHALL explain actual product state while preserving reduced-motion access and immediate interaction.
 
 #### Scenario: Animation shows the product
 - **WHEN** an animated figure plays
@@ -78,6 +85,8 @@
 
 ### Requirement: Content accuracy
 
+The landing page SHALL distinguish shipped capabilities from roadmap work and identify the source of displayed results.
+
 #### Scenario: Only shipped capabilities are claimed
 - **WHEN** the page describes what the tool does
 - **THEN** every claim SHALL correspond to a capability in the released version
@@ -102,6 +111,8 @@
 - **AND** any backtested figure SHALL be labelled as hypothetical
 
 ### Requirement: Performance
+
+The landing page SHALL remain readable before JavaScript and enforce its mobile and initial-bundle budgets.
 
 #### Scenario: Lighthouse budget
 - **WHEN** the built site is audited on a simulated mid-range mobile device
@@ -129,6 +140,8 @@
 
 ### Requirement: Privacy
 
+The landing page SHALL avoid tracking, cookies and third-party runtime requests.
+
 #### Scenario: No tracking
 - **WHEN** the page is loaded
 - **THEN** it SHALL set no cookies, use no analytics, and make no third-party
@@ -136,6 +149,8 @@
 - **AND** consequently SHALL require no consent banner
 
 ### Requirement: Accessibility and reach
+
+The landing page SHALL support keyboard and screen-reader use, narrow screens and accurate link previews.
 
 #### Scenario: Keyboard
 - **WHEN** the page is navigated by keyboard alone
@@ -157,3 +172,27 @@
 - **THEN** Open Graph and Twitter card metadata SHALL render a title, description,
   and image
 - **AND** the image SHALL depict the actual product
+
+### Requirement: Aligned site development
+The site SHALL follow the merged 0013 contribution and verification contract
+while preserving its own static build and actual-product evidence.
+
+#### Scenario: Site resumes after alignment
+- **WHEN** the site is built from the amended plan
+- **THEN** its locked build SHALL use only public site inputs and reviewed product examples
+- **AND** the Python package and ordinary contributor checks SHALL remain independent of site tooling
+
+### Requirement: One project home page with an honest hosting inquiry
+The existing site SHALL explain the shipped product and offer a hosting inquiry
+without implying an available enterprise product or collecting confidential data.
+
+#### Scenario: Hosting inquiry
+- **WHEN** a visitor follows the hosting contact link
+- **THEN** the linked issue form or approved contact route SHALL state its visibility
+- **AND** it SHALL request no credentials, financial records or confidential information
+- **AND** an inquiry SHALL NOT imply an SLA, payment contract or multi-tenant capability
+
+#### Scenario: Publication is disabled or the repository is private
+- **WHEN** publication has not been configured and its intended access reviewed
+- **THEN** checks SHALL run without uploading a public site
+- **AND** a private source repository SHALL NOT be treated as proof of a private website

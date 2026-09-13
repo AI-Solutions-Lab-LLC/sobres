@@ -11,6 +11,7 @@ currency; Round-trip properties; Algebraic properties.
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -121,6 +122,17 @@ def test_unknown_currency_is_never_guessed() -> None:
         normalize_currency_code("  ", symbol="XYZ")
     with pytest.raises(ProviderError, match="unrecognized"):
         normalize_currency_code("DOLLARS", symbol="XYZ")
+
+
+@pytest.mark.parametrize("metadata", [None, {}, {"A": "USD"}, {"A": "USD", "B": None}, ""])
+def test_conversion_rejects_incomplete_currency(metadata: Any) -> None:
+    """Scenario: Complete conversion metadata (0012)."""
+    frame = pd.DataFrame({"A": [100.0], "B": [200.0]})
+    if metadata is not None:
+        frame.attrs["currency"] = metadata
+    with pytest.raises(ProviderError, match="no currency declared"):
+        convert_frame(frame, "USD", rates=None)
+    assert frame.attrs.get("currency") == metadata
 
 
 def test_mixed_currency_without_target_raises_usage_error() -> None:

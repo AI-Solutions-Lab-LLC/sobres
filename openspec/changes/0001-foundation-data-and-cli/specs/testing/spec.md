@@ -28,6 +28,8 @@ The suite SHALL be organized by what each test proves, not by module.
 
 ### Requirement: Math is tested against known answers
 
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
+
 #### Scenario: Sources of truth
 - **WHEN** a `core/` function is tested
 - **THEN** expected values SHALL come from one of: a hand computation shown in
@@ -49,6 +51,8 @@ The suite SHALL be organized by what each test proves, not by module.
   overlap)
 
 ### Requirement: Architecture is tested, not reviewed
+
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
 
 #### Scenario: Layering rules are code
 - **WHEN** `tests/architecture/` runs
@@ -72,12 +76,25 @@ The suite SHALL be organized by what each test proves, not by module.
 
 ### Requirement: Fixtures, not mocks, at the data boundary
 
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
+
 #### Scenario: Recorded payloads
 - **WHEN** a provider is tested offline
 - **THEN** it SHALL parse a real payload recorded under `tests/fixtures/` by
   `scripts/record_fixtures.py`
 - **AND** the fixture SHALL carry the date and provider version it was recorded
   from
+
+#### Scenario: Recorded market dates survive timezone changes
+- **WHEN** recorded daily Yahoo bars contain different UTC offsets across daylight saving time
+- **THEN** replay SHALL preserve each exchange-local calendar date and include both requested endpoints
+- **AND** it SHALL return the same prices as the live provider's date normalization
+
+#### Scenario: Recording provenance is verifiable
+- **WHEN** provider payloads are recorded
+- **THEN** metadata SHALL identify the source, client version, recording time, request window where applicable, and SHA-256 of each payload
+- **AND** offline checks SHALL reject a changed payload whose recorded digest no longer matches
+- **AND** known-answer tests SHALL identify the recorded vendor revision rather than assume historical observations never change
 
 #### Scenario: Re-recording is deliberate
 - **WHEN** a fixture is regenerated
@@ -93,6 +110,8 @@ The suite SHALL be organized by what each test proves, not by module.
 
 ### Requirement: Conformance and parity suites
 
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
+
 #### Scenario: Conformance suites are parametrized
 - **WHEN** more than one implementation of a protocol exists or is planned
 - **THEN** a single shared suite SHALL be parametrized over a fixture list of
@@ -105,6 +124,8 @@ The suite SHALL be organized by what each test proves, not by module.
 - **AND** a parity suite SHALL exist for CLI/API/UI from 0004
 
 ### Requirement: Invariants across every command
+
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
 
 #### Scenario: Enumerated, not sampled
 - **WHEN** an invariant test runs
@@ -122,6 +143,8 @@ The suite SHALL be organized by what each test proves, not by module.
 
 ### Requirement: Property-based tests where they earn their place
 
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
+
 #### Scenario: Round-trip properties
 - **WHEN** a function has an inverse — currency conversion, serialization,
   rate inversion, migration up from a fixture
@@ -136,6 +159,8 @@ The suite SHALL be organized by what each test proves, not by module.
   so failures are real, not artifacts of nonsense input
 
 ### Requirement: Coverage and speed
+
+Automated tests SHALL exercise the specified observable invariants and report missing verification honestly.
 
 #### Scenario: Coverage floor
 - **WHEN** CI runs

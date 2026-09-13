@@ -317,3 +317,26 @@ def test_disclaimer_rule_per_command(name: str, cli: Callable[..., Any], tmp_pat
     for fmt in ("json", "csv"):
         out = cli(*_prepare(name, cli, tmp_path), "--format", fmt, env_extra=ENV)
         assert DISCLAIMER not in out.stdout
+
+
+@pytest.mark.parametrize("name", ["data.prices", "data.macro", "data.factors", "data.fx"])
+def test_data_stdout_bytes_stable_with_fixed_state(
+    name: str, cli: Callable[..., Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Stable data output under instrumentation (0001)."""
+    from sobres.data.cache import ObservationCache
+    from tests.conftest import FROZEN_NOW
+
+    original_init = ObservationCache.__init__
+
+    def fixed_clock(self: ObservationCache, store: Any, **kwargs: Any) -> None:
+        original_init(self, store, clock=lambda: FROZEN_NOW)
+
+    monkeypatch.setattr(ObservationCache, "__init__", fixed_clock)
+    args = [*SAMPLE_ARGS[name], "--format", "json"]
+    cli(*args, env_extra=ENV)  # Every measured run starts from the same warm cache.
+    quiet = cli(*args, env_extra=ENV)
+    loud = cli("-vv", *args, env_extra=ENV)
+    traced = cli(*args, env_extra={**ENV, "OTEL_TRACES_EXPORTER": "console"})
+    assert quiet.exit_code == loud.exit_code == traced.exit_code == 0
+    assert quiet.stdout == loud.stdout == traced.stdout

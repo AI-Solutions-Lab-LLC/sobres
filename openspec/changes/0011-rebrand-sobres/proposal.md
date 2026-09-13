@@ -77,7 +77,7 @@ disagree by design.
 | Risk | Mitigation |
 |---|---|
 | A user's existing local database and config sit under the old `quantfolio` paths | `sobres doctor` detects a legacy directory and reports the exact `mv` to run; it does not move data silently |
-| The `sobres` name is claimed on PyPI before the first upload | Reserve it by publishing `0.0.0` as soon as this change merges, per 0000's release gate |
+| The `sobres` name is claimed on PyPI before the first upload | Publish only the intended reviewed version after issue #21's release checks |
 | A stale `QUANTFOLIO_*` env var in someone's shell reads as unset and the tool silently uses a default | The settings registry refuses to start when any `QUANTFOLIO_*` variable is present, naming the `SOBRES_*` replacement |
 | The Docker Hub namespace is wrong | `aisolutionslab` is an assumption. Confirm the organization's actual Docker Hub account before 0005 publishes an image |
 
@@ -87,3 +87,13 @@ disagree by design.
   a placeholder used consistently across these documents.
 - Whether the GitHub Pages site publishes from the repository or from an
   organization-level pages repo, which decides the final URL path.
+
+## Alignment amendment: remaining surfaces
+
+The package rename is merged. Pending image/page work uses 0005's `compose.yaml`
+and 0006's single `site/` home page with explicit publication enablement. Preserve
+`sobres`, `SOBRES_` and current user data/config paths through the compatible
+package migration in [0013](../0013-template-development-alignment/design.md).
+Historical names in this change remain migration evidence, not rename targets.
+Release activation belongs to existing issue #21 and an intended reviewed version;
+no speculative reservation upload is part of the alignment work.

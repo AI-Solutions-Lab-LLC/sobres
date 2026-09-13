@@ -52,15 +52,24 @@ All complete. Recorded so the change archives with its own checklist.
       or deletion. Configured 2026-09-12.
 - [x] `pypi` and `testpypi` environments created. Configured 2026-09-12.
 - [x] `RELEASE_ENABLED` repository variable exists and is `false`. Publishing is
-      deliberately disarmed until 0011 lands, because the code still declares the
-      old distribution name and arming now would publish it under a name nobody
-      wants and can never delete.
+      deliberately disarmed pending the release rehearsal and activation in #21.
 - [ ] Add required reviewers to the `pypi` environment, making every production
       publish an approval gate.
 - [ ] Set `RELEASE_ENABLED` to `true` — only after 0011 renames the distribution
       and B5 switches the upload to token auth.
-- [ ] Reserve `sobres` on PyPI by publishing `0.0.0` once armed.
-- [ ] **B5. Token-auth upload** — `release.yml` passes `secrets.PYPI_PROD` /
+- [ ] Publish the reviewed intended version after rehearsal; no placeholder version is required.
+- [x] **B5. Token-auth upload** — `release.yml` passes `secrets.PYPI_PROD` /
       `secrets.PYPI_TEST` as the upload password and drops the `id-token: write`
-      permission and the attestation step. → test: a TestPyPI rehearsal uploads
-      successfully and the run log contains no token fragment.
+      permission and disables attestations. Decision/auth-selection tests and actionlint pass.
+- [ ] **B6. Upload verification** — controlled TestPyPI rehearsal succeeds, logs contain
+      no token fragments, and the resulting wheel installs and runs. Tracked in #21.
+
+
+
+## Alignment scope (0013)
+
+Historical completed checks above refer to the original scaffold, not the current
+coverage measurement. The future formatter and harness migration is owned by
+0013; it does not reset completed release infrastructure tasks. Completed B5 code and pending B6 upload verification/
+activation use issue #21's token contract and accurate skip-reason acceptance.
+A TestPyPI upload is a separate authorized live operation after local verification.

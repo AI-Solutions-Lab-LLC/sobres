@@ -21,6 +21,7 @@ import pandas as pd
 
 from sobres.core.conventions import periods_per_year
 from sobres.core.errors import InsufficientDataError, UsageError
+from sobres.core.validation import require_finite
 
 ReturnMethod = Literal["mean_historical", "ewma", "capm"]
 CovMethod = Literal["sample", "ledoit_wolf", "ewma", "semicovariance"]
@@ -66,7 +67,8 @@ def expected_returns(
     over the aligned overlap; needs ``benchmark`` (Sharpe, 1964).
     """
     periods = periods_per_year(frequency)
-    clean = returns.dropna(how="all")
+    require_finite(returns)
+    clean = returns
     if method == "mean_historical":
         out = clean.mean() * periods
     elif method == "ewma":
@@ -74,9 +76,14 @@ def expected_returns(
     elif method == "capm":
         if benchmark is None:
             raise UsageError("the capm estimator needs a benchmark return series")
-        both = pd.concat([clean, benchmark.rename("__m__")], axis=1, join="inner").dropna()
+        require_finite(benchmark, "benchmark")
+        both = pd.concat([clean, benchmark.rename("__m__")], axis=1, join="inner")
+        if len(both) < 3:
+            raise InsufficientDataError("CAPM needs at least three aligned observations")
         market = both["__m__"]
         var_m = float(market.var(ddof=1))
+        if not np.isfinite(var_m) or var_m <= 0:
+            raise UsageError("CAPM benchmark must have positive variance")
         premium = float(market.mean()) * periods - risk_free
         betas = both.drop(columns="__m__").apply(
             lambda c: float(np.cov(c, market, ddof=1)[0, 1]) / var_m
@@ -145,7 +152,8 @@ def covariance(
     ``attrs`` record ``estimator``, ``shrinkage`` (for Ledoit-Wolf) and any
     ``psd_repair``.
     """
-    clean = returns.dropna()
+    require_finite(returns)
+    clean = returns
     _require_enough(clean)
     x = clean.to_numpy(dtype="float64")
     periods = periods_per_year(frequency)
@@ -180,6 +188,9 @@ def condition_covariance(sigma: pd.DataFrame) -> tuple[pd.DataFrame, PsdRepair |
     rescaled to keep its trace (Higham-style projection). The repair is
     returned so the caller can log it at WARNING — this module never logs.
     """
+    require_finite(sigma, "covariance")
+    if sigma.empty or sigma.shape[0] != sigma.shape[1]:
+        raise UsageError("covariance must be a nonempty square matrix")
     values = sigma.to_numpy(dtype="float64")
     sym = (values + values.T) / 2.0
     eigenvalues, vectors = np.linalg.eigh(sym)

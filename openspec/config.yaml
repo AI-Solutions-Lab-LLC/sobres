@@ -1,34 +1,38 @@
 schema: spec-driven
 
 context: |
-  sobres is a Python 3.11+ CLI and library for equity analysis.
-
-  Hard architectural rule (inherited from espin086/fire-calculator, which proved it):
-  ALL math and business logic live in `src/sobres/core/**` as pure, I/O-free
-  functions over plain dataclasses / pandas objects. Every other surface — the Typer
-  CLI, any future FastAPI app, any notebook helper — is a thin adapter that imports
-  core and holds no business logic of its own.
-
-  Data access is the other pure boundary: `src/sobres/data/**` owns all network
-  I/O and caching and returns plain pandas objects. Core never performs I/O; adapters
-  never do math.
-
-  Conventions:
-  - Typer + Rich for the CLI. Every command supports `--format table|json|csv`.
-  - Base `pip install` must work with no API keys. Keyed providers are opt-in.
-  - Tests: pytest. Math is tested against hand-computed or textbook fixtures, never
-    against live data. Live-network tests carry the `network` marker and are excluded
-    from CI.
-  - Money is never floats-with-rounding-surprises in output: format at the edge.
-  - Every number the CLI prints must be traceable to a cited formula in the spec.
-
-  This is a personal-finance / research tool. It is NOT investment advice and must
-  never present outputs as a recommendation to buy or sell.
+  sobres is a Python 3.11+ CLI/library for equity research, not investment advice.
+  Read openspec/project.md and the active proposal/design/tasks/scenarios first.
+  0013 proposes alignment with the merged AISL template; current code still uses
+  core/data/cli until that migration implements its compatibility facades.
+  Target: pure financial math/types in src/sobres/core; shared orchestration in
+  application; repository/provider interfaces in ports; concrete CLI/API/storage/
+  provider I/O in adapters; bootstrap owns construction. Registry declarations are
+  transport-neutral. No I/O/logging/tracing in core and no concrete adapters in
+  application or ports. Preserve public core imports and CLI names/defaults/output.
+  Explicit exposure selects API/UI operations; local administration is not exposed.
+  Settings and doctor checks are declared once. Use shared currency conversion,
+  distinguish missing observations from closures/listing gaps and preserve WAL-safe
+  backup, transaction and cache-clear semantics. SQLite is the operational default;
+  another backend requires real-engine contracts and data cutover/rollback evidence.
+  Private context is optional; public builds/tests/installations need no lake access.
+  Black and isort with Black profile, both line length 100, after every Python edit.
+  Keep compatible Ruff lint, strict typing, 90% branch coverage, offline known-answer
+  tests, recorded provider fixtures and base wheel/init/doctor/data verification.
+  Current Ruff-format gates remain until the explicit 0013 tooling migration.
+  Preserve 0000's org-token publishing decision and existing issue 21; do not copy
+  the template OIDC publisher over it. Cloud/enterprise profiles remain deferred.
 
 rules:
   proposal:
-    - State the user-visible outcome first, in terms of a command someone can run.
-    - Always include a "Non-goals" section.
+    - State the user-visible outcome first and always include Non-goals.
+    - Identify the issue, planning PR and predecessor changes; mark unpublished links honestly.
+    - Link relied-on template/context decisions with revision and applicability; do not copy private prose.
+    - Distinguish proposed plans, branch-local implementations, merged behavior and deferred scope.
   tasks:
-    - Break tasks into chunks of at most ~2 hours.
-    - Every capability task must name the test that proves it.
+    - Tasks are at most about two hours, each naming its proof and one coherent commit.
+    - Group one to three related tasks per PR; explain larger atomic scope.
+    - Verify merged planning ancestry before implementation; new acceptance stays unchecked until tested.
+  specs:
+    - Every requirement has substantive SHALL/MUST text and WHEN/THEN scenarios.
+    - Preserve domain correctness and public compatibility through structural changes.
