@@ -5,7 +5,7 @@ PyPI versions are immutable: re-uploading an existing version is a hard error,
 not an overwrite. So "publish on every push to main" can only mean "publish when
 the version declared in ``__about__.py`` is not yet on the index".
 
-Writes ``version``, ``target`` and ``publish`` as ``KEY=value`` lines on stdout,
+Writes ``version``, ``target``, ``publish`` and ``reason`` as ``KEY=value`` lines on stdout,
 which the workflow appends to ``$GITHUB_OUTPUT``.
 
 stdout is therefore a machine interface: it carries ONLY ``key=value`` lines.
@@ -100,15 +100,16 @@ def main() -> None:
 
     # Arming switch. Publishing to real PyPI stays off until the repository
     # variable RELEASE_ENABLED is set to "true", so merging the pipeline itself
-    # cannot fire a publish before Trusted Publishing is configured. TestPyPI
+    # cannot fire a publish before upload credentials are configured. TestPyPI
     # runs (workflow_dispatch) are always allowed -- that is how you rehearse.
     enabled = os.environ.get("RELEASE_ENABLED", "").strip().lower() == "true"
     if target == "pypi" and not enabled:
         note("Releases to PyPI are not armed (repository variable RELEASE_ENABLED != 'true').")
-        note("See docs/RELEASING.md for the one-time Trusted Publishing setup.")
+        note("See docs/RELEASING.md for the organization token setup.")
         emit("version", read_version())
         emit("target", target)
         emit("publish", "false")
+        emit("reason", "disabled")
         return
 
     version = read_version()
@@ -144,6 +145,7 @@ def main() -> None:
     emit("version", version)
     emit("target", target)
     emit("publish", str(publish).lower())
+    emit("reason", "new-version" if publish else "already-published")
 
 
 if __name__ == "__main__":

@@ -80,7 +80,7 @@ def test_csv_columns_are_ret_vol_sharpe_then_tickers(cli: Callable[..., Any]) ->
     assert result.exit_code == 0, result.stderr
     header = result.stdout.splitlines()[0]
     assert header == "ret,vol,sharpe,AAPL,MSFT,JNJ,XOM,min_variance,max_sharpe"
-    assert len(result.stdout.splitlines()) == 1 + 9  # 8 points plus the max-Sharpe point
+    assert len(result.stdout.splitlines()) == 1 + 8  # Named points are included
     doc = json.loads(
         cli("optimize", "frontier", *TICKERS, *BASE, "--points", "5", "--format", "json").stdout
     )
@@ -203,7 +203,7 @@ def test_risk_panel_of_a_fixed_portfolio(cli: Callable[..., Any]) -> None:
     } <= set(metrics)
     assert doc["weights"] == {"AAPL": 0.6, "MSFT": 0.4}
     assert metrics["sharpe"] == pytest.approx(
-        (metrics["annualized_return"] - 0.0) / metrics["volatility"]
+        (metrics["arithmetic_return"] - 0.0) / metrics["volatility"]
     )
     table = cli(
         "optimize",

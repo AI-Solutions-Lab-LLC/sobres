@@ -120,9 +120,7 @@ class ObservationCache:
         started = time.perf_counter()
         now = self._clock()
         requested = DateRange(start, end)
-        # Keys are stored upper-cased; the caller's casing (``Mkt-RF``) is restored on the way out.
-        casing = {s.upper(): s for s in symbols}
-        symbols = list(casing)
+        symbols = list(symbols)
         to_fetch: dict[DateRange, list[str]] = {}
         for symbol in symbols:
             key = SeriesKey(provider, dataset, symbol)
@@ -146,18 +144,21 @@ class ObservationCache:
             {"provider": provider, "dataset": dataset, "symbols": len(symbols), "status": status},
         ) as sp:
             for rng, missing in sorted(to_fetch.items()):
-                frame = fetch([casing[s] for s in missing], rng.start, rng.end)
-                frame = frame.rename(columns={casing[s]: s for s in missing})
-                frame.attrs["series_meta"] = {
-                    str(k).upper(): v for k, v in frame.attrs.get("series_meta", {}).items()
-                }
+                frame = fetch(missing, rng.start, rng.end)
+                previous = self._store.read_observations(
+                    ObservationQuery(provider, dataset, missing, rng.start, rng.end)
+                )
+                # A newly absent row is a withdrawal, not permission to retain
+                # an old number. Keep its date as an explicit missing observation.
+                frame = frame.reindex(index=frame.index.union(previous.index), columns=missing)
                 rows = self._to_observations(provider, dataset, frame, missing)
                 ttl = ttl_for(dataset, rng.end, now.date())
                 self._store.upsert_observations(rows)
                 for symbol in missing:
                     key = SeriesKey(provider, dataset, symbol)
                     self._store.record_fetch(FetchRecord(key, rng, now, ttl))
-                    series_meta = dict(frame.attrs.get("series_meta", {}).get(symbol, {}))
+                    series_meta = dict(self._store.get_series_meta(key) or {})
+                    series_meta.update(frame.attrs.get("series_meta", {}).get(symbol, {}))
                     if meta:
                         series_meta.update(meta)
                     if series_meta:
@@ -166,9 +167,9 @@ class ObservationCache:
             result = self._store.read_observations(
                 ObservationQuery(provider, dataset, symbols, start, end)
             )
-            result = canonical_frame(result, symbols).rename(columns=casing)
+            result = canonical_frame(result, symbols)
             series_meta_all = {
-                casing[s]: m
+                s: m
                 for s in symbols
                 if (m := self._store.get_series_meta(SeriesKey(provider, dataset, s)))
             }
@@ -208,7 +209,5 @@ class ObservationCache:
                 continue
             values = frame[symbol].to_numpy()
             for when, value in zip(index, values, strict=True):
-                if pd.isna(value):
-                    continue
                 rows.append(Observation(provider, dataset, symbol, when.date(), float(value)))
         return rows

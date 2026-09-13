@@ -48,7 +48,7 @@ objective), and it is already a base dependency via `scipy`.
   multiple starting points (equal-weight, min-variance, random) to guard against a
   local optimum; the best feasible solution wins. Determinism is preserved by a
   fixed seed for the random starts.
-- `target_return` / `target_risk` — add one equality constraint.
+- `target_return` adds an equality; `target_risk` is a volatility ceiling.
 - `risk_parity` — minimize the sum of squared deviations of risk contributions
   `w_i * (Σw)_i / (wᵀΣw)` from `1/n`.
 - `equal_weight` — no solver.
@@ -112,7 +112,7 @@ class BacktestResult:
     oos_start: date; oos_end: date
 ```
 
-`Portfolio.estimators` is what lets the CLI print "Ledoit-Wolf shrinkage, geometric
+`Portfolio.estimators` is what lets the CLI print "Ledoit-Wolf shrinkage, arithmetic
 mean historical returns" in the header. A number whose provenance is not on screen
 invites misreading.
 
@@ -153,3 +153,17 @@ quietly differ.
 | Ledoit-Wolf default | Sample covariance default | The default should be the one that does not blow up; sample covariance is a deliberate choice, not an accident |
 | 10 bps default cost | 0 bps default | A zero-cost default systematically flatters high-turnover strategies |
 | Geometric annualization default | Arithmetic | It is what an investor actually earns |
+
+## Reviewed implementation decisions
+
+The corrections in [review-decisions.md](review-decisions.md) supersede conflicting early design prose. They define date cutoffs, rate conversion, arithmetic ratios, cash-inclusive fees, frontier count, validation and the solver protocol.
+
+## Alignment amendment (0013)
+
+Keep returns/risk/optimization/backtest math in `core/`; orchestration and registry declarations go to `application/commands/optimize.py`, rendering to `adapters/cli/`. Use shared market/currency services and injected providers. R/textbook oracles and known review findings need fresh acceptance, not changed expected values.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

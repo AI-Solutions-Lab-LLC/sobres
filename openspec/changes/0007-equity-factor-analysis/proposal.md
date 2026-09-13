@@ -1,9 +1,9 @@
 ---
 change: 0007-equity-factor-analysis
 milestone: v1.3
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization]
-status: implemented
-planning_depth: proposal + spec delta + design + tasks
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0013-template-development-alignment, 0004-web-ui]
+status: proposed
+planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 
 # 0007 — Equity and factor analysis
@@ -35,9 +35,9 @@ for the optimizer, and factor-tilted portfolio construction becomes possible.
 - **New capability `equity-analysis`**: `core/factors.py` (CAPM, FF3, FF5,
   FF5+momentum, rolling betas) and a fundamentals summary built on yfinance.
 - **New CLI group `sobres analyze`**: `stock`, `factors`.
-- `statsmodels` moves from the `econ` extra into the base install, or the regression
-  is implemented on `numpy` directly — decided in design, based on whether the OLS
-  diagnostics needed (HAC standard errors) justify the dependency.
+- The amended design retains the candidate branch's numpy OLS/HAC implementation
+  with independently verified answers; `statsmodels` stays in the `econ` extra
+  and can serve as a development oracle. Base installation gains no regression dependency.
 
 ## Non-goals
 
@@ -58,3 +58,28 @@ for the optimizer, and factor-tilted portfolio construction becomes possible.
 | Overlapping/autocorrelated residuals inflate significance | Newey-West (HAC) standard errors alongside OLS; report both |
 | Short samples produce unstable betas | Enforce a minimum observation count; offer rolling-window betas so instability is visible rather than averaged away |
 | Frequency mismatch (daily prices vs monthly factors) | Alignment is explicit via 0001's `align_frames`; monthly is the default for factor work, matching how the factors are published |
+
+## Development alignment and review readiness (0013)
+
+Keep OLS/HAC computation in `core/factors.py`, use cases in `application/commands/analyze.py` and vendor parsing in `adapters/providers/`. Carry forward the branch design of numpy-based regression with independent known-answer and statsmodels comparison tests; statsmodels stays out of base dependencies. Reconcile its cache changes with the corrected foundation.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #13 at `4a8a60d88f60dfe1fd1409b6c7890f9416f2f668` contains an older candidate
+implementation. It is open and stacked, not accepted default-main behavior.
+Its newer tasks/design decisions were inspected for this amendment; checked boxes
+from that branch are not carried over as proof. The amended plan and actual branch
+must be reconciled, reverified and reviewed before it is considered complete.
+The issue is recorded below; the planning merge is PR #33 (`b9792d7`).
+Publication of the tracker/plan does not authorize implementation before merge.
+
+## GitHub tracking
+
+Implementation tracker: [#29](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/29).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

@@ -197,18 +197,17 @@ Estimates are focused hours. Each task names the test that proves it.
 - [x] **D1. Fixture recording script** (1h)
       `scripts/record_fixtures.py` — regenerates `tests/fixtures/` deliberately, so
       re-recording is a reviewable diff rather than an ad-hoc action.
-      *The current fixtures were synthesized in each vendor's payload shape by
-      `scripts/synthesize_fixtures.py` because no provider was reachable from the
-      implementing environment; see `tests/fixtures/README.md`. Re-record live.*
+      *All four providers were recorded live on 2026-09-13; the source, revision,
+      client version and payload checksums are documented in `tests/fixtures/README.md`.*
 - [x] **D2. README quickstart** (1h) — install, the three `sobres data` commands, the
       no-key promise, and the not-advice disclaimer.
 - [x] **D3. CI green** (1.5h) — ruff, ruff format, mypy --strict, pytest; the
       build job's clean-venv smoke extended to `sobres init --non-interactive` →
       `sobres doctor --offline` → one data command on a fixture.
-- [ ] **D4. Port reuse audit** (1h) — *deferred: the `NewsWaveMetrics` repository
-      was not reachable from the implementing environment; revisit when it is.*
-      Diff `NewsWaveMetrics/fetch_yfinance.py` and `extract_economic_data.py` against
-      B4/B5; lift anything that handles a real-world edge case these specs missed.
+- [x] **D4. Port reuse audit** (1h) — compared `NewsWaveMetrics/fetch_yfinance.py`
+      and `extract_economic_data.py` at `e8382d2` against B4/B5.
+      See `docs/foundation-reuse-audit.md`; no verbatim port was needed.
+      → `tests/data/test_fred.py::test_mixed_frequency_preserves_native_dates`
 
 - [x] **C6. Instrumented adapters** (2h)
       Spans and logs around provider fetches, storage operations, and core calls,
@@ -238,3 +237,12 @@ real unknowns.
 - [x] `mypy --strict` clean
 - [x] Every scenario in both spec deltas has a test that references it
 - [x] A second identical `sobres data prices` call is served from cache in < 1s
+
+## Review follow-up
+
+- [x] Complete change 0012 and rerun its regression and artifact checks.
+- [x] Replace synthetic provider payloads with deliberately recorded fixtures.
+- [x] Complete the deferred D4 reuse audit before declaring foundation complete.
+
+The earlier checked implementation tasks record delivered code; regression,
+recording and audit evidence is documented in `docs/foundation-completion.md`.

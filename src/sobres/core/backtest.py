@@ -6,7 +6,7 @@ the lookback and passes **only that slice** to the strategy, which therefore
 has no reference with which to reach forward. The test perturbs every
 observation at or after ``t`` and asserts the weights at ``t`` are identical.
 
-Turnover at a rebalance is ``0.5 · Σ|w_new - w_drifted|``; the cost deducted
+Turnover includes risky assets and residual cash: ``0.5 · Σ|w_new - w_drifted|``; the cost deducted
 is ``cost_bps / 10 000 · turnover`` of portfolio value. Between rebalances
 weights drift with realized returns. The default cost is 10 bps, not 0: a
 costless backtest flatters every high-turnover strategy.
@@ -24,6 +24,7 @@ import pandas as pd
 
 from sobres.core.errors import InsufficientDataError, UsageError
 from sobres.core.risk import RiskPanel, risk_metrics
+from sobres.core.validation import require_finite, require_time_index
 
 Rebalance = Literal["monthly", "quarterly", "annual", "never"]
 REBALANCES: tuple[str, ...] = ("monthly", "quarterly", "annual", "never")
@@ -45,6 +46,7 @@ class BacktestResult:
     weights_history: pd.DataFrame
     total_turnover: float
     total_cost: float
+    total_cost_rate: float
     oos_start: date
     oos_end: date
     n_rebalances: int
@@ -76,8 +78,9 @@ def rebalance_dates(
 
 
 def turnover(new: np.ndarray, drifted: np.ndarray) -> float:
-    """``0.5 · Σ|w_new - w_drifted|``: one-way traded fraction of the portfolio."""
-    return 0.5 * float(np.abs(new - drifted).sum())
+    """One-way traded fraction including residual cash; full initial investment is 1."""
+    cash_change = abs((1.0 - new.sum()) - (1.0 - drifted.sum()))
+    return 0.5 * (float(np.abs(new - drifted).sum()) + float(cash_change))
 
 
 def _drift(weights: np.ndarray, period_returns: np.ndarray) -> tuple[np.ndarray, float]:
@@ -86,7 +89,9 @@ def _drift(weights: np.ndarray, period_returns: np.ndarray) -> tuple[np.ndarray,
     total = float(grown.sum())
     portfolio_return = total - 1.0
     if total <= 0:
-        return np.zeros_like(weights), portfolio_return
+        raise UsageError(
+            "portfolio wealth is exhausted; leveraged loss requires a liquidation policy"
+        )
     return grown / total, portfolio_return
 
 
@@ -97,7 +102,7 @@ def _run(
     cost_rate: float,
     lookback: int,
     progress: Progress | None,
-) -> tuple[pd.Series, pd.DataFrame, float, float]:
+) -> tuple[pd.Series, pd.DataFrame, float, float, float]:
     assets = list(returns.columns)
     n = len(assets)
     values = returns.to_numpy(dtype="float64")
@@ -109,6 +114,7 @@ def _run(
     history: list[tuple[pd.Timestamp, np.ndarray]] = []
     total_turnover = 0.0
     total_cost = 0.0
+    total_cost_rate = 0.0
     rebalance_set = set(schedule)
     done = 0
     for pos in range(start_pos, len(index)):
@@ -116,29 +122,34 @@ def _run(
         if stamp in rebalance_set:
             # Strictly before t, trimmed to the lookback: the only data the strategy sees.
             window = returns.iloc[max(0, pos - lookback) : pos]
-            target = strategy(window.copy()).reindex(assets).fillna(0.0).to_numpy(dtype="float64")
+            proposed = strategy(window.copy()).reindex(assets)
+            require_finite(proposed, "strategy weights")
+            target = proposed.to_numpy(dtype="float64")
             if abs(target.sum() - 1.0) > 1e-6:
                 raise UsageError(
                     f"strategy weights on {stamp.date()} sum to {target.sum():.6f}, not 1"
                 )
             traded = turnover(target, weights)
             cost = cost_rate * traded
+            if cost >= 1.0:
+                raise UsageError("transaction costs exhaust the portfolio")
+            total_cost += value * cost
+            total_cost_rate += cost
             value *= 1.0 - cost
             total_turnover += traded
-            total_cost += cost
             weights = target
             history.append((stamp, weights.copy()))
             done += 1
             if progress is not None:
                 progress(done, len(schedule))
-        weights, period_return = _drift(weights, np.nan_to_num(values[pos]))
+        weights, period_return = _drift(weights, values[pos])
         value *= 1.0 + period_return
         curve.append(value)
     equity = pd.Series(curve, index=index[start_pos:], name="equity")
     weights_history = pd.DataFrame(
         [w for _, w in history], index=pd.DatetimeIndex([s for s, _ in history]), columns=assets
     )
-    return equity, weights_history, total_turnover, total_cost
+    return equity, weights_history, total_turnover, total_cost, total_cost_rate
 
 
 def _curve_returns(curve: pd.Series) -> pd.Series:
@@ -156,7 +167,7 @@ def walk_forward(
     lookback: int = 756,
     cost_bps: float = DEFAULT_COST_BPS,
     start: date | None = None,
-    risk_free: float = 0.0,
+    risk_free: float | pd.Series = 0.0,
     progress: Progress | None = None,
 ) -> BacktestResult:
     """Re-solve at each rebalance on prior data only; compare with equal weight.
@@ -165,6 +176,12 @@ def walk_forward(
     requested ``start`` has fewer than ``lookback`` observations before it,
     the backtest starts at the first date that does and reports the shift.
     """
+    require_finite(returns)
+    require_time_index(returns)
+    if not returns.columns.is_unique:
+        raise UsageError("asset identifiers must be unique")
+    if not np.isfinite(cost_bps) or cost_bps < 0 or cost_bps > 10_000:
+        raise UsageError("cost_bps must be finite and between 0 and 10000")
     if lookback < 2:
         raise UsageError("lookback must be at least 2 observations")
     index = pd.DatetimeIndex(returns.index)
@@ -185,7 +202,7 @@ def walk_forward(
             hint="widen --end or shorten --lookback",
         )
     cost_rate = cost_bps / 10_000.0
-    equity, weights_history, total_turnover, total_cost = _run(
+    equity, weights_history, total_turnover, total_cost, total_cost_rate = _run(
         returns, strategy, schedule, cost_rate, lookback, progress
     )
     n = len(returns.columns)
@@ -193,7 +210,7 @@ def walk_forward(
     def equal_weight(_window: pd.DataFrame) -> pd.Series:
         return pd.Series(np.full(n, 1.0 / n), index=returns.columns)
 
-    bench_equity, _, _, _ = _run(returns, equal_weight, schedule, cost_rate, lookback, None)
+    bench_equity, _, _, _, _ = _run(returns, equal_weight, schedule, cost_rate, lookback, None)
     strategy_returns = equity.pct_change().dropna()
     strategy_returns = pd.concat(
         [pd.Series([equity.iloc[0] - 1.0], index=[equity.index[0]]), strategy_returns]
@@ -212,6 +229,7 @@ def walk_forward(
         weights_history=weights_history,
         total_turnover=total_turnover,
         total_cost=total_cost,
+        total_cost_rate=total_cost_rate,
         oos_start=equity.index[0].date(),
         oos_end=equity.index[-1].date(),
         n_rebalances=len(schedule),

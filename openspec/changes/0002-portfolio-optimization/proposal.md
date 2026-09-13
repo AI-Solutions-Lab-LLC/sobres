@@ -1,8 +1,8 @@
 ---
 change: 0002-portfolio-optimization
 milestone: v1 (part 2 of 2) — the v1.0.0 release
-depends_on: [0001-foundation-data-and-cli]
-status: implemented
+depends_on: [0001-foundation-data-and-cli, 0013-template-development-alignment]
+status: proposed
 ---
 
 # 0002 — Portfolio optimization
@@ -11,12 +11,12 @@ status: implemented
 
 ```bash
 sobres optimize markowitz --tickers AAPL MSFT NVDA JNJ XOM GLD \
-    --start 2015-01-01 --objective max-sharpe --max-weight 0.35
+    --start 2015-01-01 --fill ffill --objective max_sharpe --max-weight 0.35
 
-sobres optimize frontier --tickers ... --points 50 --format csv > frontier.csv
+sobres optimize frontier --tickers ... --points 50 --start 2015-01-01 --fill ffill --format csv > frontier.csv
 
-sobres optimize backtest --tickers ... --objective max-sharpe \
-    --rebalance quarterly --lookback 36m --start 2015-01-01
+sobres optimize backtest --tickers ... --objective max_sharpe \
+    --rebalance quarterly --lookback 36m --start 2015-01-01 --fill ffill
 ```
 
 Optimal weights with the risk/return profile that produced them, the full efficient
@@ -26,8 +26,8 @@ frontier, and an honest walk-forward backtest of the strategy.
 
 This is the highest-value slice and the one that forces the hardest foundations.
 Getting Markowitz right end-to-end requires returns handling, covariance estimation,
-constrained optimization, and risk metrics — the same machinery 0003 (factor models)
-and 0004 (goal planning) then reuse. Any other starting point would build a thinner
+constrained optimization, and risk metrics — the same machinery 0007 (factor models)
+and 0008 (goal planning) then reuse. Any other starting point would build a thinner
 base.
 
 The backtest ships **with** the optimizer, not after it, and that is deliberate.
@@ -56,7 +56,7 @@ the honesty mechanism, so it is part of v1's definition of done.
 
 - **No Black-Litterman in v1.** It needs a view-specification UX that deserves its
   own change; the plumbing (a pluggable expected-return estimator) is designed in.
-- **No factor-model inputs to the optimizer.** That is 0003 → a later change.
+- **No factor-model inputs to the optimizer.** That is 0007 → a later change.
 - **No taxes, lot tracking, or wash sales.** Out of scope for the whole tool.
 - **No live trading, broker connections, or order generation.** Ever.
 - **No intraday data.** Daily bars throughout.
@@ -75,3 +75,31 @@ the honesty mechanism, so it is part of v1's definition of done.
 | Optimizer returns a silently wrong answer on a non-PSD covariance matrix | Validate PSD before solving; repair via nearest-PSD projection and warn, or fail — never solve quietly on a broken matrix |
 | Solver dependency weight (`cvxpy`) | SLSQP via `scipy` is the default and covers every v1 objective; `cvxpy` stays an opt-in extra |
 | Annualization convention errors (252 vs 365, simple vs log) | One documented convention module; every conversion tested against a hand-computed fixture |
+
+## Review correction scope
+
+PR #8 incorporates the eight review findings, the foundation corrections/recorded fixtures, and the decisions in `review-decisions.md`. Distribution activation remains gated separately: issue #21 covers PyPI enablement; a Homebrew tap/formula requires its own distribution change. No published version is claimed by this proposal.
+
+## Development alignment and review readiness (0013)
+
+Keep returns/risk/optimization/backtest math in `core/`; orchestration and registry declarations go to `application/commands/optimize.py`, rendering to `adapters/cli/`. Use shared market/currency services and injected providers. R/textbook oracles and known review findings need fresh acceptance, not changed expected values.
+
+Follow [0013's design](../0013-template-development-alignment/design.md),
+[workflow contract](../0013-template-development-alignment/specs/development-workflow/spec.md)
+and [dated source/decision audit](../0013-template-development-alignment/alignment-audit.md).
+The shared plan must be merged and its package migration implemented before new
+work targets those locations. Keep the existing feature dependencies too.
+
+PR #8 merged at `7f59d01273dec42461ac6817f890baf246a6f033` into the
+foundation branch, not default main. Its reviewed financial corrections and
+`review-decisions.md` remain the domain contract. PR #33 merged the alignment plan
+into main at `b9792d7`. This synchronization combines both; the new layout and
+remaining R verification tasks are still pending under issue #24. No release or
+actual R execution is claimed by either merge.
+
+## GitHub tracking
+
+Implementation tracker: [#24](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/24).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

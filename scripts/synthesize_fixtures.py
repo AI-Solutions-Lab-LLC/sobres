@@ -116,7 +116,9 @@ def write_yfinance(rng: np.random.Generator) -> None:
         for t, (_, _, _, currency, dy) in TICKERS.items()
         if t != "GLD"
     }
-    (out / "fundamentals.json").write_text(
+    synthetic_out = ROOT / "synthetic" / "yfinance"
+    synthetic_out.mkdir(parents=True, exist_ok=True)
+    (synthetic_out / "fundamentals.json").write_text(
         json.dumps(
             {
                 "recorded_at": None,

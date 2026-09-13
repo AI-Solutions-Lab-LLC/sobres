@@ -19,6 +19,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+import pytest
+
+from sobres.cli.context import Context
+
 OPT = ["--start", "2019-01-01", "--end", "2019-12-31", "--fill", "ffill"]
 
 
@@ -249,3 +253,19 @@ def test_one_file_is_the_whole_state(
 def test_repository_operations_are_logged(cli: Callable[..., Any]) -> None:
     result = cli("-vv", "portfolio", "save", "core", "--tickers", "AAPL")
     assert '"op": "portfolio_save"' in result.stderr and '"entity": "portfolio"' in result.stderr
+
+
+def test_saved_portfolio_preserves_pre_fetch_optimizer_validation(
+    cli: Callable[..., Any], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Use a saved portfolio anywhere tickers are accepted."""
+    saved = cli("portfolio", "save", "bounded", "--tickers", "AAPL", "MSFT")
+    assert saved.exit_code == 0
+
+    def unexpected_provider(self: Context) -> Any:
+        raise AssertionError("invalid saved-universe constraints must fail before provider access")
+
+    monkeypatch.setattr(Context, "price_provider", unexpected_provider)
+    result = cli("optimize", "markowitz", "--portfolio", "bounded", *OPT, "--max-weight", "0.1")
+    assert result.exit_code == 2
+    assert "infeasible for 2 assets" in result.stderr

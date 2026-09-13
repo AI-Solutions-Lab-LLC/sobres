@@ -26,9 +26,8 @@ VERSION_RE = re.compile(r"^\d+\.\d+\.\d+(?:(?:a|b|rc)\d+)?(?:\.dev\d+)?$")
 
 
 def test_version_is_a_valid_release_version() -> None:
-    assert VERSION_RE.match(__version__), (
-        f"{__version__!r} is not a version the release pipeline will accept"
-    )
+    message = f"{__version__!r} is not a version the release pipeline will accept"
+    assert VERSION_RE.match(__version__), message
 
 
 def test_installed_metadata_matches_source() -> None:
@@ -79,3 +78,19 @@ def test_distribution_name_is_stable() -> None:
     """Renaming the distribution silently would orphan users on PyPI."""
     pyproject = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert pyproject["project"]["name"] == DIST_NAME
+
+
+def test_price_client_is_a_base_dependency() -> None:
+    """Scenario: Base install price dependency (0012)."""
+    from importlib.metadata import requires
+
+    from packaging.requirements import Requirement
+
+    deps = [Requirement(value) for value in requires(DIST_NAME) or []]
+    assert any(
+        d.name == "yfinance" and (d.marker is None or d.marker.evaluate({"extra": ""}))
+        for d in deps
+    )
+    import yfinance
+
+    assert callable(yfinance.Ticker)

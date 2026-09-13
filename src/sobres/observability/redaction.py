@@ -11,6 +11,8 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from sobres.settings import all_settings
+
 REDACTED = "[REDACTED]"
 
 SENSITIVE_KEY = re.compile(r"(key|token|secret|password|passwd|authorization)", re.IGNORECASE)
@@ -36,7 +38,7 @@ def scrub_value(key: str | None, value: Any) -> Any:
     if isinstance(value, str):
         return scrub_text(value)
     if isinstance(value, Mapping):
-        return {str(k): scrub_value(str(k), v) for k, v in value.items()}
+        return scrub_mapping(value)
     if isinstance(value, list | tuple):
         return type(value)(scrub_value(None, v) for v in value)
     if isinstance(value, BaseException):
@@ -45,7 +47,16 @@ def scrub_value(key: str | None, value: Any) -> Any:
 
 
 def scrub_mapping(event: Mapping[str, Any]) -> dict[str, Any]:
-    return {str(k): scrub_value(str(k), v) for k, v in event.items()}
+    # Generic settings commands carry the secret under "value", not under the
+    # setting's own name. Resolve that meaning before scrubbing individual keys.
+    setting_key = event.get("key")
+    secret_value = isinstance(setting_key, str) and any(
+        setting.key == setting_key and setting.secret for setting in all_settings()
+    )
+    return {
+        str(k): REDACTED if k == "value" and secret_value else scrub_value(str(k), v)
+        for k, v in event.items()
+    }
 
 
 def redact_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> dict[str, Any]:

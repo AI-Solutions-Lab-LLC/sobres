@@ -15,7 +15,9 @@ import pandas as pd
 import pytest
 
 from sobres.core.errors import ProviderError, UnknownTickerError
+from sobres.data.cache import ObservationCache
 from sobres.data.fixtures import FixtureYahooSource
+from sobres.data.storage.base import Storage
 from sobres.data.yfinance_provider import LiveYahooSource, RawHistory, YFinanceProvider
 from tests.data.contracts import contract_test_price_provider
 
@@ -33,12 +35,36 @@ def test_adjusted_close_is_the_default(yahoo_source: FixtureYahooSource) -> None
     close = provider.get_prices(["AAPL"], date(2020, 8, 1), date(2020, 9, 30), field="close")
     assert adj.attrs["field"] == "adj_close" and close.attrs["field"] == "close"
     assert close.attrs["return_kind"] == "price return"
-    # The fixture carries a 4:1 split on 2020-08-31: the raw close halves twice,
-    # the adjusted series does not.
+    # Yahoo Close is already split-adjusted. Neither field has a fictitious
+    # 75% loss at AAPL's 2020-08-31 split. Adj Close additionally adjusts dividends.
+    # Source: https://github.com/ranaroussi/yfinance/issues/687
     raw_move = close["AAPL"].pct_change().loc["2020-08-31"]
     adj_move = adj["AAPL"].pct_change().loc["2020-08-31"]
-    assert raw_move < -0.5 and abs(adj_move) < 0.2
-    assert [f["rule"] for f in close.attrs["flags"]] == ["implausible-move"]
+    assert abs(raw_move) < 0.2 and abs(adj_move) < 0.2
+    assert not any(f["rule"] == "implausible-move" for f in close.attrs["flags"])
+    # Recorded Close values on either side of the split, in split-adjusted USD.
+    assert close.loc["2020-08-28", "AAPL"] == pytest.approx(124.807503)
+    assert close.loc["2020-08-31", "AAPL"] == pytest.approx(129.039993)
+    # AAPL's 2020-08-07 dividend makes adjusted return exceed price return.
+    assert adj["AAPL"].pct_change().loc["2020-08-07"] > close["AAPL"].pct_change().loc["2020-08-07"]
+    raw = yahoo_source.history("AAPL", date(2020, 8, 1), date(2020, 9, 30)).frame
+    assert list(adj["AAPL"]) == list(raw["Adj Close"])
+    assert list(close["AAPL"]) == list(raw["Close"])
+
+
+def test_recorded_dates_survive_dst_and_include_endpoints(yahoo_source: FixtureYahooSource) -> None:
+    """Scenario: Recorded market dates survive timezone changes."""
+    for ticker, start, end in (
+        ("AAPL", date(2020, 3, 6), date(2020, 3, 9)),
+        ("VOD.L", date(2020, 3, 27), date(2020, 3, 30)),
+    ):
+        raw = yahoo_source.history(ticker, start, end)
+        assert list(raw.frame.index.date) == [start, end]
+        actual = YFinanceProvider(source=yahoo_source).get_prices([ticker], start, end)
+        assert list(actual.index.date) == [start, end]
+        assert list(actual[ticker]) == pytest.approx(
+            list(raw.frame["Adj Close"] / (100 if ticker == "VOD.L" else 1))
+        )
 
 
 def test_unknown_ticker_raises_naming_symbol(yahoo_source: FixtureYahooSource) -> None:
@@ -46,6 +72,44 @@ def test_unknown_ticker_raises_naming_symbol(yahoo_source: FixtureYahooSource) -
     with pytest.raises(UnknownTickerError) as exc:
         provider.get_prices(["AAPL", "NOPE"], date(2020, 1, 1), date(2020, 1, 31))
     assert exc.value.symbol == "NOPE" and exc.value.exit_code == 4
+
+
+def test_cached_weekend_extension(yahoo_source: FixtureYahooSource, storage: Storage) -> None:
+    """Scenario: Empty calendar tail reuse (0012)."""
+    provider = YFinanceProvider(source=yahoo_source, cache=ObservationCache(storage.observations))
+    first = provider.get_prices(["aapl"], date(2024, 1, 2), date(2024, 1, 5))
+    extended = provider.get_prices(["AAPL"], date(2024, 1, 2), date(2024, 1, 7))
+    pd.testing.assert_frame_equal(first, extended)
+    assert first.attrs["series_meta"] == extended.attrs["series_meta"]
+    assert yahoo_source.calls[-1] == ("AAPL", date(2024, 1, 6), date(2024, 1, 7))
+    calls = len(yahoo_source.calls)
+    again = provider.get_prices(["AAPL"], date(2024, 1, 2), date(2024, 1, 7))
+    pd.testing.assert_frame_equal(extended, again)
+    assert len(yahoo_source.calls) == calls
+
+
+def test_empty_unvalidated_history_is_a_provider_error() -> None:
+    provider = YFinanceProvider(source=_Source(RawHistory(pd.DataFrame(), None)))
+    with pytest.raises(ProviderError, match="empty history without currency metadata"):
+        provider.get_prices(["X"], date(2024, 1, 6), date(2024, 1, 7))
+
+
+def test_live_empty_window_uses_currency_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
+    import yfinance
+
+    class Ticker:
+        def __init__(self, ticker: str) -> None:
+            self.ticker = ticker
+
+        def history(self, **kwargs: Any) -> pd.DataFrame:
+            raise yfinance.exceptions.YFPricesMissingError(self.ticker, "weekend")
+
+        def get_history_metadata(self) -> dict[str, str]:
+            return {"currency": "USD"}
+
+    monkeypatch.setattr(yfinance, "Ticker", Ticker)
+    frame = YFinanceProvider().get_prices(["AAPL"], date(2024, 1, 6), date(2024, 1, 7))
+    assert frame.empty and frame.attrs["currency"] == "USD"
 
 
 def test_partial_history_keeps_nan_rows(yahoo_source: FixtureYahooSource) -> None:

@@ -311,7 +311,7 @@ def stock(p: StockParams, ctx: Context) -> StockReport:
     )
     prices = universe.prices[p.ticker]
     daily = universe.returns[p.ticker]
-    panel = risk_metrics(daily, universe.risk_free, universe.frequency)
+    panel = risk_metrics(daily, universe.risk_free_rates, universe.frequency)
     rows = _rows(
         "price",
         {

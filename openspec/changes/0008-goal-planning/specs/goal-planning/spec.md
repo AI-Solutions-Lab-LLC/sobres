@@ -4,6 +4,8 @@
 
 ### Requirement: Real vs. nominal is always explicit
 
+Goal planning SHALL state its real or nominal mode and inflation assumptions in every monetary result.
+
 #### Scenario: Mode selection
 - **WHEN** any `sobres plan` command runs
 - **THEN** `--real` or `--nominal` SHALL determine whether returns and targets are
@@ -48,6 +50,8 @@ return, given the other three.
 
 ### Requirement: Retirement / FIRE planning
 
+Retirement planning SHALL compute the FI target, savings path and coast scenario from stated withdrawal assumptions.
+
 #### Scenario: FI number
 - **WHEN** `sobres plan retire --expenses 90000` runs
 - **THEN** the FI number SHALL be `annual_expenses / withdrawal_rate`, defaulting to
@@ -70,6 +74,8 @@ return, given the other three.
 
 ### Requirement: Named goal specializations
 
+Named savings goals SHALL derive their target and funding schedule from the selected goal assumptions.
+
 #### Scenario: House
 - **WHEN** `sobres plan house --price 950000 --down-pct 0.20 --by 2029-06-01` runs
 - **THEN** the down-payment target, required monthly saving, and whether the supplied
@@ -89,6 +95,8 @@ return, given the other three.
   the assumption stated
 
 ### Requirement: Monte Carlo and bootstrap simulation
+
+Goal simulations SHALL report reproducible distributions and success probabilities with their assumptions and limitations.
 
 #### Scenario: Simulation is run by default
 - **WHEN** any `sobres plan` command runs
@@ -122,3 +130,20 @@ return, given the other three.
 - **THEN** the not-investment-advice footer SHALL be present
 - **AND** the output SHALL state that taxes are not modeled and inputs are assumed
   after-tax
+
+### Requirement: Aligned development and application boundaries
+This capability SHALL use the merged 0013 development contract and target
+package ownership while preserving its domain scenarios and public CLI behavior.
+
+#### Scenario: Capability resumes after the alignment migration
+- **WHEN** implementation of this capability resumes on the aligned base
+- **THEN** its use cases SHALL use shared application services and owned ports,
+  with concrete I/O in adapters and financial computations in core
+- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
+  against the installed package without private context access
+
+#### Scenario: Capability is reviewed for another surface
+- **WHEN** the capability is exposed through an API or UI
+- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
+  service and validation contract as the CLI
+- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage

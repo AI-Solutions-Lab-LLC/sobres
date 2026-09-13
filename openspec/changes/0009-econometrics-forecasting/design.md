@@ -1,5 +1,9 @@
 # 0009 — Design
 
+Proposed design carried forward from PR #15; statements about tests or
+behavior describe that branch's intent and claims, not verified acceptance here.
+Reconcile through R0/R1/R2 and this amendment before implementation.
+
 ## The econ extra, gated at the call
 
 `statsmodels` and `arch` stay in the `econ` extra. `core/timeseries.py` and
@@ -11,10 +15,9 @@ modules and registers the commands; the first call without the extra raises
 ## Symbols: FRED or ticker, explicitly
 
 `econ forecast CPIAUCSL`, `econ diagnose DGS10`, `econ volatility SPY` and
-`econ regress --y AAPL --x SPY DGS10` mix macro series and tickers. A bare
-symbol is read as a FRED series when it carries a digit or is longer than five
-characters, otherwise as a ticker; `fred:` and `ticker:` prefixes override and
-`--source` sets the default. Prices become simple returns for volatility and
+`econ regress --y AAPL --x SPY DGS10` mix macro series and tickers. Use `fred:` and `ticker:` prefixes or an explicit `--source`. Bare symbols
+resolve only through declared unambiguous catalog metadata; unknown/ambiguous
+inputs produce actionable usage errors. Do not guess from length or digits. Prices become simple returns for volatility and
 regression and stay levels for forecasting and diagnosis; macro levels are
 first-differenced for regression; the transform is printed.
 
@@ -51,3 +54,13 @@ correlation off it, then the same PSD conditioning every estimator gets.
 | CCC-GARCH covariance | DCC-GARCH | DCC adds parameters that are unstable on the windows this tool uses; CCC is the honest first step |
 | Simulated volatility bands | Analytic variance-of-variance | `arch` provides simulation for every model; analytic bands exist only for some |
 | Heuristic FRED/ticker split with prefixes | A separate `--fred` list flag | The proposal's examples pass bare symbols; the prefix keeps them explicit when it matters |
+
+## Alignment amendment (0013)
+
+Keep econometric math in `core/`, source resolution and use cases in `application/commands/econ.py`; providers remain adapters. Preserve the optional econ dependency/doctor contract and forecast intervals. Use explicit source prefixes or declared catalog entries, rejecting ambiguity instead of inferring a provider from symbol length.
+
+The [common package map](../0013-template-development-alignment/design.md) is authoritative
+for future locations. This amendment does not accept proposed cloud profiles.
+Use named task proofs, installed-artifact checks and explicit rollback: revert
+application wiring with compatibility facades intact; never rewrite a released
+schema migration or delete user state to roll back a module move.

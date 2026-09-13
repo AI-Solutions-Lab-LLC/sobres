@@ -1,7 +1,17 @@
 {
-  "recorded_at": null,
-  "synthesized_at": "2026-09-12T17:32:49.612959+00:00",
+  "recorded_at": "2026-09-13T18:10:47.982604+00:00",
   "provider": "ecb",
-  "api": "data-api.ecb.europa.eu EXR/D.<CCY>.EUR.SP00.A?format=csvdata",
-  "note": "synthesized in the SDMX csvdata shape; see tests/fixtures/README.md"
+  "provider_version": "unversioned",
+  "client": "httpx",
+  "client_version": "0.28.1",
+  "sha256": {
+    "CHF.csv": "b11d359ec8c6078e9258045d24fde44ff2a1e435133d1c055aaacf503d38e697",
+    "GBP.csv": "1408d4af043cdb2219bb9335f8c5264f30e481c88e251d6237eba74e4e50771b",
+    "JPY.csv": "1dcbab310cad73477c57a6870fd4248fc93bd8a73170d427c54c5a099b970075",
+    "USD.csv": "9004e4fe3c56d405e0eb47a076dfaccc134f3f0657840c025472341085fedded"
+  },
+  "source": "https://data-api.ecb.europa.eu/service/data/EXR",
+  "api": "EXR/D.<CCY>.EUR.SP00.A?format=csvdata",
+  "start": "2015-01-02",
+  "end": "2024-12-31"
 }

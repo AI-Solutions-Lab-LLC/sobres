@@ -1,0 +1,14 @@
+{"assets": 6, "task": "min_variance", "seconds": 0.0025, "calls": 1, "evaluations": 4}
+{"assets": 6, "task": "max_sharpe", "seconds": 0.0052, "calls": 11, "evaluations": 205}
+{"assets": 6, "task": "frontier", "seconds": 0.0237, "calls": 60, "evaluations": 305}
+{"assets": 20, "task": "min_variance", "seconds": 0.0009, "calls": 1, "evaluations": 7}
+{"assets": 20, "task": "max_sharpe", "seconds": 0.0174, "calls": 11, "evaluations": 625}
+{"assets": 20, "task": "frontier", "seconds": 0.045, "calls": 60, "evaluations": 863}
+{"assets": 50, "task": "min_variance", "seconds": 0.0027, "calls": 1, "evaluations": 1}
+{"assets": 50, "task": "max_sharpe", "seconds": 0.1533, "calls": 11, "evaluations": 1611}
+{"assets": 50, "task": "frontier", "seconds": 0.1943, "calls": 60, "evaluations": 1709}
+{"assets": 50, "task": "monthly backtest", "seconds": 2.8379, "calls": 187, "evaluations": 25694, "rebalances": 17}
+{"assets": 100, "task": "min_variance", "seconds": 0.0016, "calls": 1, "evaluations": 1}
+{"assets": 100, "task": "max_sharpe", "seconds": 1.6676, "calls": 11, "evaluations": 3534}
+{"assets": 100, "task": "frontier", "seconds": 1.9309, "calls": 60, "evaluations": 3631}
+{"assets": 100, "task": "monthly backtest", "seconds": 30.9809, "calls": 187, "evaluations": 53655, "rebalances": 17}
