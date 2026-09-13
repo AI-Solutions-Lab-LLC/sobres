@@ -73,6 +73,9 @@ Executed on arm64 macOS with Python 3.12.13 in isolated source and wheel environ
   `ensurepip` SIGABRT; auditing that complete list with `--disable-pip --no-deps`
   succeeded. No dependency was excluded to silence an advisory.
 - Workflow lint passed with actionlint 1.7.7 and shellcheck.
+- The first GitHub matrix run caught an undeclared PyYAML test dependency that
+  was available locally. It is now explicitly included in the dev extra; the
+  workflow contract test can run in a fresh CI environment.
 
 Raw concise evidence is in [verification/](verification/). Live vendor tests emit
 a yfinance deprecation warning; no data failure was hidden. Local platform checks
