@@ -29,7 +29,7 @@ Publishing SHALL be driven by the version declared in
 #### Scenario: Unchanged version on main
 - **WHEN** a push to `main` declares a version already on the index
 - **THEN** the pipeline SHALL publish nothing and exit successfully
-- **AND** the run summary SHALL state the version and what to bump to release
+- **AND** the run summary SHALL state the version and the actual skip reason
 
 #### Scenario: First ever release
 - **WHEN** the distribution does not exist on the index at all
@@ -47,7 +47,7 @@ Publishing SHALL be driven by the version declared in
 
 ### Requirement: Publishing is armed explicitly
 
-Publishing SHALL remain disabled until a maintainer configures and enables the release target.
+Production publishing SHALL require the repository arming switch; TestPyPI rehearsal SHALL remain available independently.
 
 #### Scenario: Disarmed by default
 - **WHEN** the repository variable `RELEASE_ENABLED` is not `true`
@@ -124,12 +124,12 @@ every repository in it; no repository SHALL store its own copy.
 
 ### Requirement: Artifacts are verified before upload
 
-The pipeline SHALL verify distribution metadata, buildability and clean installation before upload.
+Distribution artifacts SHALL pass metadata, version and clean-install verification before upload.
 
 #### Scenario: The built wheel actually works
 - **WHEN** distributions are built
 - **THEN** the wheel SHALL be installed into a clean virtual environment and
-  both console scripts executed, before any upload
+  the `sobres` console script executed, before any upload
 - **AND** the sdist SHALL be proven to build a wheel
 
 #### Scenario: Built version matches the authorization
@@ -144,7 +144,7 @@ The pipeline SHALL verify distribution metadata, buildability and clean installa
 
 ### Requirement: A shipped version is a documented version
 
-Every released version SHALL have a matching changelog section verified before publication.
+Each published version SHALL have a changelog section describing its contents.
 
 #### Scenario: Changelog gate
 - **WHEN** a publish is about to be authorized
@@ -158,7 +158,7 @@ Every released version SHALL have a matching changelog section verified before p
 
 ### Requirement: Releases are recorded on GitHub
 
-Each published version SHALL have an idempotently created version tag and GitHub release.
+A successful production upload SHALL have a corresponding GitHub tag and release.
 
 #### Scenario: Tag and release
 - **WHEN** a publish to PyPI succeeds
@@ -171,7 +171,7 @@ Each published version SHALL have an idempotently created version tag and GitHub
 
 ### Requirement: Supply-chain scanning
 
-Dependency auditing SHALL gate changes, with static analysis and dependency updates configured as specified below.
+CI SHALL enforce dependency audits, static analysis and scheduled dependency update checks.
 
 #### Scenario: Dependency audit gates merges
 - **WHEN** CI runs
@@ -190,7 +190,7 @@ Dependency auditing SHALL gate changes, with static analysis and dependency upda
 
 ### Requirement: Local parity
 
-Contributors SHALL be able to run the corresponding CI checks and inspect release decisions locally.
+Contributors SHALL be able to run the same quality checks and inspect the release decision locally.
 
 #### Scenario: Same checks before commit
 - **WHEN** a contributor installs the pre-commit hooks
@@ -199,3 +199,19 @@ Contributors SHALL be able to run the corresponding CI checks and inspect releas
 #### Scenario: The release decision is inspectable
 - **WHEN** a contributor runs `python .github/scripts/check_release.py`
 - **THEN** it SHALL print what the next push to `main` would do
+
+### Requirement: Accurate release skip reporting
+
+The decision output SHALL distinguish disabled publishing from an already-published
+version. Reports SHALL state that neither condition uploaded artifacts. Secret
+selection SHALL use the selected index only; a missing test credential SHALL NOT
+fall back to the production credential.
+
+#### Scenario: Disabled releases are not reported as already published
+- **WHEN** production publishing is disabled
+- **THEN** the decision emits `publish=false` and `reason=disabled`, without checking the index
+- **AND** the report says no upload was attempted
+
+#### Scenario: An existing version is reported as already published
+- **WHEN** the target index already contains the declared version
+- **THEN** the decision emits `publish=false` and `reason=already-published`

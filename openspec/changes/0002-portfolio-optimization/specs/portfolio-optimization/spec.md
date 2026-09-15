@@ -29,16 +29,16 @@ The system SHALL convert price series to returns under one documented convention
 
 #### Scenario: Missing observations
 - **WHEN** a return series contains `NaN`
-- **THEN** the caller SHALL choose `drop` or `zero` explicitly via a parameter with
-  no default, so the choice is never silent
+- **THEN** the caller SHALL resolve it explicitly through `apply_nan_policy` with no default
+- **AND** public aggregation, estimation, risk and backtest functions SHALL reject unresolved NaN or infinity rather than silently dropping or zero-filling
 
 ### Requirement: One currency per computation
 
-Portfolio computations SHALL use one declared currency, converting mixed inputs before estimation.
+The system SHALL estimate portfolio statistics in one explicitly identified currency.
 
 #### Scenario: Single currency needs no ceremony
 - **WHEN** every asset in a computation shares a currency
-- **THEN** it SHALL proceed with no rate fetch and no conversion
+- **THEN** it SHALL proceed with no FX rate fetch and no conversion unless a different base or a differently denominated CAPM benchmark is explicitly requested
 - **AND** results SHALL be identical to a build without currency support
 
 #### Scenario: Mixed currencies require a base
@@ -98,21 +98,24 @@ The system SHALL compute a standard risk panel from a return series.
 
 #### Scenario: Sharpe ratio definition
 - **WHEN** Sharpe is computed
-- **THEN** it SHALL be `(annualized_return - annualized_risk_free) / annualized_vol`
-- **AND** the risk-free input SHALL be a decimal annual rate, defaulting to the FRED
-  3-month Treasury over the same window, or `0.0` if FRED is unavailable — with a
-  stderr note saying which was used
+- **THEN** it SHALL be `mean(period_excess) / sample_std(period_excess) * sqrt(periods_per_year)`
+- **AND** `period_excess = simple_return - annual_simple_risk_free_proxy / periods_per_year`
+- **AND** arithmetic annual return and geometric CAGR SHALL be reported separately
+- **AND** a USD computation MAY obtain a FRED DTB3 proxy; other currencies and unavailable FRED SHALL use a disclosed zero fallback unless an explicit annual decimal override is provided
+- **AND** DTB3 bank-discount yields SHALL be converted using a stated 91-day bill approximation, a 360-day discount year and 365-day simple investment yield, never described as realized Treasury returns
 
 #### Scenario: Sortino uses downside deviation
 - **WHEN** Sortino is computed
-- **THEN** the denominator SHALL be the annualized standard deviation of returns
-  below the target (default `0.0`), not total volatility
+- **THEN** the denominator SHALL be `sqrt(mean(min(r-target, 0)^2)) * sqrt(periods_per_year)` over all observations
+- **AND** the target SHALL be a per-period decimal, default `0.0`
+- **AND** the numerator SHALL be annualized arithmetic excess return
 
 #### Scenario: Max drawdown
 - **WHEN** max drawdown is computed
 - **THEN** the result SHALL be the most negative `(V_t / max(V_{0..t})) - 1` over the
   cumulative wealth series
-- **AND** the peak date, trough date, and recovery date (or `None`) SHALL be returned
+- **AND** initial capital of 1.0 SHALL be included before the first return
+- **AND** the peak date, trough date, and recovery date SHALL be returned; `None` for the peak denotes initial capital before the recorded window, and `None` for recovery denotes no recovery
 
 #### Scenario: Beta against a benchmark
 - **WHEN** `beta(asset_returns, benchmark_returns)` is called
@@ -169,12 +172,13 @@ The system SHALL solve constrained mean-variance problems.
 
 ### Requirement: Efficient frontier
 
-The system SHALL compute a feasible frontier with ordered risk/return points and identified reference portfolios.
+The system SHALL return a deterministic, correctly counted set of constrained portfolios.
 
 #### Scenario: Frontier generation
 - **WHEN** `efficient_frontier(mu, sigma, n_points=50)` is called
-- **THEN** 50 portfolios SHALL be returned spanning min-variance return to max
-  attainable return
+- **THEN** exactly 50 portfolios SHALL be returned spanning min-variance return to max attainable return, with named points included in that count
+- **AND** for N=2 the min-variance and max-Sharpe points SHALL take priority; N>=3 SHALL also include maximum attainable return
+- **AND** coincident extrema SHALL share one named row; a degenerate single-portfolio frontier MAY repeat identical unflagged samples to satisfy N
 - **AND** each SHALL carry its weights, expected return, volatility, and Sharpe
 
 #### Scenario: Monotonicity
@@ -193,8 +197,9 @@ The system SHALL evaluate an optimization strategy out-of-sample.
 #### Scenario: No lookahead
 - **WHEN** weights are computed for a rebalance date `t`
 - **THEN** only returns strictly before `t` SHALL be used
-- **AND** a test SHALL assert that perturbing data at or after `t` leaves those
-  weights unchanged
+- **AND** every benchmark and risk-free decision input SHALL obey the same cutoff
+- **AND** an adapter-level test SHALL assert that perturbing prices or Treasury observations at or after `t` leaves those weights unchanged
+- **AND** outputs SHALL disclose that ordinary FRED history is latest available data, not historical publication vintages
 
 #### Scenario: Rebalancing frequencies
 - **WHEN** `--rebalance` is supplied
@@ -203,7 +208,9 @@ The system SHALL evaluate an optimization strategy out-of-sample.
 #### Scenario: Transaction costs
 - **WHEN** `--cost-bps 10` is supplied
 - **THEN** each rebalance SHALL deduct `0.0010 * turnover` from the portfolio value
-- **AND** turnover SHALL be `0.5 * Σ|w_new - w_drifted|`
+- **AND** turnover SHALL be `0.5 * Σ|w_new - w_drifted|` including the cash position, so initial full investment is one unit
+- **AND** cost-bps SHALL mean fee per unit of one-way turnover, not a fee on each trade side
+- **AND** total cost SHALL be fees actually deducted divided by initial capital; the sum of rebalance fee fractions SHALL be a separate field
 - **AND** the default SHALL be `10` bps, not `0` — a costless backtest flatters
   every high-turnover strategy
 
@@ -223,10 +230,10 @@ The system SHALL evaluate an optimization strategy out-of-sample.
 
 ### Requirement: `sobres optimize` command group
 
-The optimization command group SHALL expose the four operations with validated inputs and consistent output.
+The system SHALL expose usable, validated optimization commands with typed results.
 
 #### Scenario: Markowitz
-- **WHEN** `sobres optimize markowitz --tickers AAPL MSFT --start 2015-01-01` runs
+- **WHEN** `sobres optimize markowitz --tickers AAPL MSFT --start 2015-01-01 --fill ffill` runs
 - **THEN** a weights table SHALL print with the portfolio's expected return,
   volatility, and Sharpe
 - **AND** the estimators used SHALL be named in the output header
@@ -242,13 +249,61 @@ The optimization command group SHALL expose the four operations with validated i
 - **AND** the output SHALL state the out-of-sample window and total costs paid
 
 #### Scenario: Risk panel of a given portfolio
-- **WHEN** `sobres optimize risk --tickers AAPL MSFT --weights 0.6 0.4` runs
+- **WHEN** `sobres optimize risk --tickers AAPL MSFT --weights 0.6 0.4 --start 2015-01-01 --fill ffill` runs
 - **THEN** the full risk panel for that fixed portfolio SHALL print
 
 #### Scenario: Weights supplied must be valid
 - **WHEN** `--weights` is supplied with a count differing from `--tickers`, or not
   summing to 1.0 within `1e-6`
 - **THEN** `UsageError` SHALL be raised naming the discrepancy
+
+### Requirement: Reviewed boundary behavior
+
+The system SHALL enforce the corrected public and generated-interface boundaries.
+
+#### Scenario: Future rates cannot change past allocations
+- **WHEN** Treasury observations at or after the first trade change but earlier data does not
+- **THEN** the first allocation SHALL remain identical
+
+#### Scenario: Dropped prices do not bridge periods
+- **WHEN** a daily price is missing and `--fill drop` is selected
+- **THEN** invalid return intervals SHALL be dropped on the original index, not combined into a multi-session daily return
+- **AND** the result SHALL record every excluded return date
+
+#### Scenario: CAPM benchmark input
+- **WHEN** the CAPM estimator is selected
+- **THEN** a benchmark ticker SHALL be required before fetching, converted to portfolio currency and aligned before estimation
+
+#### Scenario: Target backtests
+- **WHEN** a target objective is selected for backtest
+- **THEN** `--target` SHALL be required and passed to every solve; target risk SHALL be a volatility ceiling
+
+#### Scenario: Validate before downloading
+- **WHEN** weights/rates/targets are non-finite, seeds negative, bounds infeasible, tickers duplicated or a lookback malformed
+- **THEN** the generated CLI SHALL reject the input with usage exit 2 before a provider call, with an example or next action
+
+#### Scenario: Public optimizer validates covariance
+- **WHEN** covariance is supplied directly to the public optimizer
+- **THEN** it SHALL be finite, label-compatible, symmetrized and PSD-conditioned before solving, with repair provenance retained
+- **AND** the final weights and target constraints SHALL be checked before returning success
+
+#### Scenario: Typed risk presentation
+- **WHEN** a risk or backtest table is displayed
+- **THEN** rates/returns SHALL show percent units, ratios unitless values, observation counts integers, and VaR/CVaR their period and negative-loss convention
+- **AND** JSON and CSV SHALL retain numeric decimals
+
+#### Scenario: Backtest decision provenance
+- **WHEN** a backtest completes
+- **THEN** its result SHALL retain objective, estimators, seed, bounds, risk-free policy, each training window and decision rate, and a bounded summary of concentration/conditioning warnings
+
+#### Scenario: Bounded optimization work
+- **WHEN** work is requested through the CLI
+- **THEN** there SHALL be at most 100 assets, 500 frontier points, and 100 years or 25000 observations of lookback
+- **AND** frontier and backtest SHALL support progress via adapter callbacks and cancellation by terminal interrupt
+
+#### Scenario: Solver port conformance
+- **WHEN** the default solver is used
+- **THEN** it SHALL implement a repository-owned protocol with behavioral tests for constrained success and infeasibility
 
 ### Requirement: Aligned development and application boundaries
 This capability SHALL use the merged 0013 development contract and target

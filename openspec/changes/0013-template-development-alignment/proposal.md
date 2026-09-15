@@ -115,4 +115,5 @@ database migration; preserve data/config paths and immutable schema versions.
 
 Implementation tracker: [#23](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/23).
 See [the readiness ledger](../0013-template-development-alignment/tracking.md)
-for the planning PR and prerequisite status. This plan is not yet merged.
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

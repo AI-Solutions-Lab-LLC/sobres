@@ -27,9 +27,9 @@ or notebook can sit on top later without moving any logic.
 
 ## Architecture: current implementation and proposed target
 
-Local foundation at `e0432c5` currently uses `core/`, `data/`, `cli/`, a settings
-registry and a registry that also builds Typer commands. The default remote branch
-may lag that foundation; see the [0013 audit](changes/0013-template-development-alignment/alignment-audit.md).
+The foundation merged through PR #33 (`b9792d7`) currently uses `core/`, `data/`, `cli/`, a settings
+registry and a registry that also builds Typer commands. PR #8
+merged optimization into the foundation stack branch (`7f59d01`), not main; see the [0013 audit](changes/0013-template-development-alignment/alignment-audit.md).
 Do not claim that the following layout exists until 0013 is implemented.
 
 The merged AISL template supplies repository tooling and shared agent procedures.
