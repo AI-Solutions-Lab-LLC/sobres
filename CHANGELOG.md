@@ -11,6 +11,13 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+### Fixed
+- **The source distribution no longer ships `legacy_code/`.** Hatchling's default
+  sdist included every non-ignored path, so the pre-sobres R/Python prototype and
+  its three `.rattle` datasets made up 15.5 MB of a 16.9 MB sdist. Excluding it
+  takes the sdist to 1.45 MB, 91% smaller. The wheel was never affected, and the
+  built SPA still ships in both.
+
 ## [1.1.0] - 2026-09-16
 
 First release published to PyPI. 1.0.0 was prepared but never uploaded, so this
