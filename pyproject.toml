@@ -39,7 +39,7 @@ dependencies = [
 
 [project.optional-dependencies]
 data = ["pandas-datareader>=0.10"]
-econ = ["statsmodels>=0.14"]
+econ = ["statsmodels>=0.14", "arch>=7.0"]
 opt = ["cvxpy>=1.5"]
 otel = [
   "opentelemetry-api>=1.25",
