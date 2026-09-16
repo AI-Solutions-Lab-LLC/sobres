@@ -56,6 +56,7 @@ EXPECTED_COMMANDS = [
     "deploy.health",
     "doctor",
     "econ.diagnose",
+    "econ.evaluate",
     "econ.forecast",
     "econ.regress",
     "econ.volatility",

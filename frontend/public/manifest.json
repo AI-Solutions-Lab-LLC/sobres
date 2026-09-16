@@ -57,6 +57,7 @@
     "plan.education": "/commands/plan.education",
     "plan.goal": "/commands/plan.goal",
     "econ.forecast": "/commands/econ.forecast",
+    "econ.evaluate": "/commands/econ.evaluate",
     "econ.volatility": "/commands/econ.volatility",
     "econ.diagnose": "/commands/econ.diagnose",
     "econ.regress": "/commands/econ.regress",
