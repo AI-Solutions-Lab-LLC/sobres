@@ -11,6 +11,34 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+### Fixed
+- **`risk_parity` no longer fails to converge on a low-volatility asset.** With
+  roughly equal expected returns and one volatility far below the others -- a bond
+  fund among equities -- SLSQP's QP subproblem reported its constraints as
+  incompatible from the equal-weight start, so the objective raised instead of
+  returning weights. It now retries from the inverse-volatility weights, which are
+  the exact equal-risk-contribution solution for a diagonal covariance. Cases that
+  already converged are unaffected: the original start is still tried first.
+- **A base `pip install sobres` works again.** `cli/commands/serve.py` imported
+  `sobres.api` at module scope, and `sobres.api` imports FastAPI from the `[web]`
+  extra. Because command registration imports every module under `cli/commands/`,
+  a base install failed on *every* command with `ModuleNotFoundError: fastapi` --
+  `--version` and `--help` included. The import is now deferred into the two
+  functions that use it. CI gained a base-install smoke job (no extras) that runs
+  the keyless `init`/`doctor`/`data` path, and an architecture test forbids any
+  command module from importing an optional dependency at module scope.
+- **The source distribution no longer ships `legacy_code/`.** Hatchling's default
+  sdist included every non-ignored path, so the pre-sobres R/Python prototype and
+  its three `.rattle` datasets made up 15.5 MB of a 16.9 MB sdist. Excluding it
+  takes the sdist to 1.45 MB, 91% smaller. The wheel was never affected, and the
+  built SPA still ships in both.
+
+## [1.1.0] - 2026-09-16
+
+First release published to PyPI. 1.0.0 was prepared but never uploaded, so this
+is the first version available as `pip install sobres`. It carries the whole
+foundation and portfolio optimization from 1.0.0 plus the two changes below.
+
 ### Added
 - **Goal planning (change 0008).** `sobres plan retire|house|car|education|goal`:
   a funding solver for any one of target, time, contribution and return; FIRE
@@ -71,7 +99,7 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [1.0.0] - 2026-09-12
 
-Planned first release (not yet published): the foundation plus portfolio optimization. From here the
+Prepared but never published; superseded by 1.1.0. The foundation plus portfolio optimization. From here the
 CLI's command surface, its `--format json` shapes and the `sobres.core` public
 functions are the compatibility surface.
 ### Fixed
