@@ -40,6 +40,17 @@ is the first version available as `pip install sobres`. It carries the whole
 foundation and portfolio optimization from 1.0.0 plus the two changes below.
 
 ### Added
+- **Docker distribution (change 0005).** A multi-stage image with the CLI as
+  its entrypoint (`aisolutionslab/sobres`, non-root uid 1000, `/data` volume,
+  `HEALTHCHECK` on doctor's checks, no Node or build tooling at runtime), the
+  `sobres deploy compose|env|check|health` group that generates and preflights
+  the deployment from the resolved configuration, a loud failure when `/data`
+  is not writable, container-aware `sobres open` and `sobres init`, and jobs
+  that are never left "running" across a shutdown. CI exercises the documented
+  quickstart against the built image; the release pipeline publishes the image
+  for amd64 and arm64 from the exact wheel sent to PyPI, version-asserted,
+  scanned, size-budgeted, with a BuildKit provenance attestation and an SBOM.
+  Docs: `docs/DEPLOYING.md`.
 - **Web UI and HTTP API (change 0004).** `sobres serve` (FastAPI over the same
   registry: `POST /api/v1/<group>/<name>` for every command, `/api/docs`,
   jobs with progress over SSE and cancellation, settings and doctor endpoints)
