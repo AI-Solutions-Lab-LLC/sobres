@@ -11,7 +11,22 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-16
+
+First release published to PyPI. 1.0.0 was prepared but never uploaded, so this
+is the first version available as `pip install sobres`. It carries the whole
+foundation and portfolio optimization from 1.0.0 plus the two changes below.
+
 ### Added
+- **Web UI and HTTP API (change 0004).** `sobres serve` (FastAPI over the same
+  registry: `POST /api/v1/<group>/<name>` for every command, `/api/docs`,
+  jobs with progress over SSE and cancellation, settings and doctor endpoints)
+  and `sobres open` (starts the server if needed and opens a view). A React +
+  TypeScript single-page app derived from the registry: generated forms with
+  the equivalent command line, results with provenance and the disclaimer,
+  an interactive efficient frontier, backtest charts, run history, saved
+  portfolios and a settings page. Loopback by default; a hashed deployment
+  token guards any other bind address. Install with `pip install "sobres[web]"`.
 - **Local persistence (change 0003).** Schema version 2 with saved portfolios,
   watchlists, goals, run history and job records behind the storage port;
   `sobres portfolio`, `sobres watchlist`, `sobres run` and `sobres db` groups;
@@ -22,7 +37,7 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [1.0.0] - 2026-09-12
 
-Planned first release (not yet published): the foundation plus portfolio optimization. From here the
+Prepared but never published; superseded by 1.1.0. The foundation plus portfolio optimization. From here the
 CLI's command surface, its `--format json` shapes and the `sobres.core` public
 functions are the compatibility surface.
 ### Fixed
