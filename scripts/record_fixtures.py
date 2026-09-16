@@ -69,6 +69,36 @@ def record_yfinance(start: date, end: date) -> None:
         raw = source.history(ticker, start, end)
         raw.frame.round(6).to_csv(out / f"{ticker}.csv")
         tickers[ticker] = {k: raw.meta.get(k) for k in ("currency", "exchangeName", "symbol")}
+    keys = (
+        "quoteType",
+        "longName",
+        "shortName",
+        "sector",
+        "marketCap",
+        "trailingPE",
+        "priceToBook",
+        "dividendYield",
+        "currency",
+    )
+    fundamentals = {}
+    for ticker in TICKERS:
+        info = source.fundamentals(ticker)
+        if info:
+            fundamentals[ticker] = {k: info.get(k) for k in keys}
+    (out / "fundamentals.json").write_text(
+        json.dumps(
+            {
+                "recorded_at": datetime.now(UTC).isoformat(),
+                "provider": "yfinance",
+                "provider_version": version("yfinance"),
+                "source": "yfinance.Ticker.info",
+                "tickers": fundamentals,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     (out / "meta.json").write_text(
         _meta(
             "yfinance",

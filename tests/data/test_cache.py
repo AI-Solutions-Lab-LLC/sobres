@@ -195,3 +195,26 @@ def test_generic_identifiers_are_case_sensitive(cache: ObservationCache) -> None
     for symbol in ("Mixed", "MIXED"):
         cache.get("test", "custom", [symbol], D(2024, 1, 2), D(2024, 1, 3), _fetcher(calls))
     assert len(calls) == 2
+
+
+def test_mixed_case_symbols_round_trip_with_their_casing(cache: ObservationCache) -> None:
+    """Opaque factor identifiers keep their exact spelling through cold and warm cache."""
+    calls: list[tuple[list[str], date, date]] = []
+    frame = cache.get(
+        "ken_french",
+        "factors",
+        ["Mkt-RF", "SMB"],
+        date(2024, 1, 1),
+        date(2024, 1, 10),
+        _fetcher(calls),
+    )
+    assert calls[0][0] == ["Mkt-RF", "SMB"]  # the provider is asked in its own casing
+    assert list(frame.columns) == ["Mkt-RF", "SMB"]
+    assert frame["Mkt-RF"].notna().all() and frame["Mkt-RF"].iloc[0] == 1.0
+    assert frame.attrs["series_meta"]["Mkt-RF"] == {"currency": "USD"}
+    again = cache.get(
+        "ken_french", "factors", ["Mkt-RF"], date(2024, 1, 1), date(2024, 1, 10), _fetcher(calls)
+    )
+    assert len(calls) == 1 and list(again.columns) == [
+        "Mkt-RF"
+    ]  # a hit for the same opaque identifier
