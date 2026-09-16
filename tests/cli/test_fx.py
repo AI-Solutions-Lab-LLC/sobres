@@ -291,6 +291,8 @@ def test_fx_risk_reaches_the_covariance_matrix(cli: Callable[..., Any]) -> None:
             "2024-12-31",
             "--fill",
             "drop",
+            "--risk-free",
+            "0",  # GBP has no automatic proxy (0015); the rate is irrelevant to volatility
             "--format",
             "json",
         )

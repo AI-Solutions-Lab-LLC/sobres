@@ -12,6 +12,13 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 ## [Unreleased]
 
 ### Changed
+- **The risk-free rate is always sourced, never an assumed zero (change 0015).**
+  Without a FRED key, USD runs take the 1-month Treasury bill return Ken French
+  publishes with the factor files -- keyless, dated, already a recorded
+  provider. With a key, FRED DTB3 as before; a FRED failure falls through to
+  Ken French rather than to zero. The selection is announced on stderr and in
+  provenance. A non-USD run without `--risk-free` is a usage error naming the
+  flag, and a source that does not cover the window is insufficient data.
 - **`sobres init` asks one question (change 0014).** Settings now carry an
   `advanced` tier; the wizard prompts only for the FRED key and says how many
   advanced settings it did not ask. `sobres init --advanced` walks all of them,
