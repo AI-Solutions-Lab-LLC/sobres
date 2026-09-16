@@ -65,7 +65,7 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | 📋 Planned |
 | [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | 📋 Planned |
 | [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | 📋 Planned |
-| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | ARIMA, GARCH, robust regression | 📋 Planned |
+| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Multivariable VAR/BVAR, elastic-net, boosted trees; GARCH | Revised plan; implementation pending (#31) |
 | [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | 📋 Planned |
 | [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | 🔧 In progress |
 
@@ -229,3 +229,15 @@ sobres is a research and education tool. It is not investment advice, not a
 recommendation to buy or sell any security, and carries no warranty of accuracy.
 Data comes from third-party sources that may be delayed, revised, or wrong.
 Backtested results are hypothetical and do not indicate future performance.
+
+## Revised econometrics plan
+
+[OpenSpec 0009](openspec/changes/0009-econometrics-forecasting/proposal.md) replaces
+standalone ARIMA forecasts with joint VAR/BVAR and direct elastic-net/boosted-tree
+stock-price forecasts. It retains GARCH volatility and robust diagnostics. The
+[research catalog](openspec/changes/0009-econometrics-forecasting/research.md)
+records influential and recent sources, predictor choices and their limits.
+These models are planned, not shipped: #31 tracks implementation and #15 contains
+an older ARIMA candidate that must be replaced. The default proposal uses a keyless
+four-variable preset, 20 trading sessions, chronological evaluation and mandatory
+uncertainty bounds; see the design for exact formulas and guards.
