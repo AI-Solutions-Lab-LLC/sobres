@@ -94,24 +94,3 @@ def test_price_client_is_a_base_dependency() -> None:
     import yfinance
 
     assert callable(yfinance.Ticker)
-
-
-def test_legacy_code_is_not_shipped_in_the_sdist() -> None:
-    """The pre-sobres prototype is repository history, not a published artifact.
-
-    `legacy_code/` carries three `.rattle` datasets of roughly 16 MB. Hatchling's
-    default sdist includes every non-ignored path, so without an explicit
-    exclusion the source distribution is an order of magnitude larger than the
-    code it ships. Asserted against the declared configuration rather than a
-    built sdist so the check costs nothing; the exclusion is only required while
-    the directory still exists.
-    """
-    if not (REPO_ROOT / "legacy_code").is_dir():
-        pytest.skip("legacy_code/ has been removed; nothing to exclude")
-
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    excluded = config["tool"]["hatch"]["build"]["targets"]["sdist"]["exclude"]
-    assert "/legacy_code" in excluded, (
-        "legacy_code/ must stay out of the sdist; add '/legacy_code' to "
-        "[tool.hatch.build.targets.sdist] exclude"
-    )

@@ -13,11 +13,10 @@ models, econometrics, and real-world goal planning, in one tool.
 
 > 📍 **This repository was `espin086/Stocks`, now rebuilt as `sobres` under
 > AI Solutions Lab.** The prior R linear-programming scripts and `yfinance`
-> pullers have moved to
-> [`legacy_code/`](legacy_code/) — nothing was deleted, and
-> `legacy_code/Financial Portfolio Optimization.R` is the reference implementation
-> that milestone 0002 ports (direct R execution remains deferred). The original README is preserved at
-> [`legacy_code/ORIGINAL-README.md`](legacy_code/ORIGINAL-README.md).
+> pullers were kept under `legacy_code/` while the port was in progress and
+> removed once it was complete; they remain in git history. The allocation LP
+> they solved is documented in
+> [`docs/allocation-lp-reference.md`](docs/allocation-lp-reference.md).
 
 ```bash
 # Optimize a portfolio

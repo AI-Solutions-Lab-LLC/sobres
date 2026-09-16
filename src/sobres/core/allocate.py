@@ -1,4 +1,8 @@
-"""The budget-allocation LP ported from ``legacy_code/Financial Portfolio Optimization.R``.
+"""The budget-allocation LP ported from the pre-sobres R script.
+
+The formulation, the reference table and the solution the tests assert
+against are documented in ``docs/allocation-lp-reference.md``; the R source
+lives in git history (``legacy_code/``, removed once the port was complete).
 
 The original splits a budget across six vehicles to maximize average return
 per dollar subject to: the fractions sum to one; a weighted-average risk
