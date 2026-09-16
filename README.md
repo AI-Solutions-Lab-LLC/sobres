@@ -64,7 +64,7 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | ✅ Done (deploy waits on `PAGES_ENABLED`) |
 | [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | ✅ Done |
 | [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | ✅ Done |
-| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | ARIMA forecasts, GARCH volatility, stationarity diagnostics, robust regression | 🔧 ARIMA/GARCH candidate landed; the revised multivariable VAR/BVAR contract is not implemented (#31) |
+| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Joint VAR/BVAR price forecasts with held-out controls, GARCH volatility, stationarity diagnostics, robust regression | ✅ Done (elastic-net/boosted trees and the macro preset deferred) |
 | [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | ✅ Done |
 | [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | ✅ Done (PyPI name reserved on first publish, #21) |
 
@@ -177,21 +177,33 @@ percentile outcomes; `--method bootstrap --history SPY` resamples real return
 blocks so bad-early-years paths appear. The seed is printed. Taxes are not
 modeled and the output says so.
 
-## Econometrics: revised plan
+## Quickstart: econometrics
 
-[OpenSpec 0009](openspec/changes/0009-econometrics-forecasting/proposal.md) now plans
-multivariable stock-price forecasting: a regularized VAR default, Bayesian VAR,
-elastic-net and boosted trees, with researched predictor presets, held-out
-comparisons and mandatory uncertainty intervals. See its
-[research](openspec/changes/0009-econometrics-forecasting/research.md) and
-[defaults](openspec/changes/0009-econometrics-forecasting/design.md).
+```bash
+sobres econ forecast ticker:AAPL --horizon 20             # ridge VAR on the equity-basic state
+sobres econ forecast ticker:AAPL --model bvar --sector ticker:XLK
+sobres econ evaluate ticker:AAPL --models var bvar --horizon 20
+sobres econ volatility SPY --model garch --horizon 30
+sobres econ diagnose DGS10
+sobres econ regress --y AAPL --x SPY DGS10 --robust hac
+```
 
-**These new forecasting interfaces are not implemented yet.** PR #15 still
-contains the superseded ARIMA candidate, which must be replaced before revised
-0009 is accepted. Do not treat its previous green tests as evidence for the new
-models. GARCH/EGARCH/EWMA volatility, CCC covariance, stationarity diagnostics and
-robust regression remain in scope. The proposed examples live in the OpenSpec;
-this planning amendment does not change installed commands.
+`econ forecast` models a joint state — the stock's split-only log return, the
+market return (`ticker:SPY` unless `--benchmark` says otherwise), log realized
+volatility and the change in log dollar-volume activity, plus an optional
+`--sector` series — with a ridge VAR (default) or a Minnesota-prior BVAR. Lag
+order and shrinkage are chosen on three chronological validation blocks inside
+the training window, never on the held-out dates. Every run reports a held-out
+evaluation over the last 252 sessions against no-change and training-mean
+controls (return and price errors, direction accuracy, out-of-sample R², 80%/95%
+coverage), and the price table carries 80% and 95% bounds from a joint residual
+bootstrap with parameter refits (VAR) or posterior-predictive draws (BVAR). The
+point is the median price draw; the seed is printed. A negative or near-zero
+skill is reported as such — a forecast is evidence, not advice. Univariate ARIMA
+was removed with this revision; `--model arima` explains the replacement.
+`econ evaluate` scores VAR and BVAR on identical dates and never picks a winner
+for you. Elastic-net and boosted-tree forecasters and the FRED macro preset are
+[deferred](openspec/changes/0009-econometrics-forecasting/tasks.md).
 
 ## Quickstart: exchange rates and purchasing power
 
@@ -347,15 +359,3 @@ sobres is a research and education tool. It is not investment advice, not a
 recommendation to buy or sell any security, and carries no warranty of accuracy.
 Data comes from third-party sources that may be delayed, revised, or wrong.
 Backtested results are hypothetical and do not indicate future performance.
-
-## Revised econometrics plan
-
-[OpenSpec 0009](openspec/changes/0009-econometrics-forecasting/proposal.md) replaces
-standalone ARIMA forecasts with joint VAR/BVAR and direct elastic-net/boosted-tree
-stock-price forecasts. It retains GARCH volatility and robust diagnostics. The
-[research catalog](openspec/changes/0009-econometrics-forecasting/research.md)
-records influential and recent sources, predictor choices and their limits.
-These models are planned, not shipped: #31 tracks implementation and #15 contains
-an older ARIMA candidate that must be replaced. The default proposal uses a keyless
-four-variable preset, 20 trading sessions, chronological evaluation and mandatory
-uncertainty bounds; see the design for exact formulas and guards.

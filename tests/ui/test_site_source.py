@@ -137,14 +137,14 @@ def test_only_shipped_capabilities_are_claimed() -> None:
     body = INDEX.split("<main", 1)[1]
     shipped, roadmap = body.split('<section class="wrap roadmap"', 1)
     # 1.1.0 ships all of these; the page may claim them, and the roadmap may not.
-    for claim in ("Fama-French 3 and 5", "Monte Carlo", "PPP", "GARCH"):
+    for claim in ("Fama-French 3 and 5", "Monte Carlo", "PPP", "GARCH", "VAR/BVAR"):
         assert claim in shipped and claim not in roadmap, claim
     # What is actually unshipped stays on the roadmap, named with its tracker.
-    for pending in ("VAR", "#31", "Broker", "#22"):
+    for pending in ("elastic-net", "Broker", "#22"):
         assert pending in roadmap and pending not in shipped, pending
     assert "not yet available" in roadmap.lower() and "Not shipped" not in shipped
     assert "sobres open" in shipped and "optimize backtest" in shipped
-    for command in ("analyze factors", "plan retire", "econ volatility", "ppp compare"):
+    for command in ("analyze factors", "plan retire", "econ forecast", "ppp compare"):
         assert command in shipped, command
 
 

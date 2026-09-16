@@ -1,18 +1,17 @@
-"""Time-series diagnostics and forecasting: stationarity, ARIMA, GARCH.
+"""Time-series diagnostics and volatility: stationarity tests, ACF/PACF, GARCH.
 
-Honest uncertainty is the point. A forecast here is never a point: it carries
-80% and 95% prediction intervals; an ARIMA order chosen automatically comes with
-the criterion and the runners-up; a non-stationary input is differenced to
-stationarity with the order reported, or refused. Everything is a pure function
-over a series; ``statsmodels`` and ``arch`` are imported lazily so the base
-install imports this module and only a call fails, with the install hint.
+Honest uncertainty is the point. A volatility forecast carries 80% and 95%
+bands from seeded simulation; ADF and KPSS are reported together with their
+disagreement stated. Everything is a pure function over a series; ``statsmodels``
+and ``arch`` are imported lazily so the base install imports this module and only
+a call fails, with the install hint. Price forecasting lives in
+``sobres.core.forecast`` (a joint VAR/BVAR, revised 0009); the univariate
+ARIMA forecaster that used to be here was removed with that revision.
 
 Math and sources:
 
     ADF   Dickey & Fuller (1979), Said & Dickey (1984): H0 unit root
     KPSS  Kwiatkowski, Phillips, Schmidt & Shin (1992): H0 stationarity
-    ARIMA Box & Jenkins (1970); order by AIC/BIC over a small grid
-    Ljung-Box  Ljung & Box (1978) on residuals: H0 no autocorrelation
     GARCH(1,1) Bollerslev (1986); EGARCH Nelson (1991); EWMA RiskMetrics (1996, λ=0.94)
     CCC covariance  Bollerslev (1990): Σ = D R D with GARCH variances on the diagonal
 """
@@ -30,10 +29,8 @@ from sobres.core.errors import ConfigurationError, InsufficientDataError, UsageE
 
 ECON_HINT = "This command needs the econ extra. Install it with: pip install 'sobres[econ]'"
 SIGNIFICANCE = 0.05
-MAX_D = 2
 DEFAULT_LAGS = 20
 MIN_OBS = 30
-Criterion = Literal["aic", "bic"]
 VolModel = Literal["garch", "egarch", "ewma"]
 VOL_MODELS: tuple[str, ...] = ("garch", "egarch", "ewma")
 EWMA_LAMBDA = 0.94
@@ -169,194 +166,6 @@ def diagnose(series: pd.Series, lags: int = DEFAULT_LAGS) -> Diagnostics:
         acf=[float(v) for v in acf(clean.to_numpy(), nlags=max_lag, fft=True)[1:]],
         pacf=[float(v) for v in pacf(clean.to_numpy(), nlags=max_lag)[1:]],
         bound=float(1.96 / np.sqrt(len(clean))),
-    )
-
-
-def difference_to_stationary(series: pd.Series, max_d: int = MAX_D) -> tuple[pd.Series, int]:
-    """Difference until ADF rejects a unit root, at most ``max_d`` times, else refuse."""
-    require_econ()
-    current = _clean(series)
-    for d in range(max_d + 1):
-        if _adf(current).conclusion == "stationary":
-            return current, d
-        current = current.diff().dropna()
-    raise InsufficientDataError(
-        f"the series is not stationary after differencing {max_d} times (ADF cannot reject a "
-        "unit root)",
-        hint="transform the series (log, returns) or specify --order with a larger d deliberately",
-    )
-
-
-# --------------------------------------------------------------------------- #
-# ARIMA
-# --------------------------------------------------------------------------- #
-
-
-@dataclass(frozen=True)
-class Candidate:
-    order: tuple[int, int, int]
-    aic: float
-    bic: float
-
-
-@dataclass(frozen=True)
-class Forecast:
-    model: str
-    order: tuple[int, int, int]
-    criterion: str
-    candidates: list[Candidate]
-    """The chosen order first, then the next two best under ``criterion``."""
-    horizon: int
-    n_obs: int
-    d_reported: int
-    point: pd.Series = field(repr=False)
-    lower80: pd.Series = field(repr=False)
-    upper80: pd.Series = field(repr=False)
-    lower95: pd.Series = field(repr=False)
-    upper95: pd.Series = field(repr=False)
-    ljung_box_statistic: float
-    ljung_box_pvalue: float
-    ljung_box_lags: int
-    aic: float
-    bic: float
-
-    @property
-    def residuals_adequate(self) -> bool:
-        return self.ljung_box_pvalue >= SIGNIFICANCE
-
-    @property
-    def ljung_box_statement(self) -> str:
-        if self.residuals_adequate:
-            return (
-                f"Ljung-Box on residuals: Q = {self.ljung_box_statistic:.2f}, "
-                f"p = {self.ljung_box_pvalue:.3f} over {self.ljung_box_lags} lags; "
-                "no evidence of remaining autocorrelation"
-            )
-        return (
-            f"Ljung-Box on residuals: Q = {self.ljung_box_statistic:.2f}, "
-            f"p = {self.ljung_box_pvalue:.3f} over {self.ljung_box_lags} lags; residuals are "
-            "autocorrelated — the model is inadequate and its intervals are too narrow"
-        )
-
-    def frame(self) -> pd.DataFrame:
-        out = pd.DataFrame(
-            {
-                "forecast": self.point,
-                "lower80": self.lower80,
-                "upper80": self.upper80,
-                "lower95": self.lower95,
-                "upper95": self.upper95,
-            }
-        )
-        out.index.name = "date"
-        return out
-
-
-def _fit_arima(series: pd.Series, order: tuple[int, int, int]) -> Any:
-    import warnings
-
-    from statsmodels.tools.sm_exceptions import ConvergenceWarning
-    from statsmodels.tsa.arima.model import ARIMA
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", ConvergenceWarning)
-        warnings.simplefilter("ignore", UserWarning)
-        return ARIMA(series.to_numpy(), order=order).fit()
-
-
-def select_order(
-    series: pd.Series, d: int, *, criterion: Criterion = "aic", max_p: int = 3, max_q: int = 3
-) -> list[Candidate]:
-    """Every (p, d, q) on the grid, sorted by ``criterion``; the first is the choice."""
-    candidates: list[Candidate] = []
-    for p in range(max_p + 1):
-        for q in range(max_q + 1):
-            if p == 0 and q == 0 and d == 0:
-                continue
-            try:
-                fit = _fit_arima(series, (p, d, q))
-            except Exception:  # a non-invertible corner of the grid is not an error
-                continue
-            candidates.append(Candidate((p, d, q), float(fit.aic), float(fit.bic)))
-    if not candidates:
-        raise InsufficientDataError(
-            "no ARIMA order on the grid could be fitted", hint="widen the window"
-        )
-    key = (lambda c: c.aic) if criterion == "aic" else (lambda c: c.bic)
-    return sorted(candidates, key=key)
-
-
-def _next_index(index: pd.Index, horizon: int) -> pd.Index:
-    if isinstance(index, pd.DatetimeIndex) and len(index) > 2:
-        freq = pd.infer_freq(index) or pd.tseries.frequencies.to_offset(
-            pd.Timedelta(
-                days=int(np.median(np.diff(index.values)).astype("timedelta64[D]").astype(int)) or 1
-            )
-        )
-        try:
-            return pd.date_range(index[-1], periods=horizon + 1, freq=freq)[1:]
-        except Exception:
-            pass
-    return pd.RangeIndex(1, horizon + 1)
-
-
-def arima_forecast(
-    series: pd.Series,
-    horizon: int,
-    *,
-    order: tuple[int, int, int] | None = None,
-    criterion: Criterion = "aic",
-    max_p: int = 3,
-    max_q: int = 3,
-    ljung_box_lags: int = 10,
-) -> Forecast:
-    """Fit ARIMA — the given order, or the best on a grid — and forecast with intervals.
-
-    With ``order`` unspecified (or its ``d`` None), the series is differenced to
-    stationarity and the ``d`` used is reported; if ``d = 2`` is not enough the
-    fit refuses. Intervals are the model's own 80% and 95% prediction intervals.
-    """
-    require_econ()
-    from statsmodels.stats.diagnostic import acorr_ljungbox
-
-    if horizon <= 0:
-        raise UsageError("--horizon must be at least 1")
-    clean = _clean(series)
-    if order is None:
-        _, d = difference_to_stationary(clean)
-        candidates = select_order(clean, d, criterion=criterion, max_p=max_p, max_q=max_q)
-        chosen = candidates[0].order
-    else:
-        chosen = order
-        d = order[1]
-        fit0 = _fit_arima(clean, chosen)
-        candidates = [Candidate(chosen, float(fit0.aic), float(fit0.bic))]
-    fit = _fit_arima(clean, chosen)
-    result = fit.get_forecast(steps=horizon)
-    mean = np.asarray(result.predicted_mean, dtype="float64")
-    ci80 = np.asarray(result.conf_int(alpha=0.20), dtype="float64")
-    ci95 = np.asarray(result.conf_int(alpha=0.05), dtype="float64")
-    index = _next_index(clean.index, horizon)
-    lb_lags = min(ljung_box_lags, max(1, len(clean) // 5))
-    lb = acorr_ljungbox(np.asarray(fit.resid, dtype="float64"), lags=[lb_lags], return_df=True)
-    return Forecast(
-        model="arima",
-        order=chosen,
-        criterion=criterion,
-        candidates=candidates[:3],
-        horizon=horizon,
-        n_obs=len(clean),
-        d_reported=d,
-        point=pd.Series(mean, index=index, name="forecast"),
-        lower80=pd.Series(ci80[:, 0], index=index),
-        upper80=pd.Series(ci80[:, 1], index=index),
-        lower95=pd.Series(ci95[:, 0], index=index),
-        upper95=pd.Series(ci95[:, 1], index=index),
-        ljung_box_statistic=float(lb["lb_stat"].iloc[0]),
-        ljung_box_pvalue=float(lb["lb_pvalue"].iloc[0]),
-        ljung_box_lags=lb_lags,
-        aic=float(fit.aic),
-        bic=float(fit.bic),
     )
 
 

@@ -901,7 +901,7 @@
           },
           "source": {
             "default": "auto",
-            "description": "How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.",
+            "description": "How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.",
             "enum": [
               "auto",
               "fred",
@@ -1135,6 +1135,138 @@
         "title": "EnvParams",
         "type": "object"
       },
+      "EvaluateParams": {
+        "additionalProperties": false,
+        "properties": {
+          "benchmark": {
+            "default": "ticker:SPY",
+            "description": "Market return series, ticker:<symbol>.",
+            "title": "Benchmark",
+            "type": "string"
+          },
+          "draws": {
+            "default": 1000,
+            "description": "Predictive draws per forecast.",
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "Draws",
+            "type": "integer"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Last completed session (default: today).",
+            "title": "End"
+          },
+          "fill": {
+            "default": "raise",
+            "description": "Provider-gap policy: raise (default), drop or ffill. Closures are never filled and price gaps are never bridged.",
+            "enum": [
+              "drop",
+              "ffill",
+              "raise"
+            ],
+            "title": "Fill",
+            "type": "string"
+          },
+          "horizon": {
+            "default": 20,
+            "description": "Target-market sessions ahead: 1, 5 or 20 (cumulative).",
+            "title": "Horizon",
+            "type": "integer"
+          },
+          "lag": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fix the lag order (1-5) instead of selecting from 1, 2, 5 on inner blocks.",
+            "title": "Lag"
+          },
+          "models": {
+            "description": "Models to score on identical held-out dates.",
+            "items": {
+              "enum": [
+                "var",
+                "bvar"
+              ],
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "preset": {
+            "const": "equity-basic",
+            "default": "equity-basic",
+            "description": "Predictor preset: target return, market return, log realized volatility, change in log dollar-volume activity (keyless).",
+            "title": "Preset",
+            "type": "string"
+          },
+          "refits": {
+            "default": 200,
+            "description": "Bootstrap parameter refits for var (ignored by bvar).",
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "Refits",
+            "type": "integer"
+          },
+          "sector": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional sector series (ticker:XLK) joined to the state; never inferred.",
+            "title": "Sector"
+          },
+          "seed": {
+            "default": 0,
+            "description": "Seed for the predictive draws; always printed.",
+            "title": "Seed",
+            "type": "integer"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "First date requested (default: 10 calendar years before --end; an explicit start is never silently extended).",
+            "title": "Start"
+          },
+          "ticker": {
+            "description": "Target stock, ticker:AAPL (a bare symbol is a ticker).",
+            "positional": true,
+            "title": "Ticker",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticker"
+        ],
+        "title": "EvaluateParams",
+        "type": "object"
+      },
       "FactorParams": {
         "additionalProperties": false,
         "properties": {
@@ -1340,21 +1472,19 @@
       "ForecastParams": {
         "additionalProperties": false,
         "properties": {
-          "auto": {
-            "default": true,
-            "description": "Select the order by information criterion.",
-            "title": "Auto",
-            "type": "boolean"
-          },
-          "criterion": {
-            "default": "aic",
-            "description": "Criterion for --auto.",
-            "enum": [
-              "aic",
-              "bic"
-            ],
-            "title": "Criterion",
+          "benchmark": {
+            "default": "ticker:SPY",
+            "description": "Market return series, ticker:<symbol>.",
+            "title": "Benchmark",
             "type": "string"
+          },
+          "draws": {
+            "default": 1000,
+            "description": "Predictive draws per forecast.",
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "Draws",
+            "type": "integer"
           },
           "end": {
             "anyOf": [
@@ -1366,41 +1496,66 @@
                 "type": "null"
               }
             ],
-            "description": "Last date (default: today).",
+            "description": "Last completed session (default: today).",
             "title": "End"
           },
+          "fill": {
+            "default": "raise",
+            "description": "Provider-gap policy: raise (default), drop or ffill. Closures are never filled and price gaps are never bridged.",
+            "enum": [
+              "drop",
+              "ffill",
+              "raise"
+            ],
+            "title": "Fill",
+            "type": "string"
+          },
           "horizon": {
-            "default": 12,
-            "description": "Steps ahead.",
-            "maximum": 120.0,
-            "minimum": 1.0,
+            "default": 20,
+            "description": "Target-market sessions ahead: 1, 5 or 20 (cumulative).",
             "title": "Horizon",
             "type": "integer"
           },
-          "max_p": {
-            "default": 3,
-            "description": "Largest AR order on the grid.",
-            "maximum": 5.0,
-            "minimum": 0.0,
-            "title": "Max P",
-            "type": "integer"
-          },
-          "max_q": {
-            "default": 3,
-            "description": "Largest MA order on the grid.",
-            "maximum": 5.0,
-            "minimum": 0.0,
-            "title": "Max Q",
-            "type": "integer"
+          "lag": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fix the lag order (1-5) instead of selecting from 1, 2, 5 on inner blocks.",
+            "title": "Lag"
           },
           "model": {
-            "const": "arima",
-            "default": "arima",
-            "description": "Forecasting model.",
+            "default": "var",
+            "description": "var (ridge VAR) or bvar (Minnesota prior).",
+            "enum": [
+              "var",
+              "bvar"
+            ],
             "title": "Model",
             "type": "string"
           },
-          "order": {
+          "preset": {
+            "const": "equity-basic",
+            "default": "equity-basic",
+            "description": "Predictor preset: target return, market return, log realized volatility, change in log dollar-volume activity (keyless).",
+            "title": "Preset",
+            "type": "string"
+          },
+          "refits": {
+            "default": 200,
+            "description": "Bootstrap parameter refits for var (ignored by bvar).",
+            "maximum": 2000.0,
+            "minimum": 1.0,
+            "title": "Refits",
+            "type": "integer"
+          },
+          "sector": {
             "anyOf": [
               {
                 "type": "string"
@@ -1409,36 +1564,37 @@
                 "type": "null"
               }
             ],
-            "description": "Fixed p,d,q (e.g. 1,1,0); default: --auto over a grid.",
-            "title": "Order"
+            "description": "Optional sector series (ticker:XLK) joined to the state; never inferred.",
+            "title": "Sector"
           },
-          "series": {
-            "description": "A FRED series (CPIAUCSL) or a ticker (levels).",
-            "positional": true,
-            "title": "Series",
-            "type": "string"
-          },
-          "source": {
-            "default": "auto",
-            "description": "How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.",
-            "enum": [
-              "auto",
-              "fred",
-              "ticker"
-            ],
-            "title": "Source",
-            "type": "string"
+          "seed": {
+            "default": 0,
+            "description": "Seed for the predictive draws; always printed.",
+            "title": "Seed",
+            "type": "integer"
           },
           "start": {
-            "default": "2010-01-01",
-            "description": "First date, YYYY-MM-DD.",
-            "format": "date",
-            "title": "Start",
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "First date requested (default: 10 calendar years before --end; an explicit start is never silently extended).",
+            "title": "Start"
+          },
+          "ticker": {
+            "description": "Target stock, ticker:AAPL (a bare symbol is a ticker).",
+            "positional": true,
+            "title": "Ticker",
             "type": "string"
           }
         },
         "required": [
-          "series"
+          "ticker"
         ],
         "title": "ForecastParams",
         "type": "object"
@@ -2763,7 +2919,7 @@
           },
           "source": {
             "default": "auto",
-            "description": "How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.",
+            "description": "How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.",
             "enum": [
               "auto",
               "fred",
@@ -3488,7 +3644,7 @@
           },
           "source": {
             "default": "auto",
-            "description": "How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.",
+            "description": "How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.",
             "enum": [
               "auto",
               "fred",
@@ -4593,22 +4749,22 @@
         ]
       }
     },
-    "/api/v1/econ/forecast": {
+    "/api/v1/econ/evaluate": {
       "post": {
-        "description": "ARIMA forecast with 80% and 95% prediction intervals; order selection made visible.",
-        "operationId": "econ_forecast_api_v1_econ_forecast_post",
+        "description": "Score var and bvar against no-change and training-mean controls on held-out dates.",
+        "operationId": "econ_evaluate_api_v1_econ_evaluate_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ForecastParams"
+                "$ref": "#/components/schemas/EvaluateParams"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {}
@@ -4627,7 +4783,47 @@
             "description": "Validation Error"
           }
         },
-        "summary": "ARIMA forecast with 80% and 95% prediction intervals; order selection made visible.",
+        "summary": "Score var and bvar against no-change and training-mean controls on held-out dates.",
+        "tags": [
+          "econ"
+        ]
+      }
+    },
+    "/api/v1/econ/forecast": {
+      "post": {
+        "description": "Multivariable price forecast (ridge VAR or BVAR) with held-out evidence and 80%/95% bounds.",
+        "operationId": "econ_forecast_api_v1_econ_forecast_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForecastParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Multivariable price forecast (ridge VAR or BVAR) with held-out evidence and 80%/95% bounds.",
         "tags": [
           "econ"
         ]

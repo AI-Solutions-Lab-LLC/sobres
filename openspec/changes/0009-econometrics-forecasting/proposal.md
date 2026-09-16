@@ -2,11 +2,30 @@
 change: 0009-econometrics-forecasting
 milestone: v1.5
 depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0007-equity-factor-analysis, 0004-web-ui]
-status: proposed
+status: implemented
 planning_depth: proposal + research + design + tasks + spec deltas; multivariable amendment 2026-09-13
 ---
 
 # 0009 — Multivariable equity forecasting and volatility
+
+## Shipped scope — 2026-09-16
+
+Implemented on `main`: `sobres econ forecast ticker:<T> --model var|bvar` over
+the keyless `equity-basic` state (target split-only log return, market return,
+log realized volatility, change in log dollar-volume activity) plus an optional
+`--sector` series; lag/penalty selection on three purged chronological inner
+blocks; a held-out evaluation over the last 252 sessions against no-change and
+training-mean controls; mandatory 80%/95% price bounds from a joint residual
+bootstrap with refits (VAR) or posterior-predictive draws (BVAR); `econ evaluate`
+on identical dates; ARIMA removed with a migration error; bare symbols resolved
+through a FRED catalog, never by shape. The math is in `core/forecast.py`.
+
+**Deferred to a follow-up change** (its own issue): the direct `elastic-net` and
+`boosted-trees` forecasters, the `equity-macro` preset with FRED vintage joins,
+the extended fundamentals/factor catalog, the optional costed strategy
+diagnostic, and a live-recorded SPY history (the offline benchmark is a labelled
+synthetic market proxy). The interface list below shows the original proposal;
+only the `var`/`bvar` lines and `evaluate` with those two models are shipped.
 
 ## Outcome
 

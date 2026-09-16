@@ -1,5 +1,13 @@
 # 0009 — Multivariable forecasting design
 
+> **Shipped 2026-09-16:** the VAR/BVAR contracts, the target and price meaning, the
+> `equity-basic` inputs, the sector option, the chronological validation and the
+> joint-uncertainty methods below are implemented in `core/forecast.py`. The direct
+> elastic-net / boosted-tree sections, the macro preset and vintage joins, and the
+> optional economic evaluation remain design for a follow-up change. Where this
+> document says `application/` or `adapters/`, read `cli/commands/econ.py` and
+> `data/` (0013 was superseded).
+
 This design supersedes the candidate's ARIMA design. It is proposed behavior;
 existing PR #15 code and tests are not evidence that it is implemented. Research
 sources and their limits are recorded in [research.md](research.md).

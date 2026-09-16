@@ -479,6 +479,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/econ/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Score var and bvar against no-change and training-mean controls on held-out dates.
+         * @description Score var and bvar against no-change and training-mean controls on held-out dates.
+         */
+        post: operations["econ_evaluate_api_v1_econ_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/econ/forecast": {
         parameters: {
             query?: never;
@@ -489,8 +509,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * ARIMA forecast with 80% and 95% prediction intervals; order selection made visible.
-         * @description ARIMA forecast with 80% and 95% prediction intervals; order selection made visible.
+         * Multivariable price forecast (ridge VAR or BVAR) with held-out evidence and 80%/95% bounds.
+         * @description Multivariable price forecast (ridge VAR or BVAR) with held-out evidence and 80%/95% bounds.
          */
         post: operations["econ_forecast_api_v1_econ_forecast_post"];
         delete?: never;
@@ -1862,7 +1882,7 @@ export interface components {
             series: string;
             /**
              * Source
-             * @description How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.
+             * @description How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.
              * @default auto
              * @enum {string}
              */
@@ -2010,6 +2030,83 @@ export interface components {
         };
         /** EnvParams */
         EnvParams: Record<string, never>;
+        /** EvaluateParams */
+        EvaluateParams: {
+            /**
+             * Benchmark
+             * @description Market return series, ticker:<symbol>.
+             * @default ticker:SPY
+             */
+            benchmark: string;
+            /**
+             * Draws
+             * @description Predictive draws per forecast.
+             * @default 1000
+             */
+            draws: number;
+            /**
+             * End
+             * @description Last completed session (default: today).
+             */
+            end?: string | null;
+            /**
+             * Fill
+             * @description Provider-gap policy: raise (default), drop or ffill. Closures are never filled and price gaps are never bridged.
+             * @default raise
+             * @enum {string}
+             */
+            fill: "drop" | "ffill" | "raise";
+            /**
+             * Horizon
+             * @description Target-market sessions ahead: 1, 5 or 20 (cumulative).
+             * @default 20
+             */
+            horizon: number;
+            /**
+             * Lag
+             * @description Fix the lag order (1-5) instead of selecting from 1, 2, 5 on inner blocks.
+             */
+            lag?: number | null;
+            /**
+             * Models
+             * @description Models to score on identical held-out dates.
+             */
+            models?: ("var" | "bvar")[];
+            /**
+             * Preset
+             * @description Predictor preset: target return, market return, log realized volatility, change in log dollar-volume activity (keyless).
+             * @default equity-basic
+             * @constant
+             */
+            preset: "equity-basic";
+            /**
+             * Refits
+             * @description Bootstrap parameter refits for var (ignored by bvar).
+             * @default 200
+             */
+            refits: number;
+            /**
+             * Sector
+             * @description Optional sector series (ticker:XLK) joined to the state; never inferred.
+             */
+            sector?: string | null;
+            /**
+             * Seed
+             * @description Seed for the predictive draws; always printed.
+             * @default 0
+             */
+            seed: number;
+            /**
+             * Start
+             * @description First date requested (default: 10 calendar years before --end; an explicit start is never silently extended).
+             */
+            start?: string | null;
+            /**
+             * Ticker
+             * @description Target stock, ticker:AAPL (a bare symbol is a ticker).
+             */
+            ticker: string;
+        };
         /** FactorParams */
         FactorParams: {
             /**
@@ -2110,72 +2207,81 @@ export interface components {
         /** ForecastParams */
         ForecastParams: {
             /**
-             * Auto
-             * @description Select the order by information criterion.
-             * @default true
+             * Benchmark
+             * @description Market return series, ticker:<symbol>.
+             * @default ticker:SPY
              */
-            auto: boolean;
+            benchmark: string;
             /**
-             * Criterion
-             * @description Criterion for --auto.
-             * @default aic
-             * @enum {string}
+             * Draws
+             * @description Predictive draws per forecast.
+             * @default 1000
              */
-            criterion: "aic" | "bic";
+            draws: number;
             /**
              * End
-             * @description Last date (default: today).
+             * @description Last completed session (default: today).
              */
             end?: string | null;
             /**
+             * Fill
+             * @description Provider-gap policy: raise (default), drop or ffill. Closures are never filled and price gaps are never bridged.
+             * @default raise
+             * @enum {string}
+             */
+            fill: "drop" | "ffill" | "raise";
+            /**
              * Horizon
-             * @description Steps ahead.
-             * @default 12
+             * @description Target-market sessions ahead: 1, 5 or 20 (cumulative).
+             * @default 20
              */
             horizon: number;
             /**
-             * Max P
-             * @description Largest AR order on the grid.
-             * @default 3
+             * Lag
+             * @description Fix the lag order (1-5) instead of selecting from 1, 2, 5 on inner blocks.
              */
-            max_p: number;
-            /**
-             * Max Q
-             * @description Largest MA order on the grid.
-             * @default 3
-             */
-            max_q: number;
+            lag?: number | null;
             /**
              * Model
-             * @description Forecasting model.
-             * @default arima
-             * @constant
-             */
-            model: "arima";
-            /**
-             * Order
-             * @description Fixed p,d,q (e.g. 1,1,0); default: --auto over a grid.
-             */
-            order?: string | null;
-            /**
-             * Series
-             * @description A FRED series (CPIAUCSL) or a ticker (levels).
-             */
-            series: string;
-            /**
-             * Source
-             * @description How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.
-             * @default auto
+             * @description var (ridge VAR) or bvar (Minnesota prior).
+             * @default var
              * @enum {string}
              */
-            source: "auto" | "fred" | "ticker";
+            model: "var" | "bvar";
+            /**
+             * Preset
+             * @description Predictor preset: target return, market return, log realized volatility, change in log dollar-volume activity (keyless).
+             * @default equity-basic
+             * @constant
+             */
+            preset: "equity-basic";
+            /**
+             * Refits
+             * @description Bootstrap parameter refits for var (ignored by bvar).
+             * @default 200
+             */
+            refits: number;
+            /**
+             * Sector
+             * @description Optional sector series (ticker:XLK) joined to the state; never inferred.
+             */
+            sector?: string | null;
+            /**
+             * Seed
+             * @description Seed for the predictive draws; always printed.
+             * @default 0
+             */
+            seed: number;
             /**
              * Start
-             * Format: date
-             * @description First date, YYYY-MM-DD.
-             * @default 2010-01-01
+             * @description First date requested (default: 10 calendar years before --end; an explicit start is never silently extended).
              */
-            start: string;
+            start?: string | null;
+            /**
+             * Ticker
+             * @description Target stock, ticker:AAPL (a bare symbol is a ticker).
+             */
+            ticker: string;
         };
         /** FrontierParams */
         FrontierParams: {
@@ -2915,7 +3021,7 @@ export interface components {
             robust: "hac" | "hc0" | "hc1" | "hc2" | "hc3" | "none";
             /**
              * Source
-             * @description How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.
+             * @description How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.
              * @default auto
              * @enum {string}
              */
@@ -3313,7 +3419,7 @@ export interface components {
             simulations: number;
             /**
              * Source
-             * @description How to read bare symbols: auto (digits or >5 chars = FRED), fred, ticker.
+             * @description How to read bare symbols: auto (known FRED ids are FRED, anything else a ticker), fred, ticker. fred:/ticker: prefixes always win.
              * @default auto
              * @enum {string}
              */
@@ -4195,6 +4301,39 @@ export interface operations {
             };
         };
     };
+    econ_evaluate_api_v1_econ_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvaluateParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     econ_forecast_api_v1_econ_forecast_post: {
         parameters: {
             query?: never;
@@ -4209,7 +4348,7 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

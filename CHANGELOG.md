@@ -11,21 +11,7 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
-### Changed
-
-- **Settings over HTTP are an explicit subset.** `db_url`,
-  `otel_exporter_otlp_endpoint`, `otel_traces_exporter` and `config_file` are declared
-  `browser_editable=False`; `PUT /api/v1/settings` refuses them with a usage error
-  before writing anything. `sobres config set` is unchanged.
-- **Landing page.** The "what ships today" list now includes factor analysis, goal
-  planning, econometrics and FX/PPP (all in 1.1.0); the roadmap names what is actually
-  unshipped. A hosting-inquiry link opens a public GitHub issue form that asks for no
-  credentials or financial records. The Pages deploy job runs only when the repository
-  variable `PAGES_ENABLED` is `true`; the build and Lighthouse audit run regardless.
-- **OpenSpec ledgers reconciled.** Change 0013 (template alignment / package
-  migration) is superseded; its R0/R1/R2 prerequisites and spec requirement were removed
-  from 0002–0010, whose task ledgers now check against the tests that prove them on
-  `main`. `openspec/project.md` describes the layout that exists.
+Nothing yet.
 
 ## [1.1.0] - 2026-09-16
 
@@ -33,7 +19,8 @@ First release published to PyPI. 1.0.0 was prepared but never uploaded, so this
 is the first version available as `pip install sobres`. It carries the whole
 foundation and portfolio optimization from 1.0.0 plus everything below:
 persistence, the web UI and API, the Docker image, the landing page, factor
-analysis, goal planning, ARIMA/GARCH econometrics, exchange rates and PPP,
+analysis, goal planning, VAR/BVAR forecasting and GARCH econometrics, exchange
+rates and PPP,
 and the onboarding and correctness fixes that followed the merge.
 
 ### Added
@@ -48,16 +35,25 @@ and the onboarding and correctness fixes that followed the merge.
   New keyless providers: World Bank ICP (default), OECD, BIS, with vintages
   carried and stale benchmarks flagged (`SOBRES_PPP_PROVIDER`,
   `SOBRES_PPP_STALE_YEARS`).
-- **Econometrics and forecasting (change 0009).** `sobres econ diagnose`
-  (ADF and KPSS with disagreement stated, ACF/PACF with bounds), `econ
-  forecast` (ARIMA differenced to stationarity with `d` reported, grid order
-  selection with the runners-up, mandatory 80%/95% intervals, Ljung-Box on
-  residuals), `econ volatility` (GARCH, EGARCH, EWMA; annualized; simulated
-  bands; seed printed) and `econ regress` (hac/hc0–hc3/none named, VIF over
-  10 flagged, R², F, Durbin-Watson, Breusch-Pagan). A GARCH constant-
-  correlation covariance joins the optimizer's estimator registry. The econ
-  extra gains `arch`; without it every `econ` command exits 3 with the
-  install hint.
+- **Econometrics and forecasting (change 0009, revised).** `sobres econ
+  forecast` fits a joint ridge VAR (default) or a Minnesota-prior BVAR over the
+  keyless `equity-basic` state — split-only log return, market return, log
+  realized volatility, change in log dollar-volume activity, optional
+  `--sector` — with lag and shrinkage selected on three chronological inner
+  blocks (purged), a held-out evaluation over the last 252 sessions against
+  no-change and training-mean controls (return/price RMSE and MAE, direction
+  accuracy, out-of-sample R², 80%/95% coverage and width), and a price table
+  with mandatory 80%/95% bounds from a joint residual block bootstrap with
+  parameter refits (VAR) or posterior-predictive draws (BVAR); the point is the
+  median price draw and the seed is printed. `econ evaluate` scores both models
+  and the controls on identical held-out dates. `sobres econ diagnose` (ADF and
+  KPSS with disagreement stated, ACF/PACF with bounds), `econ volatility`
+  (GARCH, EGARCH, EWMA; annualized; simulated bands; seed printed) and `econ
+  regress` (hac/hc0–hc3/none named, VIF over 10 flagged, R², F, Durbin-Watson,
+  Breusch-Pagan) are unchanged. A GARCH constant-correlation covariance joins
+  the optimizer's estimator registry. Bare symbols resolve through a FRED
+  catalog, never by length or digits. The econ extra gains `arch`; without it
+  every `econ` command exits 3 with the install hint.
 - **Goal planning (change 0008).** `sobres plan retire|house|car|education|goal`:
   a funding solver for any one of target, time, contribution and return; FIRE
   math ported from fire-calculator with its golden fixture; real (default,
@@ -75,6 +71,19 @@ and the onboarding and correctness fixes that followed the merge.
   `core/factors.py` is numpy-only; `statsmodels` stays an extra.
 
 ### Changed
+- **Settings over HTTP are an explicit subset.** `db_url`,
+  `otel_exporter_otlp_endpoint`, `otel_traces_exporter` and `config_file` are declared
+  `browser_editable=False`; `PUT /api/v1/settings` refuses them with a usage error
+  before writing anything. `sobres config set` is unchanged.
+- **Landing page.** The "what ships today" list now includes factor analysis, goal
+  planning, econometrics and FX/PPP (all in 1.1.0); the roadmap names what is actually
+  unshipped. A hosting-inquiry link opens a public GitHub issue form that asks for no
+  credentials or financial records. The Pages deploy job runs only when the repository
+  variable `PAGES_ENABLED` is `true`; the build and Lighthouse audit run regardless.
+- **OpenSpec ledgers reconciled.** Change 0013 (template alignment / package
+  migration) is superseded; its R0/R1/R2 prerequisites and spec requirement were removed
+  from 0002–0010, whose task ledgers now check against the tests that prove them on
+  `main`. `openspec/project.md` describes the layout that exists.
 - **The risk-free rate is always sourced, never an assumed zero (change 0015).**
   Without a FRED key, USD runs take the 1-month Treasury bill return Ken French
   publishes with the factor files -- keyless, dated, already a recorded
@@ -156,6 +165,10 @@ and the onboarding and correctness fixes that followed the merge.
   migrations tested against recorded prior-version fixtures.
 
 ### Removed
+- **Univariate ARIMA forecasting.** The `econ forecast` ARIMA candidate (grid
+  order selection, differencing, `--order`/`--auto`/`--criterion`/`--max-p`/`--max-q`)
+  was replaced by the joint VAR/BVAR models above; `--model arima` exits 2 with the
+  new example. Nothing had been published with it.
 - **`legacy_code/`** and its three `.rattle` datasets (16 MB). The pre-sobres R
   optimizer and `yfinance` puller were fully ported; the allocation LP they
   solved is now documented in `docs/allocation-lp-reference.md`, including two

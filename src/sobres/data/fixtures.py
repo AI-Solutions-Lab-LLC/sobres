@@ -29,6 +29,12 @@ class FixtureYahooSource:
     def history(self, ticker: str, start: date, end: date) -> RawHistory:
         self.calls.append((ticker, start, end))
         path = self.root / f"{ticker.upper()}.csv"
+        meta_root = self.root
+        if not path.exists():
+            # The explicitly separated synthetic corpus (a market proxy); its meta says so.
+            synthetic = self.root.parent / "synthetic" / "yfinance"
+            path = synthetic / f"{ticker.upper()}.csv"
+            meta_root = synthetic
         if not path.exists():
             raise UnknownTickerError(ticker, provider="yfinance")
         frame = pd.read_csv(path, index_col=0)
@@ -39,8 +45,10 @@ class FixtureYahooSource:
             [pd.Timestamp(value).tz_localize(None) for value in frame.index], name="Date"
         ).normalize()
         frame = frame.loc[str(start) : str(end)]
-        meta_all = json.loads((self.root / "meta.json").read_text(encoding="utf-8"))
+        meta_all = json.loads((meta_root / "meta.json").read_text(encoding="utf-8"))
         meta = dict(meta_all.get("tickers", {}).get(ticker.upper(), {}))
+        if meta_root is not self.root:
+            meta["synthetic"] = True
         return RawHistory(frame=frame, currency=meta.get("currency"), meta=meta)
 
     def fundamentals(self, ticker: str) -> dict[str, Any] | None:
