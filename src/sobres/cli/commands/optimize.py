@@ -76,6 +76,10 @@ class UniverseParams(Params):
             "Annual decimal risk-free rate; default: FRED 3-month bill, or 0.0 without a key."
         ),
     )
+    hedged: bool = Field(
+        default=False,
+        description="Use currency-hedged returns (interest-rate-differential approximation).",
+    )
 
     @model_validator(mode="after")
     def _window(self) -> UniverseParams:
@@ -226,6 +230,19 @@ def load_universe(p: UniverseParams, ctx: Context) -> Universe:
             f"gaps: policy {p.fill}, filled {info.get('filled', 0)}, "
             f"dropped return dates {', '.join(dates) or 'none'}"
         )
+    if p.hedged:
+        if not any(currencies[t] != target for t in tickers):
+            raise UsageError("--hedged needs at least one asset outside the base currency")
+        from sobres.cli.commands.fx import hedged_universe
+        from sobres.core.fx import HEDGE_NOTE
+
+        # Hedge the CAPM benchmark on the same base as the investable assets.
+        hedge_params = p.model_copy(update={"tickers": symbols, "portfolio": None})
+        _unhedged, hedged, _ccy, _freq, used = hedged_universe(hedge_params, ctx, target)
+        returns = hedged
+        rates_text = ", ".join(f"{k}: FRED {v}" for k, v in used.items())
+        notes.append(f"hedged returns: {HEDGE_NOTE}; short-term rates {rates_text}")
+        ctx.log.warning("returns.hedged", rates=used)
     if len(returns) < 3:
         raise InsufficientDataError(
             f"{len(returns)} return observations; at least three are needed",

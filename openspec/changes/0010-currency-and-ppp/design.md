@@ -74,3 +74,13 @@ for future locations. This amendment does not accept proposed cloud profiles.
 Use named task proofs, installed-artifact checks and explicit rollback: revert
 application wiring with compatibility facades intact; never rewrite a released
 schema migration or delete user state to roll back a module move.
+
+
+## 0009 multivariable forecasting amendment (2026-09-13)
+
+The dependent #16 branch carries [revised 0009](../0009-econometrics-forecasting/proposal.md)
+and its research/defaults. Its ARIMA candidate is superseded planning, not accepted
+multivariable implementation. GARCH volatility and the shared currency/rate math
+remain in scope. Joint equity models must not project FX or PPP convergence through
+an auxiliary series, and forecasts do not automatically replace goal assumptions.
+No 0010 domain code changes are required merely to carry this amendment.

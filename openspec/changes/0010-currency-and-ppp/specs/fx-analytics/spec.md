@@ -52,6 +52,11 @@ FX analytics SHALL identify currency risk without assuming uncorrelated or addit
 
 ### Requirement: Hedged returns
 
+Hedging SHALL reuse the reviewed 0002 price-gap and rate conventions. FRED DTB3
+bank-discount percent quotes SHALL use the shared 91-day Treasury investment-yield
+conversion after conversion to decimal; other annual percent rates use decimal
+scaling. A dropped price observation SHALL NOT create a return across the gap.
+
 Hedged-return estimates SHALL identify the interest-rate approximation, costs and missing inputs explicitly.
 
 #### Scenario: Construction
@@ -98,6 +103,8 @@ Optimization SHALL accept a declared base currency and estimate risk and return 
 - **WHEN** `--hedged` is supplied
 - **THEN** the optimization SHALL run on hedged return series
 - **AND** the result SHALL be labelled as such, carrying the hedging assumptions
+- **AND** an explicit CAPM benchmark SHALL be processed on the same hedged base
+  without becoming an investable asset in the reported weights
 
 ### Requirement: FX commands
 
