@@ -57,7 +57,13 @@ IN_SAMPLE_NOTE = (
 
 
 class UniverseParams(Params):
-    tickers: TickerList = Field(description="Ticker symbols, e.g. AAPL MSFT NESN.SW.")
+    tickers: TickerList | None = Field(
+        default=None, description="Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio)."
+    )
+    portfolio: str | None = Field(
+        default=None, description="A saved portfolio's name in place of --tickers."
+    )
+    save_run: bool = Field(default=False, description="Record this run in the run history.")
     start: date = Field(description="First date, YYYY-MM-DD.")
     end: date | None = Field(default=None, description="Last date (default: today).")
     fill: FillPolicy = Field(description="Provider-gap policy: drop, ffill or raise. No default.")
@@ -73,7 +79,9 @@ class UniverseParams(Params):
 
     @model_validator(mode="after")
     def _window(self) -> UniverseParams:
-        if len(self.tickers) > 100 or len(set(self.tickers)) != len(self.tickers):
+        if self.tickers and (
+            len(self.tickers) > 100 or len(set(self.tickers)) != len(self.tickers)
+        ):
             raise ValueError("choose 1 to 100 distinct tickers, e.g. --tickers AAPL MSFT")
         if not date(1900, 1, 1) <= self.start <= date(2200, 1, 1) or (
             self.end is not None and not date(1900, 1, 1) <= self.end <= date(2200, 1, 1)
@@ -81,7 +89,16 @@ class UniverseParams(Params):
             raise ValueError("dates must be between 1900-01-01 and 2200-01-01")
         if self.end is not None and self.end < self.start:
             raise ValueError(f"end {self.end} precedes start {self.start}")
+        if self.portfolio and self.tickers:
+            raise ValueError("--portfolio and --tickers are mutually exclusive")
+        if not self.portfolio and not self.tickers:
+            raise ValueError("one of --tickers or --portfolio is required")
         return self
+
+    @property
+    def symbols(self) -> list[str]:
+        """Tickers after ``--portfolio`` resolution (set by the loader)."""
+        return list(self.tickers or [])
 
 
 class EstimatorParams(UniverseParams):
@@ -107,7 +124,11 @@ class EstimatorParams(UniverseParams):
             )
         if self.benchmark is not None and self.returns_estimator != "capm":
             raise ValueError("--benchmark is used only with --returns-estimator capm")
-        if self.max_weight is not None and self.max_weight * len(self.tickers) < 1.0 - 1e-8:
+        if (
+            self.tickers
+            and self.max_weight is not None
+            and self.max_weight * len(self.tickers) < 1.0 - 1e-8
+        ):
             raise ValueError(
                 f"max_weight {self.max_weight} is infeasible for {len(self.tickers)} assets; "
                 "raise --max-weight"
@@ -133,16 +154,41 @@ class Universe:
     benchmark: pd.Series | None = None
 
 
+def resolve_symbols(p: UniverseParams, ctx: Context) -> tuple[list[str], list[float] | None]:
+    """The ticker list and, from a saved portfolio, its weights."""
+    if p.portfolio:
+        from sobres.cli.commands.portfolio import resolve_portfolio
+
+        record = resolve_portfolio(p.portfolio, ctx)
+        tickers = list(record.tickers)
+        if not tickers or len(tickers) > 100 or len(set(tickers)) != len(tickers):
+            raise UsageError("choose 1 to 100 distinct tickers in the saved portfolio")
+        if (
+            isinstance(p, EstimatorParams)
+            and p.max_weight is not None
+            and p.max_weight * len(tickers) < 1.0 - 1e-8
+        ):
+            raise UsageError(
+                f"max_weight {p.max_weight} is infeasible for {len(tickers)} assets; "
+                "raise --max-weight"
+            )
+        if isinstance(p, BacktestParams) and parse_lookback(p.lookback, "daily") <= len(tickers):
+            raise UsageError("lookback must have more observations than assets")
+        return tickers, None if record.weights is None else list(record.weights)
+    return list(p.tickers or []), None
+
+
 def load_universe(p: UniverseParams, ctx: Context) -> Universe:
     started = time.perf_counter()
     end = p.end or ctx.today()
-    symbols = list(p.tickers)
+    tickers, _ = resolve_symbols(p, ctx)
+    symbols = list(tickers)
     benchmark = p.benchmark if isinstance(p, EstimatorParams) else None
     if benchmark is not None and benchmark not in symbols:
         symbols.append(benchmark)
     prices = ctx.price_provider().get_prices(symbols, p.start, end)
     currencies = frame_currencies(prices)
-    target = require_single_currency([currencies[t] for t in p.tickers], target=p.base)
+    target = require_single_currency([currencies[t] for t in tickers], target=p.base)
     notes: list[str] = []
     if any(c != target for c in currencies.values()):
         pairs = pairs_for(list(currencies.values()), target)
@@ -199,12 +245,12 @@ def load_universe(p: UniverseParams, ctx: Context) -> Universe:
     ctx.log.info(
         "optimization.loaded",
         rows=len(returns),
-        assets=len(p.tickers),
+        assets=len(tickers),
         elapsed_ms=round((time.perf_counter() - started) * 1000, 3),
     )
     return Universe(
-        returns[p.tickers],
-        filled[p.tickers],
+        returns[tickers],
+        filled[tickers],
         frequency,
         target,
         rf,
@@ -530,8 +576,9 @@ def frontier(p: FrontierParams, ctx: Context) -> FrontierResult:
         row["min_variance"] = point.is_min_variance
         row["max_sharpe"] = point.is_max_sharpe
         rows.append(row)
+    tickers, _ = resolve_symbols(p, ctx)
     frame = pd.DataFrame(
-        rows, columns=["ret", "vol", "sharpe", *p.tickers, "min_variance", "max_sharpe"]
+        rows, columns=["ret", "vol", "sharpe", *tickers, "min_variance", "max_sharpe"]
     )
     u.provenance.notes.append(IN_SAMPLE_NOTE)
     return FrontierResult(
@@ -568,7 +615,7 @@ class BacktestParams(EstimatorParams):
         days = lookback_calendar_days(self.lookback)
         if self.start - timedelta(days=days) < date(1800, 1, 1):
             raise ValueError("lookback reaches before supported history")
-        if parse_lookback(self.lookback, "daily") <= len(self.tickers):
+        if self.tickers and parse_lookback(self.lookback, "daily") <= len(self.tickers):
             raise ValueError("lookback must have more observations than assets")
         return self
 
@@ -731,17 +778,23 @@ def backtest(p: BacktestParams, ctx: Context) -> BacktestReport:
 
 
 class RiskParams(UniverseParams):
-    weights: Weights = Field(description="Portfolio weights, one per ticker, summing to 1.")
+    weights: Weights = Field(
+        default_factory=list,
+        description="Portfolio weights, one per ticker, summing to 1 (from --portfolio if saved).",
+    )
 
     @model_validator(mode="after")
     def _weights_match(self) -> RiskParams:
-        if len(self.weights) != len(self.tickers):
+        if self.tickers and not self.weights:
+            raise ValueError("--weights is required with --tickers")
+        if self.weights and self.tickers and len(self.weights) != len(self.tickers):
             raise ValueError(f"{len(self.weights)} weights for {len(self.tickers)} tickers")
         if not all(math.isfinite(w) for w in self.weights):
             raise ValueError("weights must be finite, e.g. --weights 0.6 0.4")
-        total = sum(self.weights)
-        if abs(total - 1.0) > 1e-6:
-            raise ValueError(f"weights sum to {total:.6f}, not 1.0")
+        if self.weights:
+            total = sum(self.weights)
+            if abs(total - 1.0) > 1e-6:
+                raise ValueError(f"weights sum to {total:.6f}, not 1.0")
         return self
 
 
@@ -752,8 +805,17 @@ class RiskParams(UniverseParams):
     uses_providers=True,
 )
 def risk(p: RiskParams, ctx: Context) -> RiskPanelResult:
+    tickers, saved_weights = resolve_symbols(p, ctx)
+    weight_values = list(p.weights) if p.weights else saved_weights
+    if weight_values is None:
+        raise UsageError(
+            f"portfolio {p.portfolio!r} has no weights",
+            hint="pass --weights or save it with weights",
+        )
+    if len(weight_values) != len(tickers):
+        raise UsageError(f"{len(weight_values)} weights for {len(tickers)} tickers")
     u = load_universe(p, ctx)
-    weights = dict(zip(p.tickers, p.weights, strict=True))
+    weights = dict(zip(tickers, weight_values, strict=True))
     series = portfolio_returns(u.returns, weights)
     panel = risk_metrics(series, u.risk_free_rates, u.frequency)
     rows = [
