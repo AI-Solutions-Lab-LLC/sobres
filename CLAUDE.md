@@ -193,7 +193,11 @@ to `main` that does not change the version publishes nothing.
 
 - The release workflow **calls** `ci.yml` rather than restating its steps. When
   adding a check, add it to `ci.yml` and the release inherits it.
-- Never add a PyPI token to this repo. Publishing is OIDC Trusted Publishing.
+- Publishing uses **organization API tokens**, not OIDC Trusted Publishing:
+  `PYPI_PROD` for PyPI and `PYPI_TEST` for TestPyPI, both organization-level
+  secrets. Never copy them to repository secrets, never print them, and never
+  request `id-token: write` or claim PEP 740 attestations on a token upload.
+  `RELEASE_ENABLED` must be `true` for a PyPI publish to fire.
 - Never make `pip-audit` soft-fail. An unfixable advisory gets a named
   `--ignore-vuln` with a written reason — see `docs/RELEASING.md`.
 - The distribution, the import package, and the CLI are all `sobres`.

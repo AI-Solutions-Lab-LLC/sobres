@@ -157,6 +157,50 @@ def test_risk_contributions_equal_within_tolerance() -> None:
     np.testing.assert_allclose(contributions, 1 / 3, atol=1e-4)  # SLSQP on a scaled objective
 
 
+def test_risk_parity_matches_the_closed_form_for_a_diagonal_covariance() -> None:
+    """For diagonal Sigma, equal risk contribution is exactly ``w_i` proportional to `1 / sigma_i``.
+
+    Maillard, Roncalli and Teiletche (2010), "The Properties of Equally Weighted
+    Risk Contribution Portfolios", *Journal of Portfolio Management* 36(4),
+    60-70, section 3. The expected weights below are computed from the
+    volatilities by that formula, independently of the optimizer.
+    """
+    vols = np.array([0.37291175842976176, 0.4, 0.05])
+    expected = (1.0 / vols) / np.sum(1.0 / vols)
+
+    mu = pd.Series([0.25, 0.25, 0.25], index=list("ABC"))
+    sigma = pd.DataFrame(np.diag(np.square(vols)), index=list("ABC"), columns=list("ABC"))
+
+    p = optimize(mu, sigma, "risk_parity")
+    np.testing.assert_allclose(np.array(list(p.weights.values())), expected, atol=1e-6)
+
+
+def test_risk_parity_converges_when_one_asset_has_far_lower_volatility() -> None:
+    """Regression: a low-variance asset used to defeat SLSQP from equal weights.
+
+    Roughly equal expected returns with one volatility far below the others --
+    a bond fund among equities -- made the QP subproblem report "Inequality
+    constraints incompatible" from the equal-weight start, so `risk_parity`
+    raised instead of returning weights. About one Hypothesis run in five hit
+    it. The retry from inverse-volatility weights is what makes these solve.
+    """
+    cases = [
+        [0.37291175842976176, 0.4, 0.05],
+        [0.43, 0.472, 0.06],
+    ]
+    for vols in cases:
+        mu = pd.Series([0.25, 0.25, 0.25], index=list("ABC"))
+        sigma = pd.DataFrame(np.diag(np.square(vols)), index=list("ABC"), columns=list("ABC"))
+        p = optimize(mu, sigma, "risk_parity")
+        weights = np.array(list(p.weights.values()))
+        assert sum(p.weights.values()) == pytest.approx(1.0, abs=1e-8), vols
+        assert all(-1e-8 <= w <= 1 + 1e-8 for w in p.weights.values()), vols
+        contributions = np.array(list(p.risk_contributions.values()))
+        np.testing.assert_allclose(contributions, 1 / 3, atol=1e-4)
+        # The low-volatility asset must carry the largest weight.
+        assert weights.argmax() == int(np.argmin(vols)), vols
+
+
 def test_equal_weight_needs_no_solver() -> None:
     p = optimize(MU3, SIG3, "equal_weight")
     assert p.weights == {"A": 1 / 3, "B": 1 / 3, "C": 1 / 3}
