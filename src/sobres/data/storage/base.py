@@ -161,6 +161,64 @@ class RunRecord:
     created_at: datetime | None = None
 
 
+# ------------------------------------------------------------------ 0016 trading
+
+
+INTENT_STATES: tuple[str, ...] = ("confirmed", "submitted", "reconciled", "failed")
+
+
+@dataclass(frozen=True)
+class TradeIntent:
+    """What the operator confirmed, persisted before any order leaves the process."""
+
+    id: str
+    kind: str
+    """``rebalance`` (from a portfolio) or ``close`` (one position)."""
+    broker: str
+    account_id: str
+    environment: str
+    plan_hash: str
+    plan: dict[str, Any]
+    portfolio: str | None = None
+    run_id: str | None = None
+    state: str = "confirmed"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class TradeOrder:
+    """One order of an intent: the internal id is the client order id sent to the broker."""
+
+    id: str
+    intent_id: str
+    symbol: str
+    side: str
+    quantity: float
+    status: str = "new"
+    broker_order_id: str | None = None
+    filled_quantity: float = 0.0
+    filled_avg_price: float | None = None
+    submitted_at: datetime | None = None
+    updated_at: datetime | None = None
+    raw: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True)
+class TradeFill:
+    id: str
+    """Application-generated from the broker order id, symbol, side, quantity, price and time."""
+    broker_order_id: str
+    symbol: str
+    side: str
+    quantity: float
+    price: float
+    filled_at: datetime
+    source: str = "broker"
+    order_id: str | None = None
+    """The internal order this fill belongs to; None for a fill no Sobres order explains."""
+
+
 JobState = str  # queued | running | succeeded | failed | cancelled
 JOB_STATES: tuple[str, ...] = ("queued", "running", "succeeded", "failed", "cancelled")
 TERMINAL_JOB_STATES: frozenset[str] = frozenset({"succeeded", "failed", "cancelled"})
@@ -289,6 +347,41 @@ class JobRepository(Protocol):
     def next_queued(self) -> JobRecord | None: ...
 
 
+class TradeRepository(Protocol):
+    """Intents, orders and fills, scoped by broker, account and environment."""
+
+    def save_intent(self, intent: TradeIntent) -> TradeIntent:
+        """Persist; ``StorageConflictError`` on an existing id or on the same plan hash
+        for the same broker, account and environment."""
+        ...
+
+    def get_intent(self, intent_id: str) -> TradeIntent | None: ...
+
+    def find_intent(
+        self, plan_hash: str, broker: str, account_id: str, environment: str
+    ) -> TradeIntent | None: ...
+
+    def update_intent(self, intent_id: str, **changes: Any) -> TradeIntent: ...
+
+    def list_intents(self, limit: int = 20) -> list[TradeIntent]: ...
+
+    def save_order(self, order: TradeOrder) -> TradeOrder: ...
+
+    def update_order(self, order_id: str, **changes: Any) -> TradeOrder: ...
+
+    def get_order(self, order_id: str) -> TradeOrder | None: ...
+
+    def list_orders(
+        self, intent_id: str | None = None, *, open_only: bool = False, limit: int = 100
+    ) -> list[TradeOrder]: ...
+
+    def add_fills(self, fills: Sequence[TradeFill]) -> int:
+        """Insert fills not already present (by id); returns how many were new."""
+        ...
+
+    def list_fills(self, symbol: str | None = None, limit: int = 1000) -> list[TradeFill]: ...
+
+
 class Storage(Protocol):
     """One opened backend. Repositories hang off it; transactions wrap them."""
 
@@ -320,6 +413,9 @@ class Storage(Protocol):
 
     @property
     def jobs(self) -> JobRepository: ...
+
+    @property
+    def trades(self) -> TradeRepository: ...
 
     def transaction(self) -> AbstractContextManager[None]:
         """A unit of work: every operation inside commits or rolls back together."""

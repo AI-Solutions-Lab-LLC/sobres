@@ -35,6 +35,20 @@ and the onboarding and correctness fixes that followed the merge.
   New keyless providers: World Bank ICP (default), OECD, BIS, with vintages
   carried and stale benchmarks flagged (`SOBRES_PPP_PROVIDER`,
   `SOBRES_PPP_STALE_YEARS`).
+- **Broker execution (change 0016).** `sobres trade preview|execute|positions|
+  orders|status|history|close` invest a saved portfolio through a Sobres-owned
+  broker port; Alpaca (Trading API v2 over httpx, paper and live hosts) is the
+  first adapter and a deterministic fake broker shares its conformance suite.
+  Whole-share sizing from weights, budget, holdings, pending orders and fresh
+  quotes (stale quotes refused); a plan hash that `execute` must match; the
+  intent persisted before the first order leaves; per-order broker state with
+  `unresolved` for a submission that timed out, reconciled by `status`;
+  average-cost realized/unrealized P&L with cash flows kept apart; records in
+  migration v3 that `cache clear` never touches. Paper by default; live needs
+  `SOBRES_ALPACA_ENVIRONMENT=live`, `SOBRES_TRADING_LIVE_ENABLED=true`, `--live`
+  and a typed account confirmation; `execute`/`close` refuse over HTTP. New
+  settings `SOBRES_ALPACA_KEY_ID`, `SOBRES_ALPACA_SECRET_KEY` (secrets) with an
+  `alpaca` doctor check.
 - **Econometrics and forecasting (change 0009, revised).** `sobres econ
   forecast` fits a joint ridge VAR (default) or a Minnesota-prior BVAR over the
   keyless `equity-basic` state — split-only log return, market return, log

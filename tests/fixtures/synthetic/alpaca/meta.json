@@ -1,0 +1,7 @@
+{
+  "recorded_at": null,
+  "synthesized_at": "2026-09-16T04:30:00+00:00",
+  "provider": "alpaca",
+  "note": "Synthesized in the documented Alpaca Trading API v2 payload shapes (GET /v2/account, GET /v2/positions, GET /v2/stocks/{symbol}/trades/latest, POST /v2/orders, GET /v2/account/activities); not a recording. The fixture source simulates a paper account that fills market orders at these quotes. Replace with an authorized paper recording via the live workflow.",
+  "source": "https://docs.alpaca.markets/reference/getaccount-1"
+}

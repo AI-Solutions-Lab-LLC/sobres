@@ -17,7 +17,7 @@ from datetime import UTC, date, datetime, timedelta
 import pandas as pd
 import pytest
 
-from sobres.core.errors import ConfigurationError, StorageConflictError
+from sobres.core.errors import ConfigurationError, StorageConflictError, StorageError
 from sobres.data.storage.adapters.migrations import CURRENT_VERSION
 from sobres.data.storage.base import (
     DateRange,
@@ -30,6 +30,9 @@ from sobres.data.storage.base import (
     RunRecord,
     SeriesKey,
     Storage,
+    TradeFill,
+    TradeIntent,
+    TradeOrder,
 )
 
 KEY = SeriesKey("test", "prices_adj_close", "AAPL")
@@ -307,5 +310,81 @@ class ApplicationStateConformance:
 
     def test_info_counts_every_table(self, storage: Storage) -> None:
         info = storage.info()
-        for table in ("portfolio", "watchlist", "goal", "run", "job", "observation"):
+        for table in (
+            "portfolio",
+            "watchlist",
+            "goal",
+            "run",
+            "job",
+            "observation",
+            "trade_intent",
+            "trade_order",
+            "trade_fill",
+        ):
             assert table in info.table_rows
+
+    # ------------------------------------------------------------ 0016 trading
+
+    def test_trade_intent_orders_and_fills_round_trip(self, storage: Storage) -> None:
+        """Scenario: Durable intent before submission. Scenario: Duplicate confirmation
+        is refused. Scenario: Durable history."""
+        intent = storage.trades.save_intent(
+            TradeIntent(
+                id="i1",
+                kind="rebalance",
+                broker="fake",
+                account_id="A1",
+                environment="paper",
+                plan_hash="abc",
+                plan={"budget": 1000},
+                portfolio="core",
+            )
+        )
+        assert intent.state == "confirmed" and intent.created_at is not None
+        assert intent.created_at.tzinfo is not None
+        with pytest.raises(StorageConflictError):  # same plan, account and environment
+            storage.trades.save_intent(
+                TradeIntent("i2", "rebalance", "fake", "A1", "paper", "abc", {})
+            )
+        other_env = storage.trades.save_intent(
+            TradeIntent("i3", "rebalance", "fake", "A1", "live", "abc", {})
+        )
+        assert other_env.environment == "live"
+        assert storage.trades.find_intent("abc", "fake", "A1", "paper") is not None
+        assert storage.trades.find_intent("abc", "fake", "A2", "paper") is None
+        order = storage.trades.save_order(
+            TradeOrder(id="i1-01", intent_id="i1", symbol="AAPL", side="buy", quantity=6.0)
+        )
+        assert order.status == "new" and order.broker_order_id is None
+        assert [o.id for o in storage.trades.list_orders(open_only=True)] == ["i1-01"]
+        filled = storage.trades.update_order(
+            "i1-01",
+            status="filled",
+            broker_order_id="b1",
+            filled_quantity=6.0,
+            filled_avg_price=100.0,
+        )
+        assert filled.filled_avg_price == 100.0 and filled.updated_at is not None
+        assert storage.trades.list_orders(open_only=True) == []
+        assert [o.id for o in storage.trades.list_orders("i1")] == ["i1-01"]
+        with pytest.raises(ValueError):
+            storage.trades.update_order("i1-01", bogus=1)
+        with pytest.raises(StorageError):
+            storage.trades.update_order("nope", status="filled")
+        reconciled = storage.trades.update_intent("i1", state="reconciled")
+        assert reconciled.state == "reconciled"
+        assert [i.id for i in storage.trades.list_intents()][:1] == ["i3"]
+        when = datetime(2026, 9, 16, 20, 0, tzinfo=UTC)
+        fill = TradeFill("f1", "b1", "AAPL", "buy", 6.0, 100.0, when, "broker", "i1-01")
+        assert storage.trades.add_fills([fill]) == 1
+        assert storage.trades.add_fills([fill]) == 0  # already present: idempotent
+        listed = storage.trades.list_fills("AAPL")
+        assert len(listed) == 1 and listed[0].filled_at == when and listed[0].order_id == "i1-01"
+        assert storage.trades.list_fills("MSFT") == []
+
+    def test_cache_clear_preserves_trading_records(self, storage: Storage) -> None:
+        """Scenario: Durable history."""
+        storage.trades.save_intent(TradeIntent("i9", "close", "fake", "A1", "paper", "zzz", {}))
+        storage.observations.upsert_observations([_obs(2, 1.0)])
+        storage.observations.clear_observations()
+        assert storage.trades.get_intent("i9") is not None

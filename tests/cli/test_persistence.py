@@ -180,7 +180,7 @@ def test_db_info_export_and_repair(
         for r in json.loads(cli("db", "info", "--format", "json").stdout)["rows"]
     }
     assert (
-        info["backend"] == "sqlite" and info["schema_version"] == 2 and info["rows:portfolio"] == 1
+        info["backend"] == "sqlite" and info["schema_version"] == 3 and info["rows:portfolio"] == 1
     )
     assert info["location"].endswith("sobres.db") and info["size_bytes"] > 0
     dest = tmp_path / "backup" / "copy.sqlite"

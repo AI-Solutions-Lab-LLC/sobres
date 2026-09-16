@@ -295,6 +295,8 @@ def test_unsafe_settings_are_refused_over_http_but_not_from_the_cli(
         "config_file",
         "otel_exporter_otlp_endpoint",
         "otel_traces_exporter",
+        "alpaca_key_id",
+        "alpaca_secret_key",
     }
     assert all(listed[k]["browser_editable"] is False for k in locked)
     assert listed["fred_api_key"]["browser_editable"] is True

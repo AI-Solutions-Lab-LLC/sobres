@@ -670,6 +670,48 @@
         "title": "CheckParams",
         "type": "object"
       },
+      "CloseParams": {
+        "additionalProperties": false,
+        "properties": {
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Shares to sell (default: the whole position).",
+            "title": "Quantity"
+          },
+          "symbol": {
+            "description": "The position to close.",
+            "minLength": 1,
+            "positional": true,
+            "title": "Symbol",
+            "type": "string"
+          },
+          "yes": {
+            "default": false,
+            "description": "Skip the confirmation prompt (paper only).",
+            "title": "Yes",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "CloseParams",
+        "type": "object"
+      },
       "CommandsParams": {
         "additionalProperties": false,
         "properties": {},
@@ -1265,6 +1307,59 @@
           "ticker"
         ],
         "title": "EvaluateParams",
+        "type": "object"
+      },
+      "ExecuteParams": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "description": "Total value the portfolio should reach, in the account currency.",
+            "exclusiveMinimum": 0.0,
+            "title": "Budget",
+            "type": "number"
+          },
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          },
+          "plan": {
+            "description": "The plan hash printed by `trade preview`.",
+            "title": "Plan",
+            "type": "string"
+          },
+          "portfolio": {
+            "description": "Saved portfolio name (needs weights).",
+            "positional": true,
+            "title": "Portfolio",
+            "type": "string"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Use the weights of this saved optimization run instead.",
+            "title": "Run"
+          },
+          "yes": {
+            "default": false,
+            "description": "Skip the confirmation prompt (paper only).",
+            "title": "Yes",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "portfolio",
+          "budget",
+          "plan"
+        ],
+        "title": "ExecuteParams",
         "type": "object"
       },
       "FactorParams": {
@@ -2152,6 +2247,32 @@
         "title": "HedgeParams",
         "type": "object"
       },
+      "HistoryParams": {
+        "additionalProperties": false,
+        "properties": {
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only this symbol's fills.",
+            "title": "Symbol"
+          }
+        },
+        "title": "HistoryParams",
+        "type": "object"
+      },
       "HouseParams": {
         "additionalProperties": false,
         "properties": {
@@ -2656,6 +2777,31 @@
         "title": "OpenParams",
         "type": "object"
       },
+      "OrdersParams": {
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only this intent's orders.",
+            "title": "Intent"
+          },
+          "open": {
+            "default": false,
+            "description": "Only orders that are not terminal.",
+            "title": "Open",
+            "type": "boolean"
+          }
+        },
+        "title": "OrdersParams",
+        "type": "object"
+      },
       "PortfolioDeleteParams": {
         "additionalProperties": false,
         "properties": {
@@ -2739,6 +2885,60 @@
           "name"
         ],
         "title": "PortfolioShowParams",
+        "type": "object"
+      },
+      "PositionsParams": {
+        "additionalProperties": false,
+        "properties": {
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          }
+        },
+        "title": "PositionsParams",
+        "type": "object"
+      },
+      "PreviewParams": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "description": "Total value the portfolio should reach, in the account currency.",
+            "exclusiveMinimum": 0.0,
+            "title": "Budget",
+            "type": "number"
+          },
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          },
+          "portfolio": {
+            "description": "Saved portfolio name (needs weights).",
+            "positional": true,
+            "title": "Portfolio",
+            "type": "string"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Use the weights of this saved optimization run instead.",
+            "title": "Run"
+          }
+        },
+        "required": [
+          "portfolio",
+          "budget"
+        ],
+        "title": "PreviewParams",
         "type": "object"
       },
       "PricesParams": {
@@ -3431,6 +3631,19 @@
           "value"
         ],
         "title": "SettingBody",
+        "type": "object"
+      },
+      "StatusParams": {
+        "additionalProperties": false,
+        "properties": {
+          "live": {
+            "default": false,
+            "description": "Address the live account (gated).",
+            "title": "Live",
+            "type": "boolean"
+          }
+        },
+        "title": "StatusParams",
         "type": "object"
       },
       "StockParams": {
@@ -6396,6 +6609,286 @@
         "summary": "Settings Verify",
         "tags": [
           "settings"
+        ]
+      }
+    },
+    "/api/v1/trade/close": {
+      "post": {
+        "description": "Preview, confirm and submit a sell that closes part or all of a position.",
+        "operationId": "trade_close_api_v1_trade_close_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview, confirm and submit a sell that closes part or all of a position.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/execute": {
+      "post": {
+        "description": "Submit the previewed plan: the intent is recorded first, then each order independently.",
+        "operationId": "trade_execute_api_v1_trade_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecuteParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit the previewed plan: the intent is recorded first, then each order independently.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/history": {
+      "post": {
+        "description": "Fills, realized and unrealized P&L (average cost) and cash flows kept apart.",
+        "operationId": "trade_history_api_v1_trade_history_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistoryParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fills, realized and unrealized P&L (average cost) and cash flows kept apart.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/orders": {
+      "post": {
+        "description": "Recorded orders with the broker state last observed.",
+        "operationId": "trade_orders_api_v1_trade_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrdersParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recorded orders with the broker state last observed.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/positions": {
+      "post": {
+        "description": "Open positions as the broker reports them; reads never place orders.",
+        "operationId": "trade_positions_api_v1_trade_positions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PositionsParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open positions as the broker reports them; reads never place orders.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/preview": {
+      "post": {
+        "description": "Size whole-share orders that move the account toward a saved portfolio. No side effects.",
+        "operationId": "trade_preview_api_v1_trade_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Size whole-share orders that move the account toward a saved portfolio. No side effects.",
+        "tags": [
+          "trade"
+        ]
+      }
+    },
+    "/api/v1/trade/status": {
+      "post": {
+        "description": "Ask the broker about every open or unresolved order and record what it says.",
+        "operationId": "trade_status_api_v1_trade_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask the broker about every open or unresolved order and record what it says.",
+        "tags": [
+          "trade"
         ]
       }
     },

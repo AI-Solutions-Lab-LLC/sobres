@@ -119,6 +119,7 @@ destination and the config-file path are CLI-only.
 | `sobres portfolio save core --tickers ...` | Save a named portfolio |
 | `sobres run list` / `sobres run show <id>` | Browse saved analysis runs |
 | `sobres db info` / `sobres db export --to ...` | Inspect and back up the database |
+| `sobres trade preview core --budget 1000` / `trade execute … --plan <hash>` | Whole-share orders from a saved portfolio through the broker port; paper first |
 | `sobres serve --host 0.0.0.0` | Run the web UI and API |
 | `sobres open [doctor\|settings\|run 42\|...]` | Start the server if needed and open the browser to a view |
 | `sobres deploy compose` / `sobres deploy check` | Generate and verify a deployment |
@@ -131,6 +132,7 @@ destination and the config-file path are CLI-only.
 | **ECB reference rates** | no | Daily exchange rates | 0001 |
 | **FRED** | free API key (`FRED_API_KEY`) | Risk-free rate, CPI, macro series | 0001 |
 | **Ken French Data Library** | no | Fama-French 3/5-factor + momentum returns | 0001 |
+| **Alpaca** | paper or live API keys (`SOBRES_ALPACA_*`) | Account, quotes, orders, positions, fills | 0016 |
 | **World Bank ICP / OECD** | no | PPP conversion factors, comparative price levels | 0010 |
 | **BIS** | no | Published real effective exchange rates | 0010 |
 
@@ -260,6 +262,7 @@ Each is one OpenSpec change under `openspec/changes/`.
 | 0013 | `template-development-alignment` | **Superseded 2026-09-16** — the boundaries it proposed already exist and are tested |
 | 0014 | `onboarding-defaults` | `init` asks one question, `--start` defaults to five years, usage errors show an example |
 | 0015 | `risk-free-proxy` | Risk-free rate sourced from FRED or Ken French; never an assumed zero |
+| 0016 | `broker-execution` | Saved portfolio → orders through a Sobres-owned broker port; Alpaca adapter, fake broker, average-cost P&L; paper first, live gated |
 
 0001 → 0002 is the v1.0.0 release. 0003 → 0006 turn it into a deployable product
 with a UI. 0007–0009 then add analytics to a UI that already exists, rather than

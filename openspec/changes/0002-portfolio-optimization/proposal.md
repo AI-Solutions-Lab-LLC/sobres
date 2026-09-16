@@ -58,7 +58,9 @@ the honesty mechanism, so it is part of v1's definition of done.
   own change; the plumbing (a pluggable expected-return estimator) is designed in.
 - **No factor-model inputs to the optimizer.** That is 0007 → a later change.
 - **No taxes, lot tracking, or wash sales.** Out of scope for the whole tool.
-- **No live trading, broker connections, or order generation.** Ever.
+- **No live trading, broker connections, or order generation in this change.**
+  The optimizer produces weights; turning them into orders is change 0016
+  (`trade preview|execute`), behind its own port and enablement gates.
 - **No intraday data.** Daily bars throughout.
 - **No currency analytics.** Multi-currency sets are converted to a stated base
   before estimation, per 0001; decomposing return into asset and currency

@@ -357,6 +357,13 @@ SAMPLE_ARGS: dict[str, list[str]] = {
     "run.show": ["run", "show", "{run}"],
     "serve": ["serve", "--port", "8798"],
     "serve.token.rotate": ["serve", "token", "rotate"],
+    "trade.close": ["trade", "close", "AAPL", "--quantity", "1", "--yes"],
+    "trade.execute": ["trade", "execute", "core", "--budget", "1000", "--plan", "{plan}", "--yes"],
+    "trade.history": ["trade", "history"],
+    "trade.orders": ["trade", "orders"],
+    "trade.positions": ["trade", "positions"],
+    "trade.preview": ["trade", "preview", "core", "--budget", "1000"],
+    "trade.status": ["trade", "status"],
     "upgrade": ["upgrade", "--check"],
     "watchlist.add": ["watchlist", "add", "tech", "NVDA", "AMD"],
     "watchlist.delete": ["watchlist", "delete", "tech", "--yes"],
@@ -376,7 +383,54 @@ PREPARE: dict[str, list[list[str]]] = {
     "run.show": [["portfolio", "save", "core", "--tickers", "AAPL", "MSFT", "--force"]],
     "run.diff": [["portfolio", "save", "core", "--tickers", "AAPL", "MSFT", "--force"]],
     "run.delete": [["portfolio", "save", "core", "--tickers", "AAPL", "MSFT", "--force"]],
+    "trade.preview": [
+        [
+            "portfolio",
+            "save",
+            "core",
+            "--tickers",
+            "AAPL",
+            "MSFT",
+            "--weights",
+            "0.6",
+            "0.4",
+            "--force",
+        ]
+    ],
+    # Flatten first so every run submits the same 6/8 plan (the first closes just fail).
+    "trade.execute": [
+        [
+            "portfolio",
+            "save",
+            "core",
+            "--tickers",
+            "AAPL",
+            "MSFT",
+            "--weights",
+            "0.6",
+            "0.4",
+            "--force",
+        ],
+        ["trade", "close", "AAPL", "--yes"],
+        ["trade", "close", "MSFT", "--yes"],
+    ],
+    "trade.close": [
+        [
+            "portfolio",
+            "save",
+            "core",
+            "--tickers",
+            "AAPL",
+            "MSFT",
+            "--weights",
+            "0.6",
+            "0.4",
+            "--force",
+        ],
+        ["trade", "execute", "core", "--budget", "1000", "--plan", "{plan}", "--yes"],
+    ],
 }
+PLAN_SAMPLE = ["trade", "preview", "core", "--budget", "1000", "--format", "json"]
 RUN_SAMPLE = [
     "optimize",
     "risk",
@@ -403,11 +457,20 @@ def test_every_command_has_a_sample() -> None:
     assert {c.name for c in all_commands()} == set(SAMPLE_ARGS)
 
 
+def _with_plan(args: list[str], cli: Callable[..., Any]) -> list[str]:
+    """``{plan}`` is the hash of a fresh preview: it changes whenever the account does."""
+    if not any("{plan}" in a for a in args):
+        return list(args)
+    out = cli(*PLAN_SAMPLE, env_extra=ENV)
+    plan = json.loads(out.stdout)["plan_hash"]
+    return [a.replace("{plan}", plan) for a in args]
+
+
 def _prepare(name: str, cli: Callable[..., Any], tmp_path: Any) -> list[str]:
     """Run the state-setting commands a sample needs; return the sample with ids filled in."""
-    for args in PREPARE.get(name, []):
-        cli(*args, env_extra=ENV)
-    args = list(SAMPLE_ARGS[name])
+    for prep in PREPARE.get(name, []):
+        cli(*_with_plan(prep, cli), env_extra=ENV)
+    args = _with_plan(list(SAMPLE_ARGS[name]), cli)
     if any("{run}" in a for a in args):
         out = cli(*RUN_SAMPLE, env_extra=ENV)
         run_id = out.stderr.split("saved run ")[1].split(" ")[0]
@@ -451,6 +514,14 @@ def _no_pypi(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 VOLATILE_KEYS = {
+    "intent_id",
+    "plan_hash",
+    "order_id",
+    "broker_order_id",
+    "quotes_as_of",
+    "next_step",
+    "filled_at",
+    "submitted_at",
     "fetched_at",
     "updated_at",
     "created_at",
@@ -463,6 +534,12 @@ VOLATILE_KEYS = {
     "run",
 }
 STATEFUL = {
+    "trade.close",
+    "trade.execute",
+    "trade.status",
+    "trade.history",
+    "trade.orders",
+    "trade.positions",
     "cache.clear",
     "db.export",
     "db.repair",

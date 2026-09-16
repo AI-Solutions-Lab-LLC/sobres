@@ -5,7 +5,8 @@
 # the tests marked `network` on a schedule and on demand so fixture drift is
 # noticed, and it never gates a pull request.
 #
-# Keys come from organization secrets by name. `FRED_API_KEY` is optional: the
+# Keys come from organization secrets by name. `FRED_API_KEY` and the Alpaca *paper*
+# pair `ALPACA_PAPER_KEY_ID` / `ALPACA_PAPER_SECRET_KEY` are optional: the
 # FRED test skips itself when the secret is absent, and the three keyless
 # providers (yfinance, ECB, Ken French) run either way. The application reads
 # `FRED_API_KEY` directly (it is a declared alias of SOBRES_FRED_API_KEY).
@@ -39,12 +40,20 @@ jobs:
       - name: Report which keys are present (names only, never values)
         env:
           HAS_FRED: ${{ secrets.FRED_API_KEY != '' }}
+          HAS_ALPACA: ${{ secrets.ALPACA_PAPER_KEY_ID != '' && secrets.ALPACA_PAPER_SECRET_KEY != '' }}
         run: |
           echo "FRED_API_KEY present: $HAS_FRED"
           if [ "$HAS_FRED" != "true" ]; then
             echo "::notice::FRED_API_KEY is not set as an organization or repository secret; the FRED live test will skip."
           fi
+          echo "ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY present: $HAS_ALPACA"
+          if [ "$HAS_ALPACA" != "true" ]; then
+            echo "::notice::ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY are not set as organization or repository secrets; the Alpaca paper live test will skip. Paper keys only: this workflow never addresses a live account."
+          fi
       - name: Live provider tests
         env:
           SOBRES_FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          SOBRES_ALPACA_KEY_ID: ${{ secrets.ALPACA_PAPER_KEY_ID }}
+          SOBRES_ALPACA_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+          SOBRES_ALPACA_ENVIRONMENT: paper
         run: python -m pytest -m network -v -p no:cacheprovider

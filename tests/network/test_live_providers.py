@@ -56,3 +56,23 @@ def test_fred_live_matches_fixture_shape() -> None:
         "observations"
     ][0]
     assert set(recorded) <= set(rows[0]), RE_RECORD.format(name="fred")
+
+
+def test_alpaca_paper_live_matches_fixture_shape() -> None:
+    """The paper account answers in the shapes the synthetic fixture models; reads only."""
+    import os
+
+    from sobres.data.brokers.alpaca import AlpacaBroker, LiveAlpacaSource
+
+    key_id = os.environ.get("SOBRES_ALPACA_KEY_ID")
+    secret = os.environ.get("SOBRES_ALPACA_SECRET_KEY")
+    if not key_id or not secret:
+        pytest.skip("SOBRES_ALPACA_KEY_ID / SOBRES_ALPACA_SECRET_KEY not set")
+    broker = AlpacaBroker(LiveAlpacaSource(key_id, secret), "paper")
+    account = broker.account()
+    assert account.environment == "paper" and account.currency == "USD", RE_RECORD.format(
+        name="alpaca"
+    )
+    quote = broker.quotes(["AAPL"])["AAPL"]
+    assert quote.price > 0 and quote.as_of.tzinfo is not None
+    assert isinstance(broker.positions(), list) and isinstance(broker.fills(), list)
