@@ -20,7 +20,6 @@ from typing import Any
 import httpx
 from pydantic import Field
 
-from sobres.api import auth
 from sobres.cli.context import Context
 from sobres.core.errors import ConfigurationError, UsageError
 from sobres.registry import Params, positional, register
@@ -98,7 +97,10 @@ class ServeParams(Params):
 
 
 def run_server(host: str, port: int, ctx: Context, *, ready: threading.Event | None = None) -> None:
-    from sobres.api import create_app
+    # Deferred: `sobres.api` pulls in FastAPI, a `[web]` extra. Importing it at
+    # module scope breaks every command on a base install, because this module is
+    # imported eagerly during command registration.
+    from sobres.api import auth, create_app
 
     if ctx.surface == "api":
         raise UsageError("the server cannot start itself over HTTP")
@@ -183,6 +185,8 @@ class TokenRotateParams(Params):
 def token_rotate(p: TokenRotateParams, ctx: Context) -> MessageResult:
     if ctx.surface == "api":
         raise UsageError("rotate the token from the CLI: sobres serve token rotate")
+    from sobres.api import auth  # deferred: FastAPI is a `[web]` extra
+
     token = auth.rotate_token(ctx.storage.kv, p.token)
     ctx.note("new deployment token (shown once, stored hashed):")
     ctx.note(f"  {token}")

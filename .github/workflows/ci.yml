@@ -169,6 +169,32 @@ jobs:
       - name: twine check
         run: twine check --strict dist/*
 
+      - name: Install the base wheel, no extras, in a clean environment
+        # `pip install sobres` with no extras is what most users get, and until
+        # now nothing tested it: every other job installs `.[dev]` and the job
+        # below installs `[web]`. Registering commands imports every module under
+        # cli/commands/, so a single module-scope import of an optional
+        # dependency breaks the whole CLI, `--version` included. That shipped.
+        env:
+          SOBRES_CONFIG_FILE: /tmp/base-home/config.toml
+          SOBRES_DB_URL: sqlite:////tmp/base-home/sobres.db
+          SOBRES_FIXTURE_DIR: ${{ github.workspace }}/tests/fixtures
+        run: |
+          python -m venv /tmp/smoke-base
+          /tmp/smoke-base/bin/pip install --upgrade pip
+          /tmp/smoke-base/bin/pip install "$(ls dist/*.whl)"
+          # The check is only meaningful if the extra is genuinely absent.
+          if /tmp/smoke-base/bin/python -c "import fastapi" 2>/dev/null; then
+            echo "::error::fastapi is installed in the base environment; this job proves nothing"
+            exit 1
+          fi
+          /tmp/smoke-base/bin/sobres --version
+          /tmp/smoke-base/bin/sobres --help > /dev/null
+          /tmp/smoke-base/bin/sobres init --non-interactive --offline
+          /tmp/smoke-base/bin/sobres doctor --offline
+          /tmp/smoke-base/bin/sobres data prices AAPL MSFT --start 2020-01-01 --end 2020-03-31 \
+            --format csv | head -3
+
       - name: Install the built wheel in a clean environment
         # Proves the artifact users actually download works -- catches missing
         # package data, a broken entry point, or an import that only resolves
