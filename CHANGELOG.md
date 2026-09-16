@@ -12,6 +12,14 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 ## [Unreleased]
 
 ### Fixed
+- **A base `pip install sobres` works again.** `cli/commands/serve.py` imported
+  `sobres.api` at module scope, and `sobres.api` imports FastAPI from the `[web]`
+  extra. Because command registration imports every module under `cli/commands/`,
+  a base install failed on *every* command with `ModuleNotFoundError: fastapi` --
+  `--version` and `--help` included. The import is now deferred into the two
+  functions that use it. CI gained a base-install smoke job (no extras) that runs
+  the keyless `init`/`doctor`/`data` path, and an architecture test forbids any
+  command module from importing an optional dependency at module scope.
 - **The source distribution no longer ships `legacy_code/`.** Hatchling's default
   sdist included every non-ignored path, so the pre-sobres R/Python prototype and
   its three `.rattle` datasets made up 15.5 MB of a 16.9 MB sdist. Excluding it
