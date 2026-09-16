@@ -116,8 +116,8 @@
           </li>
           <li class="cap">
             <h3>Econometrics</h3>
-            <p>Stationarity diagnostics with disagreement stated, GARCH volatility with simulated bands, robust regression with VIF, and forecasts that always carry 80% and 95% prediction intervals.</p>
-            <pre><code>sobres econ volatility SPY --model garch --horizon 30</code></pre>
+            <p>A joint VAR/BVAR price forecast scored against no-change on held-out dates and always carrying 80% and 95% bounds; stationarity diagnostics with disagreement stated; GARCH volatility with simulated bands; robust regression with VIF.</p>
+            <pre><code>sobres econ forecast ticker:AAPL --horizon 20</code></pre>
           </li>
           <li class="cap">
             <h3>Exchange rates and PPP</h3>
@@ -171,7 +171,7 @@
         <h2 id="roadmap-title">Roadmap — not yet available</h2>
         <p class="muted">Specified in the repository, not shipped in the version above:</p>
         <ul>
-          <li>Multivariable price forecasting: a regularized joint VAR and a Bayesian VAR with held-out baseline comparisons (OpenSpec 0009, issue #31).</li>
+          <li>Direct machine-learning forecasters (elastic-net, boosted trees) and the FRED macro preset for the price forecast (OpenSpec 0009 follow-up).</li>
           <li>Broker execution: preview and place orders from a saved portfolio through a broker adapter, paper trading first (issue #22).</li>
         </ul>
       </section>

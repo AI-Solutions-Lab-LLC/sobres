@@ -266,12 +266,25 @@ class YFinanceProvider:
             if not pd.isna(last_quote) and end - last_quote.date() > timedelta(days=14):
                 info["delisted"] = True
                 info["reason"] = str(raw.meta.get("reason") or "no quotes after last_quote")
+            if raw.meta.get("synthetic"):
+                info["synthetic"] = True
+                info["flags"] = [
+                    {
+                        "symbol": symbol,
+                        "date": "",
+                        "kind": "synthetic",
+                        "detail": "synthetic fixture series, not a recording",
+                    }
+                ]
             if {"Adj Close", "Close"} <= set(raw.frame.columns):
                 adj = raw.frame["Adj Close"].astype("float64")
                 cls = raw.frame["Close"].astype("float64")
                 adj.index = values.index[: len(adj)] if len(adj) == len(values) else adj.index
                 cls.index = adj.index
-                info["flags"] = check_adjustment_consistency(adj, cls, symbol)
+                info["flags"] = [
+                    *info.get("flags", []),
+                    *check_adjustment_consistency(adj, cls, symbol),
+                ]
             series_meta[symbol] = info
         frame = canonical_frame(pd.DataFrame(columns), symbols)
         frame.attrs["provider"] = self.name

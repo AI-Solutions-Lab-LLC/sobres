@@ -1,5 +1,9 @@
 # Research basis and predictor decisions
 
+> Catalog rows marked as the basic preset or the sector option are shipped
+> (`equity-basic/v1`); momentum, illiquidity/beta, macro, credit, valuation and
+> factor-state rows are deferred with the direct models (see tasks.md).
+
 Checked 2026-09-13. This is a focused primary-source review, not an exhaustive
 ranking or a replication. Recent preprints below are distinguished from established
 journal results. No Sobres forecasting experiment was run for this planning change.

@@ -1,0 +1,14 @@
+{
+  "recorded_at": null,
+  "synthesized_at": "2026-09-16T03:45:23.547916+00:00",
+  "provider": "yfinance",
+  "note": "SPY is an equal-weight daily-rebalanced basket of the recorded USD tickers AAPL, MSFT, NVDA, JNJ, XOM, GLD, normalized to 200; volume is their summed share volume. A market proxy for offline tests, not a recording of SPY.",
+  "tickers": {
+    "SPY": {
+      "currency": "USD",
+      "exchangeName": "synthetic",
+      "symbol": "SPY",
+      "synthetic": true
+    }
+  }
+}

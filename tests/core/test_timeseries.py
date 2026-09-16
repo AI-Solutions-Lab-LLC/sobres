@@ -1,8 +1,7 @@
-"""Stationarity, ARIMA and GARCH against constructed series with known properties.
+"""Stationarity diagnostics and GARCH against constructed series with known properties.
 
-Scenarios: Tests reported; ACF and PACF; Stationarity is enforced before
-fitting; Order selection is transparent; Intervals are mandatory; Residual
-diagnostics; GARCH fit; Annualized output; Feeds the optimizer; Missing extra.
+Scenarios: Tests reported; ACF and PACF; GARCH fit; Annualized output; Feeds
+the optimizer; Missing extra.
 """
 
 from __future__ import annotations
@@ -16,12 +15,8 @@ from sobres.core.errors import ConfigurationError, InsufficientDataError, UsageE
 from sobres.core.moments import covariance, is_psd
 from sobres.core.timeseries import (
     ECON_HINT,
-    MAX_D,
-    arima_forecast,
     diagnose,
-    difference_to_stationary,
     garch_covariance,
-    select_order,
     volatility_forecast,
 )
 
@@ -71,68 +66,6 @@ def test_acf_and_pacf_through_lag_20_with_bounds() -> None:
     assert d.bound == pytest.approx(1.96 / np.sqrt(240))
     assert 0.5 < d.acf[0] < 0.95  # AR(1): ρ₁ ≈ φ = 0.8, biased down in a 240-point sample
     assert abs(d.pacf[0]) > d.bound and abs(d.pacf[5]) < d.bound  # PACF cuts off after lag 1
-
-
-def test_stationarity_is_enforced_before_fitting() -> None:
-    _, d0 = difference_to_stationary(white_noise())
-    assert d0 == 0
-    _, d1 = difference_to_stationary(random_walk())
-    assert d1 == 1
-    double = random_walk().cumsum()
-    _, d2 = difference_to_stationary(double)
-    assert d2 == 2 and MAX_D == 2
-    explosive = pd.Series(
-        1.03 ** np.arange(240), index=INDEX
-    )  # stays explosive however often differenced
-    with pytest.raises(InsufficientDataError, match="not stationary after differencing 2"):
-        arima_forecast(explosive, 3)
-    fit = arima_forecast(random_walk(), 3)
-    assert fit.d_reported == 1 and fit.order[1] == 1
-
-
-def test_order_selection_is_transparent() -> None:
-    series = ar1(0.7)
-    candidates = select_order(series, 0, max_p=2, max_q=1)
-    assert candidates[0].aic <= candidates[1].aic <= candidates[2].aic
-    fit = arima_forecast(series, 6, criterion="aic", max_p=2, max_q=1)
-    assert fit.order == candidates[0].order and fit.criterion == "aic"
-    assert [c.order for c in fit.candidates] == [c.order for c in candidates[:3]]
-    assert fit.candidates[0].aic == pytest.approx(fit.aic)
-    bic = arima_forecast(series, 6, criterion="bic", max_p=2, max_q=1)
-    assert bic.candidates[0].bic <= bic.candidates[1].bic
-    fixed = arima_forecast(series, 6, order=(1, 0, 0))
-    assert fixed.order == (1, 0, 0) and len(fixed.candidates) == 1
-
-
-def test_intervals_are_mandatory_nested_and_widening() -> None:
-    fit = arima_forecast(ar1(0.5), 12, order=(1, 0, 0))
-    frame = fit.frame()
-    assert list(frame.columns) == ["forecast", "lower80", "upper80", "lower95", "upper95"]
-    assert len(frame) == 12
-    assert (frame["lower95"] <= frame["lower80"]).all() and (
-        frame["lower80"] <= frame["forecast"]
-    ).all()
-    assert (frame["forecast"] <= frame["upper80"]).all() and (
-        frame["upper80"] <= frame["upper95"]
-    ).all()
-    width = frame["upper95"] - frame["lower95"]
-    assert width.iloc[-1] > width.iloc[0]  # uncertainty grows with the horizon
-    assert isinstance(frame.index, pd.DatetimeIndex) and frame.index[0] > INDEX[-1]
-    with pytest.raises(UsageError):
-        arima_forecast(ar1(0.5), 0)
-
-
-def test_residual_diagnostics_flag_an_inadequate_model() -> None:
-    good = arima_forecast(ar1(0.8), 3, order=(1, 0, 0))
-    assert (
-        good.residuals_adequate
-        and "no evidence of remaining autocorrelation" in good.ljung_box_statement
-    )
-    bad = arima_forecast(
-        ar1(0.8), 3, order=(0, 0, 0)
-    )  # a mean for an AR(1): residuals autocorrelated
-    assert not bad.residuals_adequate and "inadequate" in bad.ljung_box_statement
-    assert bad.ljung_box_pvalue < 0.05 < good.ljung_box_pvalue
 
 
 def _garch_returns(n: int = 1500, seed: int = 2) -> pd.Series:

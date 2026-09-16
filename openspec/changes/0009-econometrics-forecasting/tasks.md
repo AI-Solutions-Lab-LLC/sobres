@@ -1,144 +1,90 @@
-# 0009 — Revised implementation tasks
+# 0009 — Implementation tasks
 
-2026-09-13 owner amendment: multivariable price forecasting replaces ARIMA;
-GARCH and robust diagnostics remain. Source candidate: PR #15 at `6a1f12d`.
-**All boxes are unchecked.** Existing tests establish older candidate behavior,
-not the scenarios newly specified here. This commit is planning only.
+Shipped scope (2026-09-16): joint ridge VAR and Minnesota-prior BVAR over the
+keyless `equity-basic` state, optional sector series, chronological selection and
+held-out evaluation with controls, mandatory intervals, `econ evaluate`, ARIMA
+removal. The R/D/M/E/U/S/V plan of the 2026-09-13 amendment is reduced to what is
+checked below; every unchecked item is deferred and tracked as a follow-up issue.
 
-Each item is one coherent commit of at most about two hours. Split an item further
-before coding if necessary; group 1–3 related items per implementation PR. Named
-proofs below are required future tests, not claims that those files already exist.
+Each task names the test that proves it.
 
 ## R — Accepted scope and aligned base
 
-- [ ] **R0 (1h)** Record issue #31, this amendment's merged planning SHA, implemented
-  0013/predecessors, current candidate and scenario ledger. Proof: ancestry/diff report.
-- [ ] **R1 (2h)** Map forecasting types/services/engines to the 0013 package map;
-  specify owned ForecastEngine inputs/results. Proof: `tests/architecture/test_layering.py`
-  and `tests/contracts/test_forecast_engines.py` scaffolding contract review.
-- [ ] **R2 (1h)** Record whether ARIMA ever shipped and choose its removal/version
-  route. Proof: release/tag audit and `tests/cli/test_econ_migration.py` cases agreed.
+- [x] **R0** Recorded: issue #31; ARIMA never shipped to an index (1.1.0 unpublished), so its
+      removal needs no deprecation cycle. → `tests/cli/test_econ.py::test_removed_arima_model_exits_2_with_the_new_example`
+- [x] **R1** Forecast math in `core/forecast.py`, orchestration in `cli/commands/econ.py`,
+      data through the price provider. → `tests/architecture/test_layering.py`
 
 ## D — Predictor and target data contracts
 
-- [ ] **D1 (2h)** Implement split-only target/price-draw transformations and explicit
-  dividend/total-return separation. Proof: `tests/core/test_forecast_target.py`
-  independently computed splits/dividends, Jensen effect and sub-unit examples.
-- [ ] **D2 (2h)** Extend market-provider ingestion/metadata where needed for raw
-  close/volume/actions; preserve existing recordings. Proof:
-  `tests/contracts/test_forecast_market_data.py` matching units and unavailable fields.
-- [ ] **D3 (2h)** Implement the four basic features with versioned formulas/windows.
-  Proof: `tests/core/test_forecast_features.py` hand-computed activity/volatility;
-  no bridged gaps, zero volume or duplicate/constant columns.
-- [ ] **D4 (2h)** Add momentum, sector and optional beta/illiquidity transforms.
-  Proof: `tests/core/test_forecast_features.py` exact lag/window boundaries and
-  `tests/application/test_econ_sources.py` explicit sector selection.
-- [ ] **D5 (2h)** Specify and implement availability/vintage joins through owned
-  provider ports. Proof: `tests/contracts/test_forecast_vintages.py` delayed release,
-  revision and distinct vintage cache identity; no current-fundamental backfill.
-- [ ] **D6 (2h)** Implement the macro preset, transforms and staleness/credential
-  errors using the vintage contract. Proof: `tests/application/test_forecast_presets.py`
-  DGS3MO/T10Y3M units, VIX, no-key failure and no preset substitution.
-- [ ] **D7 (2h)** Register extended entries only where provider history/rights and
-  availability are supported; expose capability errors otherwise. Proof:
-  `tests/contracts/test_forecast_catalog.py` metadata, rights decision, source fixtures
-  and unavailable fundamentals/factors; no synthetic payload passed off as recorded.
+- [x] **D1** Split-only close as the price basis, distinct from adjusted close; nonpositive
+      prices refused. → `tests/core/test_forecast.py::test_invalid_systems_are_refused_not_repaired`,
+      `tests/cli/test_econ.py::test_default_stock_forecast_is_a_joint_model_with_held_out_evidence`
+- [x] **D2** Raw close and raw volume from the provider (`field="close"`, `field="volume"`).
+      → `tests/cli/test_econ.py::test_default_stock_forecast_is_a_joint_model_with_held_out_evidence`
+- [x] **D3** The four basic features with versioned formulas and windows; zero volume rejected.
+      → `tests/core/test_forecast.py::test_basic_state_formulas_by_hand`
+- [x] **D4** Explicit `--sector ticker:<symbol>`; duplicates refused. → `tests/cli/test_econ.py::test_sector_joins_the_state_and_invalid_systems_are_refused`
+- [ ] **D5 (deferred)** Availability/vintage joins for macro series.
+- [ ] **D6 (deferred)** The `equity-macro` preset (DGS3MO, T10Y3M, VIXCLS) with vintage cache identity.
+- [ ] **D7 (deferred)** Extended catalog entries (fundamentals, factor states, credit spread).
 
 ## M — Bounded multivariable models
 
-- [ ] **M1 (2h)** Write normalized VAR/ridge formulas and implement a joint fit with
-  cross-lag coefficients. Proof: `tests/core/test_var.py` known two-variable process,
-  lambda-zero equivalence and independent ridge matrix answer.
-- [ ] **M2 (2h)** Add lag/conditioning/sample guards, full residual covariance,
-  companion stability and recursive means. Proof: `tests/core/test_var.py`
-  unstable, collinear, too-short and cross-covariance cases.
-- [ ] **M3 (2h)** Verify the design's BVAR prior/posterior formula note: all hyperparameters,
-  scale/lag normalization, degrees of freedom and intercept treatment. Proof:
-  independent small normal–inverse-Wishart oracle reviewed before posterior coding.
-- [ ] **M4 (2h)** Implement BVAR fit and posterior draws against M3. Proof:
-  `tests/core/test_bvar.py` posterior oracle, zero-centered return prior and seeds.
-- [ ] **M5 (2h)** Implement direct cumulative-horizon labels and elastic-net adapter.
-  Proof: `tests/contracts/test_forecast_engines.py` horizon/lag semantics and
-  `tests/core/test_direct_forecasts.py` known multivariable linear case.
-- [ ] **M6 (2h)** Implement bounded boosted-tree adapter without random validation
-  or implicit random early stopping. Proof: `tests/contracts/test_forecast_engines.py`
-  fixed seed, multifeature dependence and frozen-origin future perturbations.
-- [ ] **M7 (2h)** Add shared system/ADF/KPSS/residual diagnostics and candidate
-  rejection records. Proof: `tests/core/test_forecast_diagnostics.py`, retaining
-  `tests/core/test_timeseries.py` diagnostic and GARCH regression cases.
+- [x] **M1** Ridge VAR closed form; λ = 0 equals least squares; cross-lag recovery on a known
+      process. → `tests/core/test_forecast.py::test_cross_variable_dynamics_are_recovered_and_matter`,
+      `::test_ridge_zero_is_least_squares_and_shrinkage_is_visible`
+- [x] **M2** Lag/sample guards, full residual covariance, companion stability, recursive means.
+      → `tests/core/test_forecast.py::test_companion_radius_matches_closed_form_roots`,
+      `::test_forecast_from_reports_the_selection_and_refuses_an_unstable_system`
+- [x] **M3/M4** BVAR conjugate posterior checked against the written-out NIW update and its
+      prior limits. → `tests/core/test_forecast.py::test_bvar_posterior_matches_the_conjugate_formulas_and_prior_limits`
+- [ ] **M5 (deferred)** Direct cumulative-horizon labels and an elastic-net engine.
+- [ ] **M6 (deferred)** Bounded boosted-tree engine (needs scikit-learn in the econ extra).
+- [x] **M7** ADF/KPSS per series, conditioning, spectral radius and residual Ljung-Box in the
+      result. → `tests/cli/test_econ.py::test_default_stock_forecast_is_a_joint_model_with_held_out_evidence`
 
 ## E — Leakage-resistant evaluation
 
-- [ ] **E1 (2h)** Implement chronological inner/outer splits, horizon purging and
-  sample/history guards. Proof: `tests/core/test_forecast_splits.py` exact boundaries,
-  incomplete labels and at least 12 nonoverlapping default outer outcomes.
-- [ ] **E2 (2h)** Implement fold-local preprocessing and bounded tuning for VAR/BVAR.
-  Proof: `tests/application/test_forecast_selection.py` future perturbation leaves
-  earlier scaling/prior/candidates/selection unchanged.
-- [ ] **E3 (2h)** Wire direct-model tuning to identical folds with fold-local feature
-  construction. Proof: same selection suite; no global scaling/ranking/PCA or
-  future label enters training.
-- [ ] **E4 (2h)** Implement no-change and training-mean baselines plus common-date
-  price/return/direction/R² metrics. Proof: `tests/core/test_forecast_evaluation.py`
-  hand calculations, negative skill and undefined-denominator cases.
-- [ ] **E5 (2h)** Implement interval coverage/width and optional costed diagnostics
-  through 0002. Proof: same evaluation suite plus
-  `tests/application/test_forecast_strategy.py` next-session execution, fixed signal
-  rule, turnover/costs and no mutation of optimizer/goal/trading state.
+- [x] **E1** Three chronological inner blocks with horizon purging; outer origins spaced by
+      the horizon; at least 12 outcomes. → `tests/core/test_forecast.py::test_evaluation_is_fold_local_and_reports_counts`
+- [x] **E2** Fold-local scaling/priors/selection; later data leaves earlier folds unchanged.
+      → `tests/core/test_forecast.py::test_evaluation_is_fold_local_and_reports_counts`
+- [ ] **E3 (deferred)** Direct-model tuning on the same folds.
+- [x] **E4** No-change and training-mean controls; hand-computed metrics with undefined cases.
+      → `tests/core/test_forecast.py::test_metrics_by_hand_including_undefined_cases`
+- [x] **E5** Interval coverage and width per model. → `tests/cli/test_econ.py::test_evaluate_scores_models_and_controls_on_identical_dates`
+- [ ] **E5b (deferred)** Optional costed strategy diagnostic through 0002.
 
 ## U — Honest uncertainty
 
-- [ ] **U1 (2h)** Implement joint block residual bootstrap and VAR parameter refits.
-  Proof: `tests/core/test_forecast_intervals.py` correlated innovations, parameter
-  uncertainty, deterministic seeds and failed-draw guard.
-- [ ] **U2 (2h)** Implement BVAR posterior-predictive paths and price conversion.
-  Proof: interval suite and BVAR oracle; include observation noise, not only
-  coefficient uncertainty, and report stability rejection counts.
-- [ ] **U3 (2h)** Implement direct horizon-specific validation-residual intervals
-  and calibration sample guard. Proof: interval suite with known quantiles,
-  overlapping labels and no outer-test calibration.
+- [x] **U1** Joint residual moving-block bootstrap with batched parameter refits; seeded;
+      usable-draw guard. → `tests/core/test_forecast.py::test_draws_are_seeded_and_reproducible_and_the_guard_counts_rejections`
+- [x] **U2** BVAR posterior-predictive paths with joint innovations and stability rejection.
+      → same test
+- [ ] **U3 (deferred)** Direct-model validation-residual intervals.
 
 ## S — Application and public surfaces
 
-- [ ] **S1 (2h)** Implement explicit source/catalog resolution and preset orchestration
-  in application. Proof: `tests/application/test_econ_sources.py` ambiguity-before-I/O,
-  required variable errors and `tests/application/test_forecast_presets.py` defaults.
-- [ ] **S2 (2h)** Register forecast/evaluate parameter/result models and provenance
-  including price basis, sources, versions and boundaries. Proof:
-  `tests/cli/test_econ_multivariable.py` proposed default/examples and every format.
-- [ ] **S3 (2h)** Remove candidate ARIMA model/flags/auto-differencing routes and
-  migrate help/current docs; retain historical saved-run readability and diagnostic
-  APIs. Proof: `tests/cli/test_econ_migration.py` plus `tests/cli/test_persistence.py`.
-- [ ] **S4 (2h)** Register optional engines/dependencies and doctor checks. Proof:
-  `tests/cli/test_econ_dependencies.py` base-wheel import/help and missing-extra
-  exit 3; dependency audit with no GPU/cloud package in the basic install.
-- [ ] **S5 (2h)** Update explicit API exposure/OpenAPI/client with shared service and
-  cancellation. Proof: `tests/api/test_econ_forecasts.py` parity, progress and cancel;
-  actual generated-client drift/type/build checks.
-- [ ] **S6 (2h)** Update forecast/evaluate UI inputs, intervals, warnings and run
-  history. Proof: browser journey for selected model/preset, negative skill,
-  cancellation and old ARIMA history (not merely source assertions).
-- [ ] **S7 (2h)** Preserve GARCH/EGARCH/EWMA, CCC covariance and robust regression.
-  Proof: existing timeseries/regression/CLI suites with independent volatility
-  answers, PSD checks and no new univariate mean forecaster.
+- [x] **S1** Catalog-based source resolution; no length/digit heuristic. → `tests/cli/test_econ.py::test_catalog_source_resolution_never_guesses_from_shape`
+- [x] **S2** `econ forecast` / `econ evaluate` parameter and result models with provenance
+      (price basis, catalog/model versions, boundaries, candidates, seed). → `tests/cli/test_econ.py`
+- [x] **S3** ARIMA removed from the model enum, core and docs with a migration error.
+      → `tests/cli/test_econ.py::test_removed_arima_model_exits_2_with_the_new_example`
+- [x] **S4** Econ extra gating unchanged (exit 3). → `tests/cli/test_econ.py::test_missing_extra_exits_3_with_the_install_hint`
+- [x] **S5** Routes, OpenAPI and generated client regenerated; both commands are jobs with
+      progress. → `tests/api/test_parity.py`, `frontend/openapi.json`
+- [x] **S6** The UI form and result table derive from the registry (no ARIMA choices remain).
+      → `frontend/src/api/schema.d.ts`
+- [x] **S7** GARCH/EGARCH/EWMA, CCC covariance and robust regression preserved.
+      → `tests/core/test_timeseries.py`, `tests/cli/test_econ.py`
 
-## V — Review evidence and release separation
+## V — Evidence
 
-- [ ] **V1 (2h)** Execute fixture-based CLI/API/installed-wheel journeys for all four
-  forecasters, with dummy secrets and every format/log level. Proof: saved outputs,
-  `tests/invariants/test_every_command.py`, redaction and architecture checks.
-- [ ] **V2 (2h)** Execute bounded authorized real-provider checks when available;
-  record vintage/price-action/volume limitations and fixture provenance. Proof:
-  provider contract + separate live evidence; do not infer vendor truth from simulation.
-- [ ] **V3 (2h)** Run held-out research evaluation and ablations (basic vs sector /
-  macro / momentum) on a preregistered ticker/date set. Proof: reproducible data/model
-  manifests, baseline/calibration tables, negative results and compute cost. This is
-  a bounded evaluation unit; split any larger research experiment into new tasks.
-- [ ] **V4 (2h)** Produce scenario-to-assertion evidence, reconcile PR #16/spec 0010,
-  update issue #31 and run full aligned make check/build/audit plus strict OpenSpec
-  validation. Proof: reviewed artifact report; no release/deployment activation.
-
-FAVAR/PCR, VECM and foundation models are deferred extension decisions in
-research.md, not unchecked promises silently required by this milestone. Core
-multivariable model tasks above are required. A green old ARIMA suite completes none
-of M/E/U/S acceptance by itself.
+- [x] **V1** Fixture-based CLI journeys for both models in every format; invariants over every
+      command. → `tests/invariants/test_every_command.py`
+- [ ] **V2 (deferred)** Bounded live-provider checks for a real SPY history (the offline
+      benchmark is a labelled synthetic market proxy; `scripts/synthesize_market_proxy.py`).
+- [ ] **V3 (deferred)** Preregistered held-out research evaluation and ablations.
+- [x] **V4** Scenario-to-test coverage enforced by `tests/architecture/test_scenarios.py`
+      (status implemented); strict OpenSpec validation.
