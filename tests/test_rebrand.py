@@ -10,16 +10,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Where the old names are allowed to survive: the changelog records history,
-# the 0011 change documents the rename itself, and legacy_code/ is the
-# pre-rewrite work preserved as-is.
+# Where the old names are allowed to survive: the changelog records history
+# and the 0011 change documents the rename itself.
 ALLOWED = {
     REPO_ROOT / "CHANGELOG.md",
 }
 ALLOWED_DIRS = (
     REPO_ROOT / "openspec" / "changes" / "0011-rebrand-sobres",
     REPO_ROOT / "openspec" / "changes" / "0000-release-engineering",
-    REPO_ROOT / "legacy_code",
     REPO_ROOT / ".git",
 )
 SCANNED_SUFFIXES = {".py", ".md", ".toml", ".yml", ".yaml", ".cfg", ".txt", ".ini", ".json"}

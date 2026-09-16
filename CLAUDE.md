@@ -179,10 +179,11 @@ Prior work in JJ's repos that these milestones draw on — check it before writi
 new code (see the table in `openspec/project.md` for what to lift from each):
 `fire-calculator`, `CompountInterestAPI`, `NewsWaveMetrics`, `jjutils`, `Econometrics`.
 
-This repository's own `legacy_code/` is the first place to look: it holds the R
-linear-programming portfolio optimizer and the `yfinance` puller that `sobres`
-supersedes. `legacy_code/Financial Portfolio Optimization.R` is the reference
-implementation for `core/optimize.py` and the source of its regression fixtures.
+The pre-sobres R optimizer and `yfinance` puller this project supersedes were
+removed from the tree once ported; they remain in git history under
+`legacy_code/`. The allocation LP's formulation, reference table and known-answer
+solution are recorded in `docs/allocation-lp-reference.md`, which is what
+`tests/fixtures/r_reference/` derives from.
 
 ## Releasing
 

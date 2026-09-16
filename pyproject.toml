@@ -81,12 +81,6 @@ artifacts = ["src/sobres/api/static/**"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/sobres"]
 
-[tool.hatch.build.targets.sdist]
-# `legacy_code/` is the pre-sobres R/Python prototype kept for reference and for
-# the regression fixtures in `tests/fixtures/r_reference/`. It is repository
-# history, not something a consumer of the source distribution needs, and its
-# three `.rattle` datasets alone are ~16 MB — the bulk of the sdist.
-exclude = ["/legacy_code"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -118,11 +112,8 @@ exclude_also = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# Spec documents contain illustrative Python snippets that are deliberately
-# abbreviated -- prose, not code to be formatted. `legacy_code/` is the
-# pre-rewrite R/Python work, preserved as-is for reference and for the 0002
-# regression fixtures; it is deliberately not held to this project's standards.
-extend-exclude = ["*.md", "legacy_code"]
+# Markdown code blocks are prose, not code to be formatted.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]

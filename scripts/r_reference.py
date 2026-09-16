@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Produce ``tests/fixtures/r_reference/`` for the legacy allocation LP.
 
-The reference implementation is ``legacy_code/Financial Portfolio
-Optimization.R`` (``linprog::solveLP``). Neither R nor the Google Sheet it
+The reference implementation was the pre-sobres R script ``Financial Portfolio
+Optimization.R`` (``linprog::solveLP``), whose formulation is recorded in
+``docs/allocation-lp-reference.md`` (the source itself now lives only in git
+history). Neither R nor the Google Sheet it
 reads were reachable from the implementing environment, so this script solves
 the *same* LP by exhaustive vertex enumeration — independent of the
 ``scipy.optimize.linprog`` path ``sobres.core.allocate`` uses — on a fixed
@@ -78,7 +80,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     w, value = enumerate_vertices()
     payload = {
-        "source": "legacy_code/Financial Portfolio Optimization.R (LP structure); "
+        "source": "docs/allocation-lp-reference.md (LP structure, from the pre-sobres R script); "
         "values from exhaustive vertex enumeration, see scripts/r_reference.py",
         "vehicles": VEHICLES,
         "returns_pct": RETURNS_PCT,

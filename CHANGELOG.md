@@ -11,6 +11,13 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+### Removed
+- **`legacy_code/`** and its three `.rattle` datasets (16 MB). The pre-sobres R
+  optimizer and `yfinance` puller were fully ported; the allocation LP they
+  solved is now documented in `docs/allocation-lp-reference.md`, including two
+  places where the original code and its comments disagreed. The files remain in
+  git history. The sdist exclusion added earlier is no longer needed and is gone.
+
 ### Fixed
 - **`risk_parity` no longer fails to converge on a low-volatility asset.** With
   roughly equal expected returns and one volatility far below the others -- a bond
