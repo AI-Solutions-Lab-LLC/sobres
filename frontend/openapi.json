@@ -159,7 +159,7 @@
             "type": "boolean"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -191,7 +191,6 @@
           }
         },
         "required": [
-          "start",
           "fill",
           "base"
         ],
@@ -377,7 +376,7 @@
             "type": "integer"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -413,7 +412,6 @@
           }
         },
         "required": [
-          "start",
           "fill"
         ],
         "title": "BacktestParams",
@@ -1242,7 +1240,7 @@
             "type": "boolean"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -1280,7 +1278,6 @@
           }
         },
         "required": [
-          "start",
           "fill"
         ],
         "title": "FactorParams",
@@ -1593,7 +1590,7 @@
             "type": "integer"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -1617,7 +1614,6 @@
           }
         },
         "required": [
-          "start",
           "fill"
         ],
         "title": "FrontierParams",
@@ -1658,14 +1654,13 @@
             "type": "string"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
           }
         },
         "required": [
-          "start",
           "pairs"
         ],
         "title": "FxParams",
@@ -1963,7 +1958,7 @@
             "type": "boolean"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -1995,7 +1990,6 @@
           }
         },
         "required": [
-          "start",
           "fill",
           "base"
         ],
@@ -2187,6 +2181,12 @@
       "InitParams": {
         "additionalProperties": false,
         "properties": {
+          "advanced": {
+            "default": false,
+            "description": "Also walk advanced settings (backend, logging, tracing); off by default.",
+            "title": "Advanced",
+            "type": "boolean"
+          },
           "non_interactive": {
             "default": false,
             "description": "Take values from flags and the environment only; never prompt.",
@@ -2264,14 +2264,13 @@
             "type": "array"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
           }
         },
         "required": [
-          "start",
           "series"
         ],
         "title": "MacroParams",
@@ -2430,7 +2429,7 @@
             "type": "integer"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -2466,7 +2465,6 @@
           }
         },
         "required": [
-          "start",
           "fill"
         ],
         "title": "MarkowitzParams",
@@ -2618,7 +2616,7 @@
             "type": "string"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -2636,7 +2634,6 @@
           }
         },
         "required": [
-          "start",
           "tickers"
         ],
         "title": "PricesParams",
@@ -2670,15 +2667,14 @@
             "type": "array"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
           }
         },
         "required": [
-          "pairs",
-          "start"
+          "pairs"
         ],
         "title": "RatesParams",
         "type": "object"
@@ -3111,7 +3107,7 @@
             "type": "boolean"
           },
           "start": {
-            "description": "First date, YYYY-MM-DD.",
+            "description": "First date, YYYY-MM-DD (default: five years before --end).",
             "format": "date",
             "title": "Start",
             "type": "string"
@@ -3143,7 +3139,6 @@
           }
         },
         "required": [
-          "start",
           "fill"
         ],
         "title": "RiskParams",
@@ -4903,7 +4898,7 @@
     },
     "/api/v1/init": {
       "post": {
-        "description": "Guided setup of every setting; ends by running doctor.",
+        "description": "Guided setup: the essentials by default, everything with --advanced; ends by running doctor.",
         "operationId": "init_api_v1_init_post",
         "requestBody": {
           "content": {
@@ -4935,7 +4930,7 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Guided setup of every setting; ends by running doctor.",
+        "summary": "Guided setup: the essentials by default, everything with --advanced; ends by running doctor.",
         "tags": [
           "root"
         ]

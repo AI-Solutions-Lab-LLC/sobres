@@ -19,6 +19,7 @@ class ConfigSetParams(Params):
     "Persist a setting to the config file (mode 0600).",
     result=MessageResult,
     emits_data=False,
+    example="config set fred_api_key YOUR_KEY",
 )
 def config_set(p: ConfigSetParams, ctx: Context) -> MessageResult:
     setting = get_setting(p.key)
@@ -67,7 +68,11 @@ class ConfigUnsetParams(Params):
 
 
 @register(
-    "config.unset", "Remove a setting from the config file.", result=MessageResult, emits_data=False
+    "config.unset",
+    "Remove a setting from the config file.",
+    result=MessageResult,
+    emits_data=False,
+    example="config unset log_file",
 )
 def config_unset(p: ConfigUnsetParams, ctx: Context) -> MessageResult:
     setting = get_setting(p.key)

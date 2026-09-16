@@ -15,6 +15,7 @@ from pydantic import Field, model_validator
 
 from sobres.cli.commands.optimize import UniverseParams, resolve_symbols
 from sobres.cli.context import Context
+from sobres.cli.window import default_start
 from sobres.core import fx as fxm
 from sobres.core.errors import InsufficientDataError, UsageError
 from sobres.core.rates import prior_rates, treasury_investment_yield
@@ -49,8 +50,17 @@ class RatesParams(Params):
     pairs: CurrencyPairList = positional(
         description="Currency pairs as EURUSD or EUR/USD: units of quote per one base."
     )
-    start: date = Field(description="First date, YYYY-MM-DD.")
+    start: date = Field(  # type: ignore[assignment]  # None until the validator fills it
+        default=None, description="First date, YYYY-MM-DD (default: five years before --end)."
+    )
     end: date | None = Field(default=None, description="Last date (default: today).")
+
+    @model_validator(mode="after")
+    def _default_window(self) -> RatesParams:
+        start: date | None = self.start  # None is the field default; see sobres.cli.window
+        if start is None:
+            self.start = default_start(self.end)
+        return self
 
 
 class RatesTable(FrameResult):
@@ -58,7 +68,12 @@ class RatesTable(FrameResult):
     base: str
 
 
-@register("fx.rates", "Daily exchange rates for one or more pairs.", result=RatesTable)
+@register(
+    "fx.rates",
+    "Daily exchange rates for one or more pairs.",
+    result=RatesTable,
+    example="fx rates EURUSD USDJPY --start 2020-01-01",
+)
 def rates(p: RatesParams, ctx: Context) -> RatesTable:
     provider = ctx.fx_provider()
     frame = provider.get_rates(list(p.pairs), p.start, p.end or ctx.today())
@@ -104,7 +119,12 @@ class Conversion(RecordsResult):
         return [*lines, *super().header_lines()]
 
 
-@register("fx.convert", "Convert an amount between currencies at a dated rate.", result=Conversion)
+@register(
+    "fx.convert",
+    "Convert an amount between currencies at a dated rate.",
+    result=Conversion,
+    example="fx convert 100000 --from USD --to EUR --on 2024-06-03",
+)
 def convert_amount(p: ConvertParams, ctx: Context) -> Conversion:
     on = p.on or ctx.today()
     provider = ctx.fx_provider()
@@ -227,6 +247,7 @@ def _local_and_fx(
     "fx.attribution",
     "Split each asset's base-currency return into local, currency and cross components.",
     result=Attribution,
+    example="fx attribution --tickers NESN.SW 7203.T --base USD --start 2018-01-01 --fill drop",
 )
 def attribution(p: AttributionParams, ctx: Context) -> Attribution:
     local, fx, currencies, frequency, provenance = _local_and_fx(p, ctx, p.base)
@@ -367,6 +388,7 @@ def hedged_universe(
     "fx.hedge",
     "Risk panels for hedged and unhedged returns side by side, and what the hedge cost.",
     result=HedgeComparison,
+    example="fx hedge --tickers NESN.SW 7203.T --base USD --start 2018-01-01 --fill drop",
 )
 def hedge(p: HedgeParams, ctx: Context) -> HedgeComparison:
     if p.compare != "unhedged":

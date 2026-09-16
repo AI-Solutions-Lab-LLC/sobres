@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from sobres.cli.context import Context
+from sobres.cli.window import default_start
 from sobres.core.errors import UsageError
 from sobres.data.base import FactorFrequency, FactorModel, PriceField
 from sobres.registry import CurrencyPairList, Params, SeriesList, TickerList, positional, register
@@ -15,11 +16,16 @@ from sobres.results import FactorTable, FxTable, MacroTable, PriceTable, Provena
 
 
 class _Window(Params):
-    start: date = Field(description="First date, YYYY-MM-DD.")
+    start: date = Field(  # type: ignore[assignment]  # None until the validator fills it
+        default=None, description="First date, YYYY-MM-DD (default: five years before --end)."
+    )
     end: date | None = Field(default=None, description="Last date (default: today).")
 
     @model_validator(mode="after")
     def _ordered(self) -> _Window:
+        start: date | None = self.start  # None is the field default; see sobres.cli.window
+        if start is None:
+            self.start = default_start(self.end)
         if self.end is not None and self.end < self.start:
             raise ValueError(f"end {self.end} precedes start {self.start}")
         return self
@@ -38,6 +44,7 @@ class PricesParams(_Window):
     "Fetch and cache daily prices for one or more tickers.",
     result=PriceTable,
     uses_providers=True,
+    example="data prices AAPL MSFT --start 2020-01-01",
 )
 def prices(p: PricesParams, ctx: Context) -> PriceTable:
     end = p.end or ctx.today()
@@ -55,6 +62,7 @@ class MacroParams(_Window):
     "Fetch and cache FRED macro series (needs a free FRED API key).",
     result=MacroTable,
     uses_providers=True,
+    example="data macro DGS10 CPIAUCSL --start 2020-01-01",
 )
 def macro(p: MacroParams, ctx: Context) -> MacroTable:
     end = p.end or ctx.today()
@@ -107,6 +115,7 @@ class FxParams(_Window):
     "Fetch and cache daily exchange rates (ECB reference rates, keyless).",
     result=FxTable,
     uses_providers=True,
+    example="data fx EURUSD USDJPY --start 2020-01-01",
 )
 def fx(p: FxParams, ctx: Context) -> FxTable:
     end = p.end or ctx.today()

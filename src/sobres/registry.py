@@ -109,6 +109,8 @@ class Command:
     """Deprecated former names, kept for one minor version with a warning."""
     param_aliases: dict[str, str] = field(default_factory=dict)
     """Deprecated former parameter names → current names."""
+    example: str | None = None
+    """A runnable invocation after `sobres `, shown first in a usage error's hint."""
 
     @property
     def group(self) -> str | None:
@@ -167,6 +169,7 @@ def register(
     long_running: bool = False,
     aliases: Sequence[str] = (),
     param_aliases: dict[str, str] | None = None,
+    example: str | None = None,
 ) -> Callable[[Handler], Handler]:
     """Declare a command. The handler's first annotation is its parameter model."""
 
@@ -192,6 +195,7 @@ def register(
             long_running=long_running,
             aliases=tuple(aliases),
             param_aliases=dict(param_aliases or {}),
+            example=example,
         )
         return handler
 
@@ -569,7 +573,11 @@ def validate_params(cmd: Command, raw: dict[str, Any]) -> BaseModel:
         for err in exc.errors():
             loc = ".".join(str(p) for p in err["loc"]) or "input"
             problems.append(f"{loc}: {err['msg']}")
+        help_hint = f"sobres {cmd.cli_name} --help"
+        hint = (
+            f"try: sobres {cmd.example}  (or: {help_hint})" if cmd.example else f"run: {help_hint}"
+        )
         raise UsageError(
             f"invalid parameters for `{cmd.cli_name}`: " + "; ".join(problems),
-            hint=f"run: sobres {cmd.cli_name} --help",
+            hint=hint,
         ) from None

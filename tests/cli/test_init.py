@@ -115,15 +115,54 @@ def _interactive(make_context: Callable[..., Context], wizard: _Wizard, **kw: An
     return ctx
 
 
+def test_guided_wizard_asks_only_essential_settings(
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Guided, in the terminal (0014) — advanced settings are not asked."""
+    fred = get_setting("fred_api_key")
+    monkeypatch.setattr(fred, "validate_live", lambda v: LiveResult(True, "FRED accepted the key"))
+    wizard = _Wizard({"fred_api_key": ["K1"], "log_level": ["INFO"]}, {"verify it": [True]})
+    ctx = _interactive(make_context, wizard)
+    err = __import__("io").StringIO()
+    ctx.stderr = err
+    report = init(InitParams(offline=True), ctx)
+    assert report.exit_code == 0
+    assert report.changed == ["fred_api_key"]  # log_level was never asked
+    walked = [q for q in wizard.seen if any(q.strip().startswith(s.key) for s in all_settings())]
+    assert [q.strip().split(" ")[0] for q in walked] == ["fred_api_key"]
+    advanced = sum(1 for s in all_settings() if s.advanced)
+    assert f"{advanced} advanced settings were not asked" in err.getvalue()
+    assert "sobres init --advanced" in err.getvalue()
+
+
+def test_advanced_setting_survives_a_default_run(
+    make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Scenario: Advanced settings survive a default run (0014)."""
+    fred = get_setting("fred_api_key")
+    monkeypatch.setattr(fred, "validate_live", lambda v: LiveResult(True, "ok"))
+    first = _interactive(
+        make_context,
+        _Wizard({"fred_api_key": ["K1"], "log_level": ["DEBUG"]}, {"verify it": [True]}),
+    )
+    init(InitParams(offline=True, advanced=True), first)
+    assert 'log_level = "DEBUG"' in first.config.path.read_text(encoding="utf-8")
+    again = _interactive(make_context, _Wizard({}, {"replace it": [False]}))
+    report = init(InitParams(offline=True), again)
+    assert report.changed == []
+    assert 'log_level = "DEBUG"' in again.config.path.read_text(encoding="utf-8")
+
+
 @pytest.mark.parametrize("secret_value", ["Z9!", "Q7$!", "SECRET9999"])
-def test_guided_wizard_walks_every_setting_and_masks_secrets(
+def test_advanced_flag_walks_every_setting_and_masks_secrets(
     make_context: Callable[..., Context], monkeypatch: pytest.MonkeyPatch, secret_value: str
 ) -> None:
+    """Scenario: Advanced settings on request (0014); Secret displays (0012)."""
     fred = get_setting("fred_api_key")
     monkeypatch.setattr(fred, "validate_live", lambda v: LiveResult(True, "FRED accepted the key"))
     wizard = _Wizard({"fred_api_key": [secret_value], "log_level": ["INFO"]}, {"verify it": [True]})
     ctx = _interactive(make_context, wizard)
-    report = init(InitParams(offline=True), ctx)
+    report = init(InitParams(offline=True, advanced=True), ctx)
     assert "fred_api_key" in report.changed and "log_level" in report.changed
     assert report.exit_code == 0
     assert (
@@ -139,7 +178,7 @@ def test_guided_wizard_walks_every_setting_and_masks_secrets(
     ctx2 = _interactive(make_context, wizard2)
     err = __import__("io").StringIO()
     ctx2.stderr = err
-    report2 = init(InitParams(offline=True), ctx2)
+    report2 = init(InitParams(offline=True, advanced=True), ctx2)
     assert report2.changed == []
     assert "current: ****" in err.getvalue()
     assert secret_value not in err.getvalue()
@@ -187,7 +226,7 @@ def test_optional_setting_skipped_names_affected_commands(
 def test_invalid_interactive_value_is_re_prompted(make_context: Callable[..., Context]) -> None:
     wizard = _Wizard({"log_level": ["LOUD", "ERROR"]}, {})
     ctx = _interactive(make_context, wizard)
-    init(InitParams(offline=True), ctx)
+    init(InitParams(offline=True, advanced=True), ctx)  # log_level is an advanced setting
     assert 'log_level = "ERROR"' in ctx.config.path.read_text(encoding="utf-8")
 
 

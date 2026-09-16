@@ -646,8 +646,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Guided setup of every setting; ends by running doctor.
-         * @description Guided setup of every setting; ends by running doctor.
+         * Guided setup: the essentials by default, everything with --advanced; ends by running doctor.
+         * @description Guided setup: the essentials by default, everything with --advanced; ends by running doctor.
          */
         post: operations["init_api_v1_init_post"];
         delete?: never;
@@ -1451,9 +1451,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio).
@@ -1570,9 +1570,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Target
              * @description Annual decimal target for target_return or target_risk.
@@ -2066,9 +2066,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Ticker
              * @description One ticker (or use --tickers for a comparison table).
@@ -2262,9 +2262,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio).
@@ -2293,9 +2293,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
         };
         /** GoalParams */
         GoalParams: {
@@ -2472,9 +2472,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio).
@@ -2602,6 +2602,12 @@ export interface components {
         /** InitParams */
         InitParams: {
             /**
+             * Advanced
+             * @description Also walk advanced settings (backend, logging, tracing); off by default.
+             * @default false
+             */
+            advanced: boolean;
+            /**
              * Non Interactive
              * @description Take values from flags and the environment only; never prompt.
              * @default false
@@ -2651,9 +2657,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
         };
         /** MarkowitzParams */
         MarkowitzParams: {
@@ -2741,9 +2747,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Target
              * @description Target return or risk for target_* objectives.
@@ -2840,9 +2846,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW.
@@ -2864,9 +2870,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
         };
         /** ReerParams */
         ReerParams: {
@@ -3111,9 +3117,9 @@ export interface components {
             /**
              * Start
              * Format: date
-             * @description First date, YYYY-MM-DD.
+             * @description First date, YYYY-MM-DD (default: five years before --end).
              */
-            start: string;
+            start?: string;
             /**
              * Tickers
              * @description Ticker symbols, e.g. AAPL MSFT NESN.SW (or use --portfolio).

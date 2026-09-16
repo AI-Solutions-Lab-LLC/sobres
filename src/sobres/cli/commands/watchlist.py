@@ -22,6 +22,7 @@ class WatchlistAddParams(Params):
     "Add symbols to a watchlist, creating it if absent; duplicates are no-ops.",
     result=MessageResult,
     emits_data=False,
+    example="watchlist add tech NVDA AMD",
 )
 def watchlist_add(p: WatchlistAddParams, ctx: Context) -> MessageResult:
     before = ctx.storage.watchlists.get(p.name)
@@ -39,7 +40,11 @@ class WatchlistRemoveParams(Params):
 
 
 @register(
-    "watchlist.remove", "Remove symbols from a watchlist.", result=MessageResult, emits_data=False
+    "watchlist.remove",
+    "Remove symbols from a watchlist.",
+    result=MessageResult,
+    emits_data=False,
+    example="watchlist remove tech AMD",
 )
 def watchlist_remove(p: WatchlistRemoveParams, ctx: Context) -> MessageResult:
     record = ctx.storage.watchlists.remove(p.name, p.symbols)
@@ -72,7 +77,12 @@ class WatchlistShowParams(Params):
     name: str = positional(description="Watchlist name.")
 
 
-@register("watchlist.show", "Show a watchlist's symbols.", result=RecordsResult)
+@register(
+    "watchlist.show",
+    "Show a watchlist's symbols.",
+    result=RecordsResult,
+    example="watchlist show tech",
+)
 def watchlist_show(p: WatchlistShowParams, ctx: Context) -> RecordsResult:
     record = ctx.storage.watchlists.get(p.name)
     if record is None:
@@ -86,7 +96,13 @@ class WatchlistDeleteParams(Params):
     yes: bool = Field(default=False, description="Skip the confirmation prompt.")
 
 
-@register("watchlist.delete", "Delete a watchlist.", result=MessageResult, emits_data=False)
+@register(
+    "watchlist.delete",
+    "Delete a watchlist.",
+    result=MessageResult,
+    emits_data=False,
+    example="watchlist delete tech --yes",
+)
 def watchlist_delete(p: WatchlistDeleteParams, ctx: Context) -> MessageResult:
     if ctx.storage.watchlists.get(p.name) is None:
         raise UsageError(f"no watchlist named {p.name!r}")

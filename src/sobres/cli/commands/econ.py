@@ -125,6 +125,7 @@ class DiagnosisResult(EconReport, RecordsResult):
     "econ.diagnose",
     "Stationarity tests (ADF, KPSS) and ACF/PACF through lag 20 for one series.",
     result=DiagnosisResult,
+    example="econ diagnose DGS10",
 )
 def diagnose(p: DiagnoseParams, ctx: Context) -> DiagnosisResult:
     series, _kind, provenance = load_series(
@@ -230,6 +231,7 @@ class ForecastResult(EconReport, FrameResult):
     "econ.forecast",
     "ARIMA forecast with 80% and 95% prediction intervals; order selection made visible.",
     result=ForecastResult,
+    example="econ forecast DGS10 --horizon 12",
 )
 def forecast(p: ForecastParams, ctx: Context) -> ForecastResult:
     series, _kind, provenance = load_series(
@@ -308,6 +310,7 @@ class VolatilityResult(EconReport, FrameResult):
     "econ.volatility",
     "GARCH, EGARCH or EWMA conditional volatility forecast, annualized, with intervals.",
     result=VolatilityResult,
+    example="econ volatility SPY --model garch --horizon 30",
 )
 def volatility(p: VolatilityParams, ctx: Context) -> VolatilityResult:
     series, _kind, provenance = load_series(
@@ -417,6 +420,7 @@ def _regressor(
     "econ.regress",
     "OLS with robust standard errors, VIF and residual diagnostics.",
     result=RegressionResult,
+    example="econ regress --y AAPL --x SPY DGS10 --robust hac",
 )
 def regress(p: RegressParams, ctx: Context) -> RegressionResult:
     end = p.end or ctx.today()

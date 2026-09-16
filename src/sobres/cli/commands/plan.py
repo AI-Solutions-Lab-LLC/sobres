@@ -296,6 +296,7 @@ class RetireParams(PlanParams):
     "plan.retire",
     "FI number, savings rate, years to FI and the probability of getting there.",
     result=PlanResult,
+    example="plan retire --income 200000 --expenses 90000 --portfolio 400000",
 )
 def retire(p: RetireParams, ctx: Context) -> PlanResult:
     annual, _inflation_used, notes = _rates(p, ctx)
@@ -445,7 +446,12 @@ class HouseParams(PlanParams):
     price_growth: float = Field(default=0.0, description="Annual house-price growth.")
 
 
-@register("plan.house", "Down-payment target and the monthly saving it needs.", result=PlanResult)
+@register(
+    "plan.house",
+    "Down-payment target and the monthly saving it needs.",
+    result=PlanResult,
+    example="plan house --price 950000 --down-pct 0.20 --by 2029-06-01 --monthly 3000",
+)
 def house(p: HouseParams, ctx: Context) -> PlanResult:
     annual, _, notes = _rates(p, ctx)
     plan = g.house_plan(
@@ -475,7 +481,10 @@ class CarParams(PlanParams):
 
 
 @register(
-    "plan.car", "Monthly saving for a car, with an optional resale estimate.", result=PlanResult
+    "plan.car",
+    "Monthly saving for a car, with an optional resale estimate.",
+    result=PlanResult,
+    example="plan car --price 45000 --by 2028-01-01 --current 5000",
 )
 def car(p: CarParams, ctx: Context) -> PlanResult:
     annual, _, notes = _rates(p, ctx)
@@ -508,6 +517,7 @@ class EducationParams(PlanParams):
     "plan.education",
     "Inflated total cost of an education and the monthly saving.",
     result=PlanResult,
+    example="plan education --annual-cost 30000 --starting 2035-09-01 --years 4",
 )
 def education(p: EducationParams, ctx: Context) -> PlanResult:
     annual, _, notes = _rates(p, ctx)

@@ -22,6 +22,7 @@ from pydantic import Field, FiniteFloat, model_validator
 
 from sobres.cli.context import Context
 from sobres.cli.metric_table import render_metric_table
+from sobres.cli.window import default_start
 from sobres.core import backtest as bt
 from sobres.core import moments
 from sobres.core import optimize as opt
@@ -64,7 +65,9 @@ class UniverseParams(Params):
         default=None, description="A saved portfolio's name in place of --tickers."
     )
     save_run: bool = Field(default=False, description="Record this run in the run history.")
-    start: date = Field(description="First date, YYYY-MM-DD.")
+    start: date = Field(  # type: ignore[assignment]  # None until the validator fills it
+        default=None, description="First date, YYYY-MM-DD (default: five years before --end)."
+    )
     end: date | None = Field(default=None, description="Last date (default: today).")
     fill: FillPolicy = Field(description="Provider-gap policy: drop, ffill or raise. No default.")
     base: Currency | None = Field(
@@ -83,6 +86,9 @@ class UniverseParams(Params):
 
     @model_validator(mode="after")
     def _window(self) -> UniverseParams:
+        start: date | None = self.start  # None is the field default; see sobres.cli.window
+        if start is None:
+            self.start = default_start(self.end)
         if self.tickers and (
             len(self.tickers) > 100 or len(set(self.tickers)) != len(self.tickers)
         ):
@@ -516,6 +522,7 @@ class MarkowitzParams(EstimatorParams):
     result=PortfolioResult,
     uses_providers=True,
     long_running=True,
+    example="optimize markowitz --tickers AAPL MSFT JNJ --start 2015-01-01 --fill drop",
 )
 def markowitz(p: MarkowitzParams, ctx: Context) -> PortfolioResult:
     u = load_universe(p, ctx)
@@ -570,6 +577,7 @@ class FrontierParams(EstimatorParams):
     result=FrontierResult,
     uses_providers=True,
     long_running=True,
+    example="optimize frontier --tickers AAPL MSFT JNJ --start 2015-01-01 --fill drop",
 )
 def frontier(p: FrontierParams, ctx: Context) -> FrontierResult:
     u = load_universe(p, ctx)
@@ -695,6 +703,7 @@ def parse_lookback(text: str, frequency: str) -> int:
     result=BacktestReport,
     uses_providers=True,
     long_running=True,
+    example="optimize backtest --tickers AAPL MSFT JNJ --start 2015-01-01 --fill drop",
 )
 def backtest(p: BacktestParams, ctx: Context) -> BacktestReport:
     # Fetch enough history before --start for the first rebalance to have a full
@@ -828,6 +837,7 @@ class RiskParams(UniverseParams):
     "The full risk panel for a fixed-weight portfolio.",
     result=RiskPanelResult,
     uses_providers=True,
+    example="optimize risk --tickers AAPL MSFT JNJ --start 2015-01-01 --fill drop",
 )
 def risk(p: RiskParams, ctx: Context) -> RiskPanelResult:
     tickers, saved_weights = resolve_symbols(p, ctx)

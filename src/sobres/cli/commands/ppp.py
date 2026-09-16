@@ -112,6 +112,7 @@ class Comparison(PppReport, RecordsResult):
     "ppp.compare",
     "Market rate against the PPP rate for each currency: the valuation gap, in words.",
     result=Comparison,
+    example="ppp compare --base USD --vs EUR GBP MXN",
 )
 def compare(p: CompareParams, ctx: Context) -> Comparison:
     on = p.on or ctx.today()
@@ -190,6 +191,7 @@ def _cpi(ctx: Context, currency: str, start: date, end: date) -> pd.Series:
     "ppp.relative",
     "Relative PPP: the rate path implied by the inflation differential since an anchor date.",
     result=RelativePath,
+    example="ppp relative EURUSD --anchor 2010-01-01",
 )
 def relative(p: RelativeParams, ctx: Context) -> RelativePath:
     pair = CurrencyPair.parse(p.pair)
@@ -243,7 +245,12 @@ class ReerTable(PppReport, FrameResult):
         ]
 
 
-@register("ppp.reer", "BIS real effective exchange rates, taken as published.", result=ReerTable)
+@register(
+    "ppp.reer",
+    "BIS real effective exchange rates, taken as published.",
+    result=ReerTable,
+    example="ppp reer --countries USA GBR JPN",
+)
 def reer(p: ReerParams, ctx: Context) -> ReerTable:
     areas = []
     for c in p.countries:
@@ -321,6 +328,7 @@ def _row(metric: str, value: Any, unit: str) -> dict[str, Any]:
     "ppp.adjust_goal",
     "Restate a goal at another country's price level, beside the market-rate figure.",
     result=AdjustedGoal,
+    example="ppp adjust-goal --goal fire --to PRT",
 )
 def adjust_goal(p: AdjustGoalParams, ctx: Context) -> AdjustedGoal:
     on = p.on or ctx.today()
