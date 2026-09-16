@@ -11,6 +11,19 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
+### Changed
+- **`sobres init` asks one question (change 0014).** Settings now carry an
+  `advanced` tier; the wizard prompts only for the FRED key and says how many
+  advanced settings it did not ask. `sobres init --advanced` walks all of them,
+  and `--set`, `sobres config set`, the environment and the settings page reach
+  them as before.
+- **`--start` has a default.** Every window-taking command runs without dates:
+  `start` is five years before `end`, which defaults to today; the resolved
+  window is in the result's provenance.
+- **Usage errors show a worked example.** Every command with a required
+  parameter declares one, and the hint leads with it:
+  `try: sobres analyze stock NVDA --fill drop  (or: sobres analyze stock --help)`.
+
 ### Removed
 - **`legacy_code/`** and its three `.rattle` datasets (16 MB). The pre-sobres R
   optimizer and `yfinance` puller were fully ported; the allocation LP they

@@ -17,6 +17,7 @@ from pydantic import Field, model_validator
 
 from sobres.cli.commands.optimize import IN_SAMPLE_NOTE, UniverseParams, load_universe
 from sobres.cli.context import Context
+from sobres.cli.window import default_start
 from sobres.core import factors as fm
 from sobres.core.returns import annualized_return, annualized_volatility, simple_returns
 from sobres.core.risk import risk_metrics
@@ -59,7 +60,9 @@ class FactorParams(Params):
         default=None, description="A saved portfolio's name in place of --tickers."
     )
     save_run: bool = Field(default=False, description="Record this run in the run history.")
-    start: date = Field(description="First date, YYYY-MM-DD.")
+    start: date = Field(  # type: ignore[assignment]  # None until the validator fills it
+        default=None, description="First date, YYYY-MM-DD (default: five years before --end)."
+    )
     end: date | None = Field(default=None, description="Last date (default: today).")
     fill: FillPolicy = Field(description="Provider-gap policy: drop, ffill or raise. No default.")
     base: Currency | None = Field(
@@ -82,6 +85,9 @@ class FactorParams(Params):
 
     @model_validator(mode="after")
     def _one_universe(self) -> FactorParams:
+        start: date | None = self.start  # None is the field default; see sobres.cli.window
+        if start is None:
+            self.start = default_start(self.end)
         given = [bool(self.ticker), bool(self.tickers), bool(self.portfolio)]
         if sum(given) != 1:
             raise ValueError("give exactly one of: a ticker, --tickers, or --portfolio")
@@ -168,6 +174,7 @@ def _term_rows(fit: fm.FactorRegression) -> list[dict[str, Any]]:
     "analyze.factors",
     "Regress excess returns on CAPM or Fama-French factors; alpha with its t-statistic.",
     result=FactorReport,
+    example="analyze factors NVDA --model ff3 --start 2015-01-01 --fill drop",
 )
 def factors(p: FactorParams, ctx: Context) -> FactorReport:
     universe = load_universe(
@@ -301,6 +308,7 @@ def _rows(section: str, items: dict[str, Any]) -> list[dict[str, Any]]:
     "analyze.stock",
     "Price summary, risk panel, CAPM beta and fundamentals for one stock.",
     result=StockReport,
+    example="analyze stock NVDA --fill drop",
 )
 def stock(p: StockParams, ctx: Context) -> StockReport:
     universe = load_universe(

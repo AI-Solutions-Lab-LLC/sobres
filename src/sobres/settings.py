@@ -59,6 +59,8 @@ class Setting:
     aliases: tuple[str, ...] = ()
     """Additional env names accepted for this setting (lower precedence)."""
     choices: tuple[str, ...] = ()
+    advanced: bool = False
+    """Not asked by `sobres init` unless --advanced; still settable everywhere else."""
 
     @property
     def env_names(self) -> tuple[str, ...]:
@@ -186,6 +188,7 @@ FRED_API_KEY = declare(
 DB_URL = declare(
     Setting(
         key="db_url",
+        advanced=True,
         env="SOBRES_DB_URL",
         description=(
             "Storage backend URL. Defaults to SQLite in the user data directory; "
@@ -201,6 +204,7 @@ DB_URL = declare(
 LOG_LEVEL = declare(
     Setting(
         key="log_level",
+        advanced=True,
         env="SOBRES_LOG_LEVEL",
         description="Default log level for stderr (DEBUG, INFO, WARNING, ERROR).",
         default="WARNING",
@@ -211,6 +215,7 @@ LOG_LEVEL = declare(
 LOG_FORMAT = declare(
     Setting(
         key="log_format",
+        advanced=True,
         env="SOBRES_LOG_FORMAT",
         description="Log rendering: 'auto' (human on a TTY, JSON otherwise), 'human' or 'json'.",
         default="auto",
@@ -221,6 +226,7 @@ LOG_FORMAT = declare(
 LOG_FILE = declare(
     Setting(
         key="log_file",
+        advanced=True,
         env="SOBRES_LOG_FILE",
         description="Optional JSON log file, rotated at 10 MB with 5 backups kept.",
         type="path",
@@ -231,6 +237,7 @@ LOG_FILE = declare(
 IMPLAUSIBLE_MOVE = declare(
     Setting(
         key="implausible_move_threshold",
+        advanced=True,
         env="SOBRES_IMPLAUSIBLE_MOVE_THRESHOLD",
         description="Single-day return above which an observation is flagged (default 50%).",
         type="float",
@@ -241,6 +248,7 @@ IMPLAUSIBLE_MOVE = declare(
 SLOW_QUERY_MS = declare(
     Setting(
         key="slow_query_ms",
+        advanced=True,
         env="SOBRES_SLOW_QUERY_MS",
         description="Storage operations slower than this many milliseconds log at WARNING.",
         type="int",
@@ -251,6 +259,7 @@ SLOW_QUERY_MS = declare(
 CONFIG_FILE = declare(
     Setting(
         key="config_file",
+        advanced=True,
         env="SOBRES_CONFIG_FILE",
         description=(
             "Override the config file location (default: <user-config-dir>/sobres/config.toml)."
@@ -263,6 +272,7 @@ CONFIG_FILE = declare(
 OTEL_ENDPOINT = declare(
     Setting(
         key="otel_exporter_otlp_endpoint",
+        advanced=True,
         env="OTEL_EXPORTER_OTLP_ENDPOINT",
         description=(
             "OpenTelemetry collector endpoint. Setting it activates tracing "
@@ -276,6 +286,7 @@ OTEL_ENDPOINT = declare(
 OTEL_TRACES_EXPORTER = declare(
     Setting(
         key="otel_traces_exporter",
+        advanced=True,
         env="OTEL_TRACES_EXPORTER",
         description="OpenTelemetry traces exporter name ('otlp', 'console' or 'none').",
         default=None,
@@ -286,6 +297,7 @@ OTEL_TRACES_EXPORTER = declare(
 FIXTURE_DIR = declare(
     Setting(
         key="fixture_dir",
+        advanced=True,
         env="SOBRES_FIXTURE_DIR",
         description=(
             "Serve every provider from recorded payloads in this directory instead of "
@@ -299,6 +311,7 @@ FIXTURE_DIR = declare(
 PPP_PROVIDER = declare(
     Setting(
         key="ppp_provider",
+        advanced=True,
         env="SOBRES_PPP_PROVIDER",
         description="PPP conversion factors: worldbank (ICP PA.NUS.PPP, keyless) or oecd.",
         type="str",
@@ -310,6 +323,7 @@ PPP_PROVIDER = declare(
 PPP_STALE_YEARS = declare(
     Setting(
         key="ppp_stale_years",
+        advanced=True,
         env="SOBRES_PPP_STALE_YEARS",
         description="Flag a PPP figure whose benchmark year is older than this many years.",
         type="int",
@@ -320,6 +334,7 @@ PPP_STALE_YEARS = declare(
 CONTAINER = declare(
     Setting(
         key="container",
+        advanced=True,
         env="SOBRES_CONTAINER",
         description=(
             "Set to 1 by the container image so `sobres upgrade` knows how it was installed."

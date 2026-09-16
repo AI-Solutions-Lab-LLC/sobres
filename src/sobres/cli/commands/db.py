@@ -45,6 +45,7 @@ class DbExportParams(Params):
     "Write a consistent copy of the database (safe while in use).",
     result=MessageResult,
     emits_data=False,
+    example="db export --to ~/backups/sobres.sqlite",
 )
 def db_export(p: DbExportParams, ctx: Context) -> MessageResult:
     destination = p.to.expanduser()

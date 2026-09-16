@@ -575,3 +575,23 @@ def test_data_stdout_bytes_stable_with_fixed_state(
     traced = cli(*args, env_extra={**ENV, "OTEL_TRACES_EXPORTER": "console"})
     assert quiet.exit_code == loud.exit_code == traced.exit_code == 0
     assert quiet.stdout == loud.stdout == traced.stdout
+
+
+def test_every_command_with_required_params_declares_an_example() -> None:
+    """Scenario: Declaration is enforced (0014)."""
+    from sobres.registry import all_commands
+
+    missing = [
+        cmd.name
+        for cmd in all_commands()
+        if any(f.is_required() for f in cmd.params.model_fields.values()) and not cmd.example
+    ]
+    assert not missing, f"commands with required parameters but no example: {missing}"
+    wrong = [
+        cmd.name
+        for cmd in all_commands()
+        if cmd.example
+        and not cmd.example.startswith(cmd.cli_name + " ")
+        and cmd.example != cmd.cli_name
+    ]
+    assert not wrong, f"examples must begin with their own CLI name: {wrong}"

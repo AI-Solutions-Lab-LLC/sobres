@@ -39,6 +39,10 @@ class InitParams(Params):
         default=False,
         description="Open the settings page in the browser instead (sobres open settings).",
     )
+    advanced: bool = Field(
+        default=False,
+        description="Also walk advanced settings (backend, logging, tracing); off by default.",
+    )
     set_values: list[str] = Field(
         default_factory=list,
         alias="set",
@@ -122,7 +126,7 @@ def _prompt_setting(setting: Setting, current: Any, ctx: Context, *, verify: boo
 
 @register(
     "init",
-    "Guided setup of every setting; ends by running doctor.",
+    "Guided setup: the essentials by default, everything with --advanced; ends by running doctor.",
     result=InitReport,
     human_default=True,
 )
@@ -146,7 +150,11 @@ def init(p: InitParams, ctx: Context) -> InitReport:
     changed: list[str] = []
     # There is no terminal to prompt on inside the container image.
     interactive = ctx.interactive and not p.non_interactive and not ctx.config.get("container")
+    skipped_advanced = 0
     for setting in all_settings():
+        if interactive and setting.advanced and not p.advanced and setting.key not in explicit:
+            skipped_advanced += 1  # neither prompted nor written; an existing value survives
+            continue
         if setting.key in explicit:
             setting.coerce(explicit[setting.key])
             if values.get(setting.key) != explicit[setting.key]:
@@ -176,6 +184,12 @@ def init(p: InitParams, ctx: Context) -> InitReport:
         elif values.get(setting.key) != new:
             values[setting.key] = new
             changed.append(setting.key)
+    if skipped_advanced:
+        ctx.note("")
+        ctx.note(
+            f"{skipped_advanced} advanced settings were not asked; run `sobres init --advanced` "
+            "or `sobres config set <key> <value>` to change them"
+        )
     if changed or not ctx.config.path.exists():
         write_config_file(ctx.config.path, values)
     else:

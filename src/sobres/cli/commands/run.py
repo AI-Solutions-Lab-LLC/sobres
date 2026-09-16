@@ -74,7 +74,12 @@ def _brief(value: Any) -> str:
     return text if len(text) <= 120 else text[:117] + "..."
 
 
-@register("run.show", "Show one recorded run in full.", result=RunDetail)
+@register(
+    "run.show",
+    "Show one recorded run in full.",
+    result=RunDetail,
+    example="run show 42",
+)
 def run_show(p: RunShowParams, ctx: Context) -> RunDetail:
     return RunDetail(run=_as_dict(resolve_run(p.id, ctx)))
 
@@ -113,7 +118,12 @@ def diff_records(a: RunRecord, b: RunRecord) -> list[dict[str, Any]]:
     return rows
 
 
-@register("run.diff", "Compare two runs of the same command side by side.", result=RunDiff)
+@register(
+    "run.diff",
+    "Compare two runs of the same command side by side.",
+    result=RunDiff,
+    example="run diff 41 42",
+)
 def run_diff(p: RunDiffParams, ctx: Context) -> RunDiff:
     a, b = resolve_run(p.a, ctx), resolve_run(p.b, ctx)
     if a.command != b.command:
@@ -129,7 +139,13 @@ class RunDeleteParams(Params):
     yes: bool = Field(default=False, description="Skip the confirmation prompt.")
 
 
-@register("run.delete", "Delete a recorded run.", result=MessageResult, emits_data=False)
+@register(
+    "run.delete",
+    "Delete a recorded run.",
+    result=MessageResult,
+    emits_data=False,
+    example="run delete 42 --yes",
+)
 def run_delete(p: RunDeleteParams, ctx: Context) -> MessageResult:
     resolve_run(p.id, ctx)
     if not p.yes and not ctx.ask_confirm(f"Delete run {p.id}?"):

@@ -37,6 +37,7 @@ class PortfolioSaveParams(Params):
     "Save a named portfolio (tickers, optionally weights).",
     result=MessageResult,
     emits_data=False,
+    example="portfolio save core --tickers AAPL MSFT NVDA JNJ --weights 0.3 0.3 0.2 0.2",
 )
 def portfolio_save(p: PortfolioSaveParams, ctx: Context) -> MessageResult:
     record = PortfolioRecord(
@@ -78,7 +79,12 @@ class PortfolioShowParams(Params):
     name: str = positional(description="Portfolio name.")
 
 
-@register("portfolio.show", "Show a saved portfolio's holdings.", result=RecordsResult)
+@register(
+    "portfolio.show",
+    "Show a saved portfolio's holdings.",
+    result=RecordsResult,
+    example="portfolio show core",
+)
 def portfolio_show(p: PortfolioShowParams, ctx: Context) -> RecordsResult:
     record = resolve_portfolio(p.name, ctx)
     weights = record.weights or (None,) * record.holdings
@@ -93,7 +99,13 @@ class PortfolioDeleteParams(Params):
     yes: bool = Field(default=False, description="Skip the confirmation prompt.")
 
 
-@register("portfolio.delete", "Delete a saved portfolio.", result=MessageResult, emits_data=False)
+@register(
+    "portfolio.delete",
+    "Delete a saved portfolio.",
+    result=MessageResult,
+    emits_data=False,
+    example="portfolio delete core --yes",
+)
 def portfolio_delete(p: PortfolioDeleteParams, ctx: Context) -> MessageResult:
     resolve_portfolio(p.name, ctx)
     if not p.yes and not ctx.ask_confirm(f"Delete portfolio {p.name!r}?"):
