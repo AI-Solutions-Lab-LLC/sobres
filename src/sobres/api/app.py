@@ -270,6 +270,7 @@ def create_app(
                     "affects": list(s.affects),
                     "choices": list(s.choices),
                     "has_live_validator": s.validate_live is not None,
+                    "browser_editable": s.browser_editable,
                     "value": display_value(s, cfg.get(s.key)),
                     "source": cfg.source(s.key),
                     "default": s.default,
@@ -282,8 +283,15 @@ def create_app(
     @app.put(f"{API_PREFIX}/settings", tags=["settings"])
     def settings_put(body: SettingBody) -> dict[str, Any]:
         # The same code path as `sobres config set`: validate, then write the file at 0600.
+        # Settings that move data or traces elsewhere are refused here, before that path
+        # runs; they stay available from the terminal.
         from sobres.cli.commands.config import ConfigSetParams, config_set
 
+        if not get_setting(body.key).browser_editable:
+            raise UsageError(
+                f"{body.key} cannot be changed from the browser",
+                hint=f"run: sobres config set {body.key} <value>",
+            )
         result = config_set(ConfigSetParams(key=body.key, value=body.value), state.context())
         state.config = resolve(None, state.environ, path=state.config.path)
         state.runner._config = state.config

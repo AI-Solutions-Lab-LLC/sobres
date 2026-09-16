@@ -1,8 +1,10 @@
 name: Landing page
 
-# Builds site/ on every change and deploys it to GitHub Pages from main. A
-# failed build or a failed Lighthouse audit deploys nothing: the previous
-# version stays live.
+# Builds site/ on every change and deploys it to GitHub Pages from main once the
+# repository variable PAGES_ENABLED is "true" (Settings -> Pages must be enabled with
+# source "GitHub Actions" first). A failed build or a failed Lighthouse audit deploys
+# nothing: the previous version stays live. Without the variable the build and audit
+# still run on every change; only the upload is skipped.
 on:
   pull_request:
     paths: [site/**, frontend/src/theme/**, src/sobres/__about__.py, .github/workflows/pages.yml]
@@ -47,7 +49,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && vars.PAGES_ENABLED == 'true'
     runs-on: ubuntu-latest
     # Least privilege: only this job may write Pages, and only on main.
     permissions:

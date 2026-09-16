@@ -1,8 +1,8 @@
 ---
 change: 0010-currency-and-ppp
 milestone: v1.6
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0008-goal-planning, 0013-template-development-alignment, 0004-web-ui]
-status: proposed
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0008-goal-planning, 0004-web-ui]
+status: implemented
 planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 

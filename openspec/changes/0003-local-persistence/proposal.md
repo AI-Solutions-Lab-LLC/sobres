@@ -1,8 +1,8 @@
 ---
 change: 0003-local-persistence
 milestone: v1.1
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0013-template-development-alignment]
-status: proposed
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization]
+status: implemented
 ---
 
 # 0003 — Local persistence

@@ -1,7 +1,7 @@
 ---
 change: 0009-econometrics-forecasting
 milestone: v1.5
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0007-equity-factor-analysis, 0013-template-development-alignment, 0004-web-ui]
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0007-equity-factor-analysis, 0004-web-ui]
 status: proposed
 planning_depth: proposal + research + design + tasks + spec deltas; multivariable amendment 2026-09-13
 ---

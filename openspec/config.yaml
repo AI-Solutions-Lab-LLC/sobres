@@ -3,25 +3,21 @@ schema: spec-driven
 context: |
   sobres is a Python 3.11+ CLI/library for equity research, not investment advice.
   Read openspec/project.md and the active proposal/design/tasks/scenarios first.
-  0013 proposes alignment with the merged AISL template; current code still uses
-  core/data/cli until that migration implements its compatibility facades.
-  Target: pure financial math/types in src/sobres/core; shared orchestration in
-  application; repository/provider interfaces in ports; concrete CLI/API/storage/
-  provider I/O in adapters; bootstrap owns construction. Registry declarations are
-  transport-neutral. No I/O/logging/tracing in core and no concrete adapters in
-  application or ports. Preserve public core imports and CLI names/defaults/output.
-  Explicit exposure selects API/UI operations; local administration is not exposed.
+  Layout (enforced by tests/architecture/test_layering.py): pure financial math and
+  types in src/sobres/core (no I/O, logging or tracing); provider protocols, vendor
+  adapters, the observation cache and the storage port in src/sobres/data (drivers only
+  under data/storage/adapters); Typer and FastAPI adapters in cli/ and api/ with no
+  business logic; one registry declaration per command generates CLI, API and UI.
   Settings and doctor checks are declared once. Use shared currency conversion,
   distinguish missing observations from closures/listing gaps and preserve WAL-safe
   backup, transaction and cache-clear semantics. SQLite is the operational default;
-  another backend requires real-engine contracts and data cutover/rollback evidence.
-  Private context is optional; public builds/tests/installations need no lake access.
-  Black and isort with Black profile, both line length 100, after every Python edit.
-  Keep compatible Ruff lint, strict typing, 90% branch coverage, offline known-answer
-  tests, recorded provider fixtures and base wheel/init/doctor/data verification.
-  Current Ruff-format gates remain until the explicit 0013 tooling migration.
-  Preserve 0000's org-token publishing decision and existing issue 21; do not copy
-  the template OIDC publisher over it. Cloud/enterprise profiles remain deferred.
+  another backend is a new adapter plus the shared conformance suite.
+  ruff (lint + format, line length 100), mypy --strict, 90% branch coverage, offline
+  known-answer tests, recorded provider fixtures and the base-wheel smoke test gate
+  every merge. Publishing uses organization tokens (PYPI_PROD/PYPI_TEST) behind
+  RELEASE_ENABLED; never copy them to repository secrets or switch to OIDC silently.
+  Change 0013 (template alignment / package migration) is superseded; do not target
+  ports/, application/ or adapters/ paths.
 
 rules:
   proposal:

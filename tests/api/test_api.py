@@ -12,7 +12,10 @@ reachable deployment; Settings page is generated; Live validation in the
 browser; Doctor has a view; No Node needed to install the tool; Stack; Types
 come from the API; Immediate feedback; Navigation does not cancel work;
 Cancellable; Run history is browsable; Re-run and compare; Portfolios are
-managed in the UI; The disclaimer carries over; Never a token in the URL.
+managed in the UI; The disclaimer carries over; Never a token in the URL;
+A local administrative command is registered; Unsafe browser setting or doctor
+repair; Synchronous work with concurrent health request; Process restarts during
+a job.
 """
 
 from __future__ import annotations
@@ -277,6 +280,87 @@ def test_settings_endpoints_share_the_config_set_path(
     assert api.post("/api/v1/settings/log_level/verify", json={}).status_code == 400
 
 
+def test_unsafe_settings_are_refused_over_http_but_not_from_the_cli(
+    api: TestClient, env: dict[str, str], cli: Callable[..., Any]
+) -> None:
+    """Scenario: Unsafe browser setting or doctor repair."""
+    from pathlib import Path
+
+    from sobres.settings import all_settings
+
+    listed = {s["key"]: s for s in api.get("/api/v1/settings").json()["settings"]}
+    locked = {s.key for s in all_settings() if not s.browser_editable}
+    assert locked == {
+        "db_url",
+        "config_file",
+        "otel_exporter_otlp_endpoint",
+        "otel_traces_exporter",
+    }
+    assert all(listed[k]["browser_editable"] is False for k in locked)
+    assert listed["fred_api_key"]["browser_editable"] is True
+    config = Path(env["SOBRES_CONFIG_FILE"])
+    before = config.read_text(encoding="utf-8") if config.exists() else None  # fresh env: no file
+    for key, value in (
+        ("db_url", "sqlite:////elsewhere/other.db"),
+        ("otel_exporter_otlp_endpoint", "http://collector.example:4318"),
+    ):
+        refused = api.put("/api/v1/settings", json={"key": key, "value": value})
+        assert refused.status_code == 400, key
+        assert "cannot be changed from the browser" in refused.json()["error"]
+        assert f"sobres config set {key}" in refused.json()["hint"]
+    after = config.read_text(encoding="utf-8") if config.exists() else None
+    assert after == before  # nothing written
+    # The terminal keeps its authority over the same setting.
+    ok = cli("config", "set", "otel_traces_exporter", "none")
+    assert ok.exit_code == 0, ok.stderr
+    assert "otel_traces_exporter" in config.read_text(encoding="utf-8")
+
+
+def test_health_answers_while_a_job_runs(api: TestClient) -> None:
+    """Scenario: Synchronous work with concurrent health request."""
+    import threading
+
+    response = api.post(
+        "/api/v1/optimize/backtest", json={**OPT, "start": "2018-01-01", "lookback": "6m"}
+    )
+    assert response.status_code == 202
+    state = state_of(api)
+    worker = threading.Thread(target=state.runner.run_pending)
+    worker.start()
+    try:
+        # While the worker computes, the request path stays free: health answers at once.
+        started = time.perf_counter()
+        health = api.get("/api/v1/health")
+        assert health.status_code == 200 and (time.perf_counter() - started) < 5
+        assert health.json()["app"] == "sobres"
+    finally:
+        worker.join(timeout=60)
+    assert not worker.is_alive()
+    assert api.get(response.json()["url"]).json()["state"] == "succeeded"
+
+
+def test_orphaned_running_jobs_are_failed_on_restart(api: TestClient) -> None:
+    """Scenario: Process restarts during a job."""
+    from sobres.data.storage.base import JobRecord
+
+    state = state_of(api)
+    orphan = state.storage.jobs.create(
+        JobRecord(id="orphan000001", command="optimize.backtest", params=dict(OPT))
+    )
+    state.storage.jobs.update(orphan.id, state="running", progress=0.4)
+    assert api.get(f"/api/v1/jobs/{orphan.id}").json()["state"] == "running"
+    # What start() does first on the next process: nothing stays running forever, and
+    # unperformed work is never reported complete.
+    assert state.runner.recover_orphans("the previous process exited before this job finished") == 1
+    record = api.get(f"/api/v1/jobs/{orphan.id}").json()
+    assert record["state"] == "failed" and record["result"] is None
+    assert record["error"]["error_class"] == "Interrupted"
+    assert "exited before this job finished" in record["error"]["message"]
+    assert record["error"]["hint"] == "submit the command again"
+    assert state.storage.jobs.list(limit=100, state="running") == []
+    assert state.runner.recover_orphans("again") == 0
+
+
 def test_settings_verify_runs_the_live_validator(
     api: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -321,6 +405,7 @@ def test_doctor_and_history_and_portfolios_over_the_api(api: TestClient) -> None
 
 
 def test_terminal_only_commands_refuse_over_http(api: TestClient) -> None:
+    """Scenario: A local administrative command is registered."""
     assert api.post("/api/v1/serve", json={}).status_code == 400
     assert api.post("/api/v1/open", json={}).status_code == 400
     assert api.post("/api/v1/serve/token/rotate", json={}).status_code == 400

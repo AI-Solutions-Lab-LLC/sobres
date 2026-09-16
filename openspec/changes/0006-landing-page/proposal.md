@@ -1,8 +1,8 @@
 ---
 change: 0006-landing-page
 milestone: v1.2
-depends_on: [0002-portfolio-optimization, 0004-web-ui, 0005-docker-distribution, 0013-template-development-alignment]
-status: proposed
+depends_on: [0002-portfolio-optimization, 0004-web-ui, 0005-docker-distribution]
+status: implemented
 ---
 
 # 0006 — Landing page

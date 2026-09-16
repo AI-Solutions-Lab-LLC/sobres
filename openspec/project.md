@@ -5,7 +5,7 @@
 | What | Value |
 |---|---|
 | Repository | `AI-Solutions-Lab-LLC/sobres` — https://github.com/AI-Solutions-Lab-LLC/sobres |
-| PyPI distribution | `sobres` (unclaimed as of 2026-09-12) |
+| PyPI distribution | `sobres` (first publish, 1.1.0, waits on `RELEASE_ENABLED`; see #21) |
 | Import package | `sobres` (`src/sobres/`) |
 | Console script | `sobres` |
 | Container image | `aisolutionslab/sobres` on Docker Hub |
@@ -25,79 +25,74 @@ forecasts, and plan real-world money goals (retirement, house, car, college).
 The CLI is the first surface. The library underneath it is designed so a web API
 or notebook can sit on top later without moving any logic.
 
-## Architecture: current implementation and proposed target
+## Architecture
 
-The foundation merged through PR #33 (`b9792d7`) currently uses `core/`, `data/`, `cli/`, a settings
-registry and a registry that also builds Typer commands. PR #8
-merged optimization into the foundation stack branch (`7f59d01`), not main; see the [0013 audit](changes/0013-template-development-alignment/alignment-audit.md).
-Do not claim that the following layout exists until 0013 is implemented.
-
-The merged AISL template supplies repository tooling and shared agent procedures.
-Its context blueprint motivates this **proposed Sobres application expansion**:
+One rule, enforced by `tests/architecture/test_layering.py` rather than by review:
 
 ```text
 src/sobres/
-  __about__.py / py.typed          unchanged package identity and version source
-  registry.py / results.py        transport-neutral declarations and result types
-  settings.py                     one settings registry, secret metadata and precedence
-  bootstrap.py                    concrete adapter selection and lifecycle
-  core/                           pure math, data types, conventions and frame rules
-  ports/{providers,storage}.py     owned protocols; no driver or framework types
-  application/                    use cases, cache/currency coordination, health
-    commands/                     declarations and handlers shared by transports
-  adapters/
-    cli/                          Typer parsing, prompts and rendering
-    api/                          0004 optional FastAPI app; static/ holds built assets
-    providers/                    vendor I/O, parsing and fixture sources
-    storage/                      SQLite and adapter-owned immutable migrations
-    config.py                     config-file I/O
-  observability/                  adapter diagnostics; no core instrumentation
-  cli/ / data/ / config.py         temporary forwarding compatibility paths only
-frontend/                         0004 React SPA, separate locked build
-site/                             0006 single product home page
-compose.yaml / Dockerfile         0005 container profile
+  __about__.py / py.typed        package identity; the one version source
+  registry.py / results.py      one declaration per command; CLI, API and UI derive from it
+  settings.py                   one settings registry: env var, secret flag, how to obtain,
+                                live validator, browser editability
+  doctor.py                     one check registry; init/doctor/deploy check/health use it
+  core/                         pure, I/O-free math over frames and dataclasses:
+                                no network, no disk, no logging, no tracing
+  data/                         providers and the storage port -> pandas objects; no math
+    base.py                     provider Protocols (prices, macro, factors, FX) and frame rules
+    *_provider.py               vendor adapters (yfinance, FRED, ECB, Ken French, World Bank/OECD/BIS)
+    cache.py / align.py / gaps.py  observation cache, alignment, gap classification
+    storage/base.py             repository Protocols in domain terms; open_storage()
+    storage/adapters/           the only place a database driver is imported (SQLite today)
+  cli/                          Typer adapters generated from the registry; rendering, prompts
+  api/                          FastAPI adapters generated from the registry; jobs, SSE, auth
+  observability/                structlog + optional OpenTelemetry; adapters instrument calls
+frontend/                       React SPA; forms and views generated from the registry
+site/                           the GitHub Pages home page
+compose.yaml / Dockerfile       the container profile
 ```
 
-Dependencies flow transport → application → core/ports. Concrete I/O stays in
-adapters and composition; pure computations never read disk/network/settings or
-emit logs. Application code can coordinate I/O through injected ports but cannot
-import concrete adapters. Keep all public `sobres.core` APIs and existing command
-names, defaults, aliases, formats and exit codes compatible. New features use the
-new paths after migration; old paths become facades, not parallel implementations.
+Dependencies flow `cli`/`api` → `core` + `data`. Anything swappable — a data
+provider, the storage backend, the solver — sits behind a `Protocol` in our own
+namespace, and its library types never appear in a signature outside its adapter.
+Where more than one implementation is plausible, a shared conformance suite
+(`tests/data/storage_conformance.py`, the provider contract tests) defines the contract.
+If code computes something in `cli/` or `api/`, it belongs in `core/`; if `core/`
+would call a provider or open a connection, pass the frame in instead.
 
-The detailed [0013 map](changes/0013-template-development-alignment/design.md)
-assigns every current module and test family, compatibility checks and rollout.
-`tests/core/` remains known-answer math; `tests/application/` proves use cases;
-`tests/contracts/` defines provider/storage behavior; `tests/integration/` covers
-actual adapters, migrations and backup. CLI/API, architecture, invariant,
-packaging, recorded-fixture and deliberately live-network tests remain distinct.
+Tests are organized by what they prove: `tests/core/` (known answers), `tests/data/`
+(recorded fixtures and conformance), `tests/cli/`, `tests/api/`, `tests/ui/`
+(source-level checks of the SPA and the site), `tests/architecture/` (import and
+literal rules, scenario coverage), `tests/invariants/` (every registered command),
+`tests/network/` (marked, excluded from CI; run by `.github/workflows/live.yml`).
 
-## Development contract (proposed by 0013)
+Change 0013 proposed renaming these boundaries into `ports/`, `application/` and
+`adapters/` packages plus template tooling. It was superseded on 2026-09-16
+(see its proposal): the boundaries already exist and are tested, and the rename had
+no user-visible outcome.
 
-Shared entry: `AGENTS.md`; Claude imports it, Codex uses linked individual skills
-and explicitly reads applicable shared rules. Preserve Sobres' review skill and
-rules while consolidating instructions. Private `context-lake/` is optional and
-pinned; contributors, CI and package consumers work without it. Local project
-standards remain sufficient and public artifacts exclude context/state/secrets.
+## Development contract
 
-Issue → merged planning PR → small implementation PRs. A local request to prepare
-a plan does not require publishing an issue until publication is requested, and
-it does not authorize implementation. Each task is at most about two hours with
-its test; ordinarily group 1–3 tasks per PR, explaining larger atomic changes.
+`CLAUDE.md` is the entry point for contributors and agents. Behavior changes start
+with an OpenSpec change (`proposal`, `design`, `tasks`, spec deltas); every
+`#### Scenario:` gets a test, and `tests/architecture/test_scenarios.py` fails the
+build when an `implemented` change has a scenario without one.
 
-Use explicit clone-local environments, pinned development tools and the documented
-Make equivalents on supported platforms. Black/isort at 100 are the formatting
-authorities; retain compatible Ruff lint and strict mypy. Preserve 90% branch
-coverage, offline tests, cross-platform CI, strict spec validation, workflow lint,
-base-artifact install/onboarding and dependency audit. These commands become
-available with 0013 implementation, not merely by merging these documents.
+ruff (lint and format), `mypy --strict`, actionlint and the hygiene hooks run before a
+commit exists (`pre-commit install`; the Claude Code commit gate runs the same set).
+CI adds the offline test suite with a 90% branch-coverage floor on Linux, macOS and
+Windows, the base-wheel smoke test (no extras), the sdist/wheel build, the container
+quickstart, the frontend client-drift and bundle checks, CodeQL and `pip-audit`.
+Strict OpenSpec validation: `npx @fission-ai/openspec validate --all --strict`.
 
-Registry generation remains mandatory for CLI commands. API/UI generation is
-restricted to explicitly reviewed exposure metadata: excluded administration
-commands have no route/schema/form. Shared analysis services have parity; browser
-settings/health use narrow allowlists and do not expose arbitrary local operations.
+Registry generation is mandatory for CLI commands; the API route and the UI form come
+from the same declaration and a parity test fails the build if one is missing.
+Commands that only make sense in a terminal (`serve`, `open`, `serve token rotate`)
+refuse over HTTP before any side effect. Browser-editable settings are an explicit
+subset of the declarations (`browser_editable`); the database URL, the trace exporter
+destination and the config-file path are CLI-only.
 
-## Command surface (target)
+## Command surface
 
 | Command | Does |
 |---|---|
@@ -114,7 +109,7 @@ settings/health use narrow allowlists and do not expose arbitrary local operatio
 | `sobres plan retire --income ... --expenses ...` | FIRE number + date |
 | `sobres plan house --price ... --down-pct ...` | Savings path to a down payment |
 | `sobres plan goal --target ... --by 2032-01-01` | Generic funding solver |
-| `sobres econ forecast ticker:AAPL --model var --horizon 20` | Planned multivariable price distribution; see revised 0009 |
+| `sobres econ forecast ticker:AAPL --model var --horizon 20` | Multivariable price distribution with mandatory intervals (revised 0009, #31) |
 | `sobres fx rates EURUSD` / `sobres fx convert 1000 --from USD --to EUR` | Exchange rates and conversion |
 | `sobres fx attribution --tickers ... --base USD` | Split return into asset vs currency |
 | `sobres fx hedge --tickers ... --compare unhedged` | What hedging would have cost |
@@ -165,13 +160,13 @@ re-implementing health.
 ## Storage: owned ports, with SQLite behind them
 
 Persistence is reachable only through repository protocols in
-`ports/storage.py` after 0013 (currently `data/storage/base.py`), phrased in domain terms — observations, date ranges,
+`data/storage/base.py`, phrased in domain terms — observations, date ranges,
 portfolios — never as SQL execution. A port phrased as SQL is a SQL port, and
 swapping it would still be a rewrite.
 
 `SOBRES_DB_URL` selects the adapter, defaulting to
-`sqlite:///<user-data-dir>/sobres.db`. **Database drivers stay inside `adapters/storage/` after 0013** (currently
-`data/storage/adapters/`), enforced by architecture tests.
+`sqlite:///<user-data-dir>/sobres.db`. **Database drivers stay inside
+`data/storage/adapters/`**, enforced by architecture tests.
 
 SQLAlchemy Core (the expression language, not the ORM) sits *below* the
 protocols as the dialect layer, with adapter-owned migrations. Call sites never see
@@ -237,7 +232,7 @@ warns once and never fails a command.
 |---|---|
 | `espin086/fire-calculator` | The core/adapter architecture itself, plus `savings_rate`, `fi_number`, `project` → seeds `core/goals.py` |
 | `espin086/CompountInterestAPI` | Compounding math, already packaged and tested |
-| `legacy_code/` (this repo) | `StockMarketData.py` price pulls; `Financial Portfolio Optimization.R` is the reference implementation to port to `core/optimize.py` |
+| `legacy_code/` (git history) | The R allocation LP this project ported; its formulation and known answer are in `docs/allocation-lp-reference.md` |
 | `espin086/NewsWaveMetrics` | `fetch_yfinance.py` and `extract_economic_data.py` — working yfinance + FRED extraction patterns |
 | `espin086/jjutils` | `base_regression.py` — regression scaffolding for `core/factors.py` |
 | `espin086/Econometrics` | statsmodels usage patterns for `core/timeseries.py` |
@@ -257,19 +252,20 @@ Each is one OpenSpec change under `openspec/changes/`.
 | 0006 | `landing-page` | Animated dark GitHub Pages site |
 | 0007 | `equity-factor-analysis` | Single-stock analysis, CAPM, Fama-French 3/5 + momentum |
 | 0008 | `goal-planning` | Retirement/FIRE, house, car, education, Monte Carlo |
-| 0009 | `econometrics-forecasting` | Multivariable VAR/BVAR, elastic-net/boosted trees, GARCH volatility; revised plan pending implementation |
+| 0009 | `econometrics-forecasting` | Stationarity diagnostics, GARCH volatility, robust regression; multivariable VAR/BVAR forecasting under #31 |
 | 0010 | `currency-and-ppp` | FX attribution and hedging, PPP comparison, PPP-adjusted goals |
 | 0011 | `rebrand-sobres` | Rename through the code: import package, console script, env vars, image, pages URL |
 | 0012 | `foundation-review-fixes` | Foundation correctness and regression contracts, implemented in the local foundation |
-| 0013 | `template-development-alignment` | Shared dev harness/checks, optional context, compatible application layout and active-plan reconciliation |
+| 0013 | `template-development-alignment` | **Superseded 2026-09-16** — the boundaries it proposed already exist and are tested |
+| 0014 | `onboarding-defaults` | `init` asks one question, `--start` defaults to five years, usage errors show an example |
+| 0015 | `risk-free-proxy` | Risk-free rate sourced from FRED or Ken French; never an assumed zero |
 
 0001 → 0002 is the v1.0.0 release. 0003 → 0006 turn it into a deployable product
 with a UI. 0007–0009 then add analytics to a UI that already exists, rather than
 retrofitting one at the end. 0010 makes the whole tool international, last because
-it is the change that touches every earlier one. Before resuming the open implementation stack, merge the amended plan and
-implement 0013. Each feature retains its domain prerequisites; transport parity
-requires 0004, container distribution 0005, and the common migration 0013.
-See each proposal for exact dependencies rather than inferring them from numbers.
+it is the change that touches every earlier one. 0002–0008 and 0010 shipped in the
+first published version, 1.1.0. See each proposal for exact dependencies rather than
+inferring them from numbers.
 
 0011 is out of band: it renames the project and can land at any point, though the
 longer it waits the more published artifacts carry the old name.
@@ -332,10 +328,9 @@ Credentials, by index and registry:
 
 ## Template and context decisions
 
-Baseline: merged AISL project-template main at 52e8426 and its reviewed lake pin
-`de42bd55f7b2268443fa4e46c13e74f99bdab144`. The [audit](changes/0013-template-development-alignment/alignment-audit.md)
-records full revisions, every open PR, adopted local decisions and deferred profiles.
-Context review documents are proposed, not blanket approval for cloud/enterprise
-services. Keep 0000's organization-token publishing contract (existing issue #21)
-as an explicit template exception; current OIDC workflow/docs still need correction.
-0005/0006 publication is independently enabled only after artifact/access review.
+Change 0013 recorded the AISL project-template revision (52e8426) and a private
+context-lake pin as a baseline; it was superseded (see its proposal) and no private
+context is needed to build, test or release this repository. 0000's organization-token
+publishing contract (`PYPI_PROD` / `PYPI_TEST`, no OIDC, `RELEASE_ENABLED`) stands, tracked
+by #21. The landing page deploys only when `PAGES_ENABLED` is `true`; the container image
+publishes only when `DOCKER_RELEASE_ENABLED` is `true`.

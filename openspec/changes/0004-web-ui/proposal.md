@@ -1,8 +1,8 @@
 ---
 change: 0004-web-ui
 milestone: v1.2
-depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0003-local-persistence, 0013-template-development-alignment]
-status: proposed
+depends_on: [0001-foundation-data-and-cli, 0002-portfolio-optimization, 0003-local-persistence]
+status: implemented
 planning_depth: proposal + design + tasks + spec deltas; amended by 0013
 ---
 

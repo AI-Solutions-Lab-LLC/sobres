@@ -2,7 +2,10 @@
 
 Scenarios: Automatic upgrade; Migrations are tested against real prior states;
 Forward-only; Backup before migrating; Newer database than the installed tool;
-Migrations are visible; One migration set; Applied through the port.
+Migrations are visible; One migration set; Applied through the port; New engine
+versus existing SQLite lineage (``test_migrations_are_forward_only_and_contiguous``:
+the SQLite migration ids and names are the one immutable set another engine would
+leave untouched).
 """
 
 from __future__ import annotations

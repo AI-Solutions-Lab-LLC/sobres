@@ -11,7 +11,21 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- **Settings over HTTP are an explicit subset.** `db_url`,
+  `otel_exporter_otlp_endpoint`, `otel_traces_exporter` and `config_file` are declared
+  `browser_editable=False`; `PUT /api/v1/settings` refuses them with a usage error
+  before writing anything. `sobres config set` is unchanged.
+- **Landing page.** The "what ships today" list now includes factor analysis, goal
+  planning, econometrics and FX/PPP (all in 1.1.0); the roadmap names what is actually
+  unshipped. A hosting-inquiry link opens a public GitHub issue form that asks for no
+  credentials or financial records. The Pages deploy job runs only when the repository
+  variable `PAGES_ENABLED` is `true`; the build and Lighthouse audit run regardless.
+- **OpenSpec ledgers reconciled.** Change 0013 (template alignment / package
+  migration) is superseded; its R0/R1/R2 prerequisites and spec requirement were removed
+  from 0002–0010, whose task ledgers now check against the tests that prove them on
+  `main`. `openspec/project.md` describes the layout that exists.
 
 ## [1.1.0] - 2026-09-16
 
