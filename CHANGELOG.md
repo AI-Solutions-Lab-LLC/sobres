@@ -12,6 +12,13 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 ## [Unreleased]
 
 ### Fixed
+- **`risk_parity` no longer fails to converge on a low-volatility asset.** With
+  roughly equal expected returns and one volatility far below the others -- a bond
+  fund among equities -- SLSQP's QP subproblem reported its constraints as
+  incompatible from the equal-weight start, so the objective raised instead of
+  returning weights. It now retries from the inverse-volatility weights, which are
+  the exact equal-risk-contribution solution for a diagonal covariance. Cases that
+  already converged are unaffected: the original start is still tried first.
 - **A base `pip install sobres` works again.** `cli/commands/serve.py` imported
   `sobres.api` at module scope, and `sobres.api` imports FastAPI from the `[web]`
   extra. Because command registration imports every module under `cli/commands/`,

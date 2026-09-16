@@ -381,6 +381,29 @@ def _max_sharpe(
     return best
 
 
+def _inverse_volatility_start(
+    s: np.ndarray, bounds: list[tuple[float, float]]
+) -> np.ndarray | None:
+    """Weights proportional to ``1 / sigma_i``, or ``None`` if they break a bound.
+
+    For a diagonal covariance matrix this is the exact equal-risk-contribution
+    solution, so it is both the best available starting point and, in that case,
+    the answer itself. Maillard, Roncalli and Teiletche (2010), "The Properties
+    of Equally Weighted Risk Contribution Portfolios", *Journal of Portfolio
+    Management* 36(4), 60-70, section 3.
+    """
+    variances = np.diag(s)
+    if not np.all(np.isfinite(variances)) or np.any(variances <= 0):
+        return None
+    weights = 1.0 / np.sqrt(variances)
+    weights = weights / weights.sum()
+    lower = np.array([low for low, _ in bounds])
+    upper = np.array([high for _, high in bounds])
+    if np.any(weights < lower - 1e-12) or np.any(weights > upper + 1e-12):
+        return None
+    return np.asarray(weights, dtype="float64")
+
+
 def _risk_parity(
     s: np.ndarray,
     bounds: list[tuple[float, float]],
@@ -409,9 +432,22 @@ def _risk_parity(
         return np.asarray(2e4 * jac.T @ (numerator / total - 1.0 / n), dtype="float64")
 
     w, ok, msg = solve(objective, x0, bounds, sum_to_one, gradient)
-    if not ok:
-        raise OptimizationError(f"risk_parity did not converge: {msg}")
-    return w
+    if ok:
+        return w
+
+    # SLSQP's QP subproblem reports "Inequality constraints incompatible" from
+    # some starting points when one asset's variance is far below the others --
+    # a conditioning failure, not a bad gradient, which matches finite
+    # differences to ~3e-9. Retrying from the inverse-volatility weights fixes
+    # it: that point is the exact solution for a diagonal covariance and a much
+    # better-conditioned start otherwise. Deterministic, so reproducibility holds.
+    retry = _inverse_volatility_start(s, bounds)
+    if retry is not None and not np.allclose(retry, x0):
+        w, ok, retry_msg = solve(objective, retry, bounds, sum_to_one, gradient)
+        if ok:
+            return w
+        msg = f"{msg}; from inverse-volatility weights: {retry_msg}"
+    raise OptimizationError(f"risk_parity did not converge: {msg}")
 
 
 def efficient_frontier(
