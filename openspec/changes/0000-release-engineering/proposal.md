@@ -75,9 +75,9 @@ added after the code is written never catches what it would have prevented.
 The merged infrastructure is historical; remaining release work is tracked by
 [issue #21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21).
 Keep the agreed organization-token contract as an explicit exception to the
-project-template OIDC default. The current workflow/docs still describe OIDC;
-implementation must correct that mismatch and distinguish disabled from already
-published release decisions. Environment arming and an actual index rehearsal
+project-template OIDC default. PR #8 includes the organization-token workflow and accurate disabled/already-
+published reporting. This synchronized branch preserves those changes from its
+accepted merge; upload verification and activation still belong to issue #21. Environment arming and an actual index rehearsal
 remain separate owner actions, not consequences of this planning amendment.
 
 Future tooling/harness changes follow [0013](../0013-template-development-alignment/proposal.md),

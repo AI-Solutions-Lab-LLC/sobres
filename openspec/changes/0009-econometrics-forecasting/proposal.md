@@ -103,6 +103,8 @@ Missing required predictors must fail visibly rather than silently reduce the mo
 
 Tracker: [#31](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/31);
 Candidate PR: [#15](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/15).
+See [the readiness ledger](../0013-template-development-alignment/tracking.md)
+for the planning PR and prerequisite status.
 The docs-only planning PR against main is linked from #31; merge that amendment
 independently before replacing the older candidate implementation.
 Carry this amended contract into dependent #16. New source/extra dependencies need

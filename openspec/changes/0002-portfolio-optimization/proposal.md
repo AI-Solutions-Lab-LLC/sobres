@@ -11,12 +11,12 @@ status: proposed
 
 ```bash
 sobres optimize markowitz --tickers AAPL MSFT NVDA JNJ XOM GLD \
-    --start 2015-01-01 --objective max-sharpe --max-weight 0.35
+    --start 2015-01-01 --fill ffill --objective max_sharpe --max-weight 0.35
 
-sobres optimize frontier --tickers ... --points 50 --format csv > frontier.csv
+sobres optimize frontier --tickers ... --points 50 --start 2015-01-01 --fill ffill --format csv > frontier.csv
 
-sobres optimize backtest --tickers ... --objective max-sharpe \
-    --rebalance quarterly --lookback 36m --start 2015-01-01
+sobres optimize backtest --tickers ... --objective max_sharpe \
+    --rebalance quarterly --lookback 36m --start 2015-01-01 --fill ffill
 ```
 
 Optimal weights with the risk/return profile that produced them, the full efficient
@@ -76,6 +76,10 @@ the honesty mechanism, so it is part of v1's definition of done.
 | Solver dependency weight (`cvxpy`) | SLSQP via `scipy` is the default and covers every v1 objective; `cvxpy` stays an opt-in extra |
 | Annualization convention errors (252 vs 365, simple vs log) | One documented convention module; every conversion tested against a hand-computed fixture |
 
+## Review correction scope
+
+PR #8 incorporates the eight review findings, the foundation corrections/recorded fixtures, and the decisions in `review-decisions.md`. Distribution activation remains gated separately: issue #21 covers PyPI enablement; a Homebrew tap/formula requires its own distribution change. No published version is claimed by this proposal.
+
 ## Development alignment and review readiness (0013)
 
 Keep returns/risk/optimization/backtest math in `core/`; orchestration and registry declarations go to `application/commands/optimize.py`, rendering to `adapters/cli/`. Use shared market/currency services and injected providers. R/textbook oracles and known review findings need fresh acceptance, not changed expected values.
@@ -86,16 +90,16 @@ and [dated source/decision audit](../0013-template-development-alignment/alignme
 The shared plan must be merged and its package migration implemented before new
 work targets those locations. Keep the existing feature dependencies too.
 
-PR #8 at `21724ce35c6a4b3f5d89db265517bf77a38d425f` contains an older candidate
-implementation. It is open and stacked, not accepted default-main behavior.
-Its newer tasks/design decisions were inspected for this amendment; checked boxes
-from that branch are not carried over as proof. The amended plan and actual branch
-must be reconciled, reverified and reviewed before it is considered complete.
-The issue is recorded below; the planning merge commit remains pending.
-Publication of the tracker/plan does not authorize implementation before merge.
+PR #8 merged at `7f59d01273dec42461ac6817f890baf246a6f033` into the
+foundation branch, not default main. Its reviewed financial corrections and
+`review-decisions.md` remain the domain contract. PR #33 merged the alignment plan
+into main at `b9792d7`. This synchronization combines both; the new layout and
+remaining R verification tasks are still pending under issue #24. No release or
+actual R execution is claimed by either merge.
 
 ## GitHub tracking
 
 Implementation tracker: [#24](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/24).
 See [the readiness ledger](../0013-template-development-alignment/tracking.md)
-for the planning PR and prerequisite status. This plan is not yet merged.
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.

@@ -102,11 +102,12 @@ implementation. It is open and stacked, not accepted default-main behavior.
 Its newer tasks/design decisions were inspected for this amendment; checked boxes
 from that branch are not carried over as proof. The amended plan and actual branch
 must be reconciled, reverified and reviewed before it is considered complete.
-The issue is recorded below; the planning merge commit remains pending.
+The issue is recorded below; the planning merge is PR #33 (`b9792d7`).
 Publication of the tracker/plan does not authorize implementation before merge.
 
 ## GitHub tracking
 
 Implementation tracker: [#27](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/27).
 See [the readiness ledger](../0013-template-development-alignment/tracking.md)
-for the planning PR and prerequisite status. This plan is not yet merged.
+for the planning PR and prerequisite status. The plan merged in PR #33 at `b9792d72dad7217f7bb642c0c90a668afc501087`;
+the 0013 package migration remains unimplemented.
