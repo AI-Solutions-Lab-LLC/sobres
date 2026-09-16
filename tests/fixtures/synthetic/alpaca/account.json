@@ -1,0 +1,12 @@
+{
+  "id": "5a8d8a2e-0000-4000-8000-000000000001",
+  "account_number": "PA3SYNTH01",
+  "status": "ACTIVE",
+  "currency": "USD",
+  "cash": "100000",
+  "buying_power": "200000",
+  "equity": "100000",
+  "portfolio_value": "100000",
+  "pattern_day_trader": false,
+  "trading_blocked": false
+}

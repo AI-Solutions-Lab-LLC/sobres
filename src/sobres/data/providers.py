@@ -58,6 +58,13 @@ PROVIDERS: tuple[ProviderSpec, ...] = (
         reachability_url="https://sdmx.oecd.org/public/rest/dataflow/OECD.SDD.NAD/DSD_NAMAIN10@DF_TABLE4",
     ),
     ProviderSpec(
+        name="alpaca",
+        kind="broker",
+        description="Alpaca Trading API (paper by default): orders, positions, fills.",
+        reachability_url="https://paper-api.alpaca.markets/v2/clock",
+        requires_setting="alpaca_key_id",
+    ),
+    ProviderSpec(
         name="bis",
         kind="reer",
         description="Real effective exchange rates published by the BIS (keyless).",

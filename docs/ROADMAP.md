@@ -79,7 +79,10 @@ one arrives — which by 0002 is every risk and optimization function.
 - Derivatives pricing. Hedged returns come from interest-rate differentials under
   covered interest parity, not from a forward or options model
 - Tax, residency, visa, or healthcare modeling for relocation
-- Live trading, broker connections, order generation
+- Autonomous or scheduled trading, options, crypto, shorting, leverage, bulk
+  liquidation. (User-initiated execution of a saved portfolio through a broker
+  adapter, paper first and live behind explicit enablement, is change 0016 —
+  a deliberate revision of the earlier "no broker connections" exclusion.)
 - Tax modeling (marginal rates, Roth ladders, RMDs, wash sales, lot tracking)
 - Intraday or tick data
 - Machine-learning price prediction

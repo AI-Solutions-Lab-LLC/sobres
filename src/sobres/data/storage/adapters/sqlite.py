@@ -47,6 +47,9 @@ from sobres.data.storage.base import (
     RunRecord,
     SeriesKey,
     StorageInfo,
+    TradeFill,
+    TradeIntent,
+    TradeOrder,
     WatchlistRecord,
     register_backend,
 )
@@ -122,6 +125,7 @@ class SqliteStorage:
         self.goals = _Goals(self)
         self.runs = _Runs(self)
         self.jobs = _Jobs(self)
+        self.trades = _Trades(self)
         if options.check_integrity and not self.integrity_check():
             raise CorruptDatabaseError(
                 f"database {self.location} failed its integrity check",
@@ -943,6 +947,274 @@ def _job(row: Any) -> JobRecord:
         created_at=row.created_at,
         updated_at=row.updated_at,
         finished_at=row.finished_at,
+    )
+
+
+class _Trades:
+    def __init__(self, storage: SqliteStorage) -> None:
+        self._s = storage
+
+    # ---------------------------------------------------------------- intents
+    def save_intent(self, intent: TradeIntent) -> TradeIntent:
+        now = datetime.now(UTC)
+
+        def write(conn: Connection) -> int:
+            t = schema.trade_intent
+            clash = conn.execute(
+                sa.select(t.c.id).where(
+                    (t.c.plan_hash == intent.plan_hash)
+                    & (t.c.broker == intent.broker)
+                    & (t.c.account_id == intent.account_id)
+                    & (t.c.environment == intent.environment)
+                )
+            ).first()
+            if clash is not None:
+                raise sa.exc.IntegrityError(
+                    "trade_intent",
+                    {},
+                    Exception(f"UNIQUE constraint: plan {intent.plan_hash!r} already confirmed"),
+                )
+            conn.execute(
+                t.insert().values(
+                    id=intent.id,
+                    kind=intent.kind,
+                    broker=intent.broker,
+                    account_id=intent.account_id,
+                    environment=intent.environment,
+                    plan_hash=intent.plan_hash,
+                    plan=intent.plan,
+                    portfolio=intent.portfolio,
+                    run_id=intent.run_id,
+                    state=intent.state,
+                    created_at=intent.created_at or now,
+                    updated_at=now,
+                )
+            )
+            return 1
+
+        self._s._run("trade_intent_save", write, entity="trade_intent")
+        saved = self.get_intent(intent.id)
+        assert saved is not None
+        return saved
+
+    def get_intent(self, intent_id: str) -> TradeIntent | None:
+        def read(conn: Connection) -> TradeIntent | None:
+            t = schema.trade_intent
+            row = conn.execute(sa.select(t).where(t.c.id == intent_id)).first()
+            return None if row is None else _intent(row)
+
+        return self._s._run("trade_intent_get", read, entity="trade_intent")
+
+    def find_intent(
+        self, plan_hash: str, broker: str, account_id: str, environment: str
+    ) -> TradeIntent | None:
+        def read(conn: Connection) -> TradeIntent | None:
+            t = schema.trade_intent
+            row = conn.execute(
+                sa.select(t).where(
+                    (t.c.plan_hash == plan_hash)
+                    & (t.c.broker == broker)
+                    & (t.c.account_id == account_id)
+                    & (t.c.environment == environment)
+                )
+            ).first()
+            return None if row is None else _intent(row)
+
+        return self._s._run("trade_intent_find", read, entity="trade_intent")
+
+    def update_intent(self, intent_id: str, **changes: Any) -> TradeIntent:
+        allowed = {"state", "plan"}
+        unknown = set(changes) - allowed
+        if unknown:
+            raise ValueError(f"cannot update intent fields {sorted(unknown)}")
+        now = datetime.now(UTC)
+
+        def write(conn: Connection) -> int:
+            t = schema.trade_intent
+            return int(
+                conn.execute(
+                    t.update().where(t.c.id == intent_id).values(updated_at=now, **changes)
+                ).rowcount
+            )
+
+        if self._s._run("trade_intent_update", write, entity="trade_intent") == 0:
+            raise StorageError(f"intent {intent_id!r} does not exist")
+        saved = self.get_intent(intent_id)
+        assert saved is not None
+        return saved
+
+    def list_intents(self, limit: int = 20) -> list[TradeIntent]:
+        def read(conn: Connection) -> list[TradeIntent]:
+            t = schema.trade_intent
+            stmt = sa.select(t).order_by(t.c.created_at.desc(), t.c.id.desc()).limit(limit)
+            return [_intent(r) for r in conn.execute(stmt)]
+
+        return self._s._run("trade_intent_list", read, entity="trade_intent")
+
+    # ----------------------------------------------------------------- orders
+    def save_order(self, order: TradeOrder) -> TradeOrder:
+        now = datetime.now(UTC)
+
+        def write(conn: Connection) -> int:
+            conn.execute(
+                schema.trade_order.insert().values(
+                    id=order.id,
+                    intent_id=order.intent_id,
+                    symbol=order.symbol,
+                    side=order.side,
+                    quantity=order.quantity,
+                    status=order.status,
+                    broker_order_id=order.broker_order_id,
+                    filled_quantity=order.filled_quantity,
+                    filled_avg_price=order.filled_avg_price,
+                    submitted_at=order.submitted_at,
+                    updated_at=now,
+                    raw=order.raw,
+                )
+            )
+            return 1
+
+        self._s._run("trade_order_save", write, entity="trade_order")
+        saved = self.get_order(order.id)
+        assert saved is not None
+        return saved
+
+    def update_order(self, order_id: str, **changes: Any) -> TradeOrder:
+        allowed = {
+            "status",
+            "broker_order_id",
+            "filled_quantity",
+            "filled_avg_price",
+            "submitted_at",
+            "raw",
+        }
+        unknown = set(changes) - allowed
+        if unknown:
+            raise ValueError(f"cannot update order fields {sorted(unknown)}")
+        now = datetime.now(UTC)
+
+        def write(conn: Connection) -> int:
+            t = schema.trade_order
+            return int(
+                conn.execute(
+                    t.update().where(t.c.id == order_id).values(updated_at=now, **changes)
+                ).rowcount
+            )
+
+        if self._s._run("trade_order_update", write, entity="trade_order") == 0:
+            raise StorageError(f"order {order_id!r} does not exist")
+        saved = self.get_order(order_id)
+        assert saved is not None
+        return saved
+
+    def get_order(self, order_id: str) -> TradeOrder | None:
+        def read(conn: Connection) -> TradeOrder | None:
+            t = schema.trade_order
+            row = conn.execute(sa.select(t).where(t.c.id == order_id)).first()
+            return None if row is None else _order(row)
+
+        return self._s._run("trade_order_get", read, entity="trade_order")
+
+    def list_orders(
+        self, intent_id: str | None = None, *, open_only: bool = False, limit: int = 100
+    ) -> list[TradeOrder]:
+        def read(conn: Connection) -> list[TradeOrder]:
+            t = schema.trade_order
+            stmt = sa.select(t).order_by(t.c.updated_at.desc(), t.c.id.desc()).limit(limit)
+            if intent_id is not None:
+                stmt = stmt.where(t.c.intent_id == intent_id)
+            if open_only:
+                stmt = stmt.where(t.c.status.notin_(list(_TERMINAL_ORDER_STATES)))
+            return [_order(r) for r in conn.execute(stmt)]
+
+        return self._s._run("trade_order_list", read, entity="trade_order")
+
+    # ------------------------------------------------------------------ fills
+    def add_fills(self, fills: Sequence[TradeFill]) -> int:
+        def write(conn: Connection) -> int:
+            t = schema.trade_fill
+            added = 0
+            for f in fills:
+                exists = conn.execute(sa.select(t.c.id).where(t.c.id == f.id)).first()
+                if exists is not None:
+                    continue
+                conn.execute(
+                    t.insert().values(
+                        id=f.id,
+                        broker_order_id=f.broker_order_id,
+                        order_id=f.order_id,
+                        symbol=f.symbol,
+                        side=f.side,
+                        quantity=f.quantity,
+                        price=f.price,
+                        filled_at=f.filled_at,
+                        source=f.source,
+                    )
+                )
+                added += 1
+            return added
+
+        return self._s._run("trade_fill_add", write, entity="trade_fill")
+
+    def list_fills(self, symbol: str | None = None, limit: int = 1000) -> list[TradeFill]:
+        def read(conn: Connection) -> list[TradeFill]:
+            t = schema.trade_fill
+            stmt = sa.select(t).order_by(t.c.filled_at, t.c.id).limit(limit)
+            if symbol is not None:
+                stmt = stmt.where(t.c.symbol == symbol)
+            return [_fill(r) for r in conn.execute(stmt)]
+
+        return self._s._run("trade_fill_list", read, entity="trade_fill")
+
+
+_TERMINAL_ORDER_STATES: tuple[str, ...] = ("filled", "cancelled", "rejected", "expired")
+
+
+def _intent(row: Any) -> TradeIntent:
+    return TradeIntent(
+        id=row.id,
+        kind=row.kind,
+        broker=row.broker,
+        account_id=row.account_id,
+        environment=row.environment,
+        plan_hash=row.plan_hash,
+        plan=dict(row.plan),
+        portfolio=row.portfolio,
+        run_id=row.run_id,
+        state=row.state,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+    )
+
+
+def _order(row: Any) -> TradeOrder:
+    return TradeOrder(
+        id=row.id,
+        intent_id=row.intent_id,
+        symbol=row.symbol,
+        side=row.side,
+        quantity=float(row.quantity),
+        status=row.status,
+        broker_order_id=row.broker_order_id,
+        filled_quantity=float(row.filled_quantity),
+        filled_avg_price=None if row.filled_avg_price is None else float(row.filled_avg_price),
+        submitted_at=row.submitted_at,
+        updated_at=row.updated_at,
+        raw=None if row.raw is None else dict(row.raw),
+    )
+
+
+def _fill(row: Any) -> TradeFill:
+    return TradeFill(
+        id=row.id,
+        broker_order_id=row.broker_order_id,
+        symbol=row.symbol,
+        side=row.side,
+        quantity=float(row.quantity),
+        price=float(row.price),
+        filled_at=row.filled_at,
+        source=row.source,
+        order_id=row.order_id,
     )
 
 

@@ -1259,6 +1259,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/trade/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview, confirm and submit a sell that closes part or all of a position.
+         * @description Preview, confirm and submit a sell that closes part or all of a position.
+         */
+        post: operations["trade_close_api_v1_trade_close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit the previewed plan: the intent is recorded first, then each order independently.
+         * @description Submit the previewed plan: the intent is recorded first, then each order independently.
+         */
+        post: operations["trade_execute_api_v1_trade_execute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Fills, realized and unrealized P&L (average cost) and cash flows kept apart.
+         * @description Fills, realized and unrealized P&L (average cost) and cash flows kept apart.
+         */
+        post: operations["trade_history_api_v1_trade_history_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recorded orders with the broker state last observed.
+         * @description Recorded orders with the broker state last observed.
+         */
+        post: operations["trade_orders_api_v1_trade_orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open positions as the broker reports them; reads never place orders.
+         * @description Open positions as the broker reports them; reads never place orders.
+         */
+        post: operations["trade_positions_api_v1_trade_positions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Size whole-share orders that move the account toward a saved portfolio. No side effects.
+         * @description Size whole-share orders that move the account toward a saved portfolio. No side effects.
+         */
+        post: operations["trade_preview_api_v1_trade_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/trade/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask the broker about every open or unresolved order and record what it says.
+         * @description Ask the broker about every open or unresolved order and record what it says.
+         */
+        post: operations["trade_status_api_v1_trade_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/upgrade": {
         parameters: {
             query?: never;
@@ -1759,6 +1899,31 @@ export interface components {
              */
             strict: boolean;
         };
+        /** CloseParams */
+        CloseParams: {
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
+            /**
+             * Quantity
+             * @description Shares to sell (default: the whole position).
+             */
+            quantity?: number | null;
+            /**
+             * Symbol
+             * @description The position to close.
+             */
+            symbol: string;
+            /**
+             * Yes
+             * @description Skip the confirmation prompt (paper only).
+             * @default false
+             */
+            yes: boolean;
+        };
         /** CommandsParams */
         CommandsParams: Record<string, never>;
         /** CompareParams */
@@ -2106,6 +2271,41 @@ export interface components {
              * @description Target stock, ticker:AAPL (a bare symbol is a ticker).
              */
             ticker: string;
+        };
+        /** ExecuteParams */
+        ExecuteParams: {
+            /**
+             * Budget
+             * @description Total value the portfolio should reach, in the account currency.
+             */
+            budget: number;
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
+            /**
+             * Plan
+             * @description The plan hash printed by `trade preview`.
+             */
+            plan: string;
+            /**
+             * Portfolio
+             * @description Saved portfolio name (needs weights).
+             */
+            portfolio: string;
+            /**
+             * Run
+             * @description Use the weights of this saved optimization run instead.
+             */
+            run?: string | null;
+            /**
+             * Yes
+             * @description Skip the confirmation prompt (paper only).
+             * @default false
+             */
+            yes: boolean;
         };
         /** FactorParams */
         FactorParams: {
@@ -2592,6 +2792,20 @@ export interface components {
              */
             weights?: number[];
         };
+        /** HistoryParams */
+        HistoryParams: {
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
+            /**
+             * Symbol
+             * @description Only this symbol's fills.
+             */
+            symbol?: string | null;
+        };
         /** HouseParams */
         HouseParams: {
             /**
@@ -2887,6 +3101,20 @@ export interface components {
              */
             target?: string[];
         };
+        /** OrdersParams */
+        OrdersParams: {
+            /**
+             * Intent
+             * @description Only this intent's orders.
+             */
+            intent?: string | null;
+            /**
+             * Open
+             * @description Only orders that are not terminal.
+             * @default false
+             */
+            open: boolean;
+        };
         /** PortfolioDeleteParams */
         PortfolioDeleteParams: {
             /**
@@ -2934,6 +3162,39 @@ export interface components {
              * @description Portfolio name.
              */
             name: string;
+        };
+        /** PositionsParams */
+        PositionsParams: {
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
+        };
+        /** PreviewParams */
+        PreviewParams: {
+            /**
+             * Budget
+             * @description Total value the portfolio should reach, in the account currency.
+             */
+            budget: number;
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
+            /**
+             * Portfolio
+             * @description Saved portfolio name (needs weights).
+             */
+            portfolio: string;
+            /**
+             * Run
+             * @description Use the weights of this saved optimization run instead.
+             */
+            run?: string | null;
         };
         /** PricesParams */
         PricesParams: {
@@ -3313,6 +3574,15 @@ export interface components {
             key: string;
             /** Value */
             value: string;
+        };
+        /** StatusParams */
+        StatusParams: {
+            /**
+             * Live
+             * @description Address the live account (gated).
+             * @default false
+             */
+            live: boolean;
         };
         /** StockParams */
         StockParams: {
@@ -5624,6 +5894,237 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_close_api_v1_trade_close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_execute_api_v1_trade_execute_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecuteParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_history_api_v1_trade_history_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HistoryParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_orders_api_v1_trade_orders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrdersParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_positions_api_v1_trade_positions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PositionsParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_preview_api_v1_trade_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trade_status_api_v1_trade_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusParams"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

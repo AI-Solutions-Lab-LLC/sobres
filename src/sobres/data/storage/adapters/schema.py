@@ -192,8 +192,66 @@ job = Table(
     Column("finished_at", UtcTimestamp, nullable=True),
 )
 
+# --------------------------------------------------------------------- 0016
+trade_intent = Table(
+    "trade_intent",
+    metadata,
+    Column("id", Text, primary_key=True),  # application-generated
+    Column("kind", Text, nullable=False),
+    Column("broker", Text, nullable=False),
+    Column("account_id", Text, nullable=False),
+    Column("environment", Text, nullable=False),
+    Column("plan_hash", Text, nullable=False),
+    Column("plan", JsonText, nullable=False),
+    Column("portfolio", Text, nullable=True),
+    Column("run_id", Text, nullable=True),
+    Column("state", Text, nullable=False),
+    Column("created_at", UtcTimestamp, nullable=False),
+    Column("updated_at", UtcTimestamp, nullable=False),
+)
+
+trade_order = Table(
+    "trade_order",
+    metadata,
+    Column("id", Text, primary_key=True),  # the client order id, application-generated
+    Column("intent_id", Text, nullable=False),
+    Column("symbol", Text, nullable=False),
+    Column("side", Text, nullable=False),
+    Column("quantity", Float, nullable=False),
+    Column("status", Text, nullable=False),
+    Column("broker_order_id", Text, nullable=True),
+    Column("filled_quantity", Float, nullable=False),
+    Column("filled_avg_price", Float, nullable=True),
+    Column("submitted_at", UtcTimestamp, nullable=True),
+    Column("updated_at", UtcTimestamp, nullable=False),
+    Column("raw", JsonText, nullable=True),
+)
+
+trade_fill = Table(
+    "trade_fill",
+    metadata,
+    Column("id", Text, primary_key=True),  # application-generated, deterministic
+    Column("broker_order_id", Text, nullable=False),
+    Column("order_id", Text, nullable=True),
+    Column("symbol", Text, nullable=False),
+    Column("side", Text, nullable=False),
+    Column("quantity", Float, nullable=False),
+    Column("price", Float, nullable=False),
+    Column("filled_at", UtcTimestamp, nullable=False),
+    Column("source", Text, nullable=False),
+)
+
 CACHE_TABLES: tuple[str, ...] = ("observation", "fetch_log", "series_meta")
 """Tables ``sobres cache clear`` may touch. Everything else is user-authored."""
 
-USER_TABLES: tuple[str, ...] = ("portfolio", "watchlist", "goal", "run", "job")
+USER_TABLES: tuple[str, ...] = (
+    "portfolio",
+    "watchlist",
+    "goal",
+    "run",
+    "job",
+    "trade_intent",
+    "trade_order",
+    "trade_fill",
+)
 """Tables that hold user-authored state: never touched by cache maintenance."""

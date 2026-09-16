@@ -188,6 +188,63 @@ FRED_API_KEY = declare(
     )
 )
 
+
+def _validate_alpaca(value: str) -> LiveResult:
+    # A key id alone cannot be checked; the pair is verified by `sobres doctor` through
+    # the alpaca provider check and by `trade preview`.
+    return LiveResult(bool(value.strip()), "key id recorded; the pair is checked on first use")
+
+
+ALPACA_KEY_ID = declare(
+    Setting(
+        key="alpaca_key_id",
+        advanced=True,
+        browser_editable=False,
+        env="SOBRES_ALPACA_KEY_ID",
+        description="Alpaca API key id (paper or live; they differ). Enables `sobres trade`.",
+        secret=True,
+        obtain="https://app.alpaca.markets/paper/dashboard/overview  (Paper Trading -> API keys)",
+        affects=("trade.preview",),
+        validate_live=_validate_alpaca,
+    )
+)
+
+ALPACA_SECRET_KEY = declare(
+    Setting(
+        key="alpaca_secret_key",
+        advanced=True,
+        browser_editable=False,
+        env="SOBRES_ALPACA_SECRET_KEY",
+        description="Alpaca API secret key matching the key id.",
+        secret=True,
+        obtain="shown once when the key is created at Alpaca",
+        affects=("trade.preview",),
+    )
+)
+
+ALPACA_ENVIRONMENT = declare(
+    Setting(
+        key="alpaca_environment",
+        advanced=True,
+        env="SOBRES_ALPACA_ENVIRONMENT",
+        description="Which Alpaca account the credentials address: paper (default) or live.",
+        default="paper",
+        choices=("paper", "live"),
+    )
+)
+
+TRADING_LIVE_ENABLED = declare(
+    Setting(
+        key="trading_live_enabled",
+        advanced=True,
+        env="SOBRES_TRADING_LIVE_ENABLED",
+        description="Must be true before any command may address a live brokerage account.",
+        type="bool",
+        default=False,
+    )
+)
+
+
 DB_URL = declare(
     Setting(
         key="db_url",

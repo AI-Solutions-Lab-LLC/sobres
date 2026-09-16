@@ -67,6 +67,7 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Joint VAR/BVAR price forecasts with held-out controls, GARCH volatility, stationarity diagnostics, robust regression | ✅ Done (elastic-net/boosted trees and the macro preset deferred) |
 | [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | ✅ Done |
 | [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | ✅ Done (PyPI name reserved on first publish, #21) |
+| [0016](openspec/changes/0016-broker-execution/) | Broker execution | Saved portfolio → whole-share orders through a broker port; Alpaca adapter; paper first, live gated | ✅ Done (real-money verification is the owner's step, #22) |
 
 The whole tool also runs from one container — see [docs/DEPLOYING.md](docs/DEPLOYING.md):
 
@@ -204,6 +205,33 @@ was removed with this revision; `--model arima` explains the replacement.
 `econ evaluate` scores VAR and BVAR on identical dates and never picks a winner
 for you. Elastic-net and boosted-tree forecasters and the FRED macro preset are
 [deferred](openspec/changes/0009-econometrics-forecasting/tasks.md).
+
+## Quickstart: invest a saved portfolio (paper first)
+
+```bash
+sobres config set alpaca_key_id <PAPER_KEY_ID>          # paper keys from app.alpaca.markets
+sobres config set alpaca_secret_key <PAPER_SECRET>
+sobres portfolio save core --tickers AAPL MSFT --weights 0.6 0.4
+sobres trade preview core --budget 1000                 # no side effects; prints a plan hash
+sobres trade execute core --budget 1000 --plan <hash>   # records the intent, then submits
+sobres trade status                                     # reconciles open/unresolved orders
+sobres trade positions && sobres trade history          # what the broker reports; realized/unrealized
+sobres trade close AAPL --quantity 4                    # preview, confirm, submit a sell
+```
+
+The broker sits behind a Sobres-owned port (`data/brokers/base.py`); Alpaca is
+the first adapter and the shared workflow, storage, accounting and commands do
+not know its name. Sizing is whole shares from the saved weights, a budget,
+current holdings, pending orders and fresh quotes — a 60/40 portfolio, a $1,000
+budget and quotes of $100/$50 preview as 6 and 8 shares with $0 residual.
+`execute` refuses a plan whose hash no longer matches (quotes moved, holdings
+changed) and a plan already confirmed; a submission that times out is recorded
+as `unresolved`, never as failed or filled, until `status` asks the broker.
+P&L uses average cost (buy 10 @ 100, sell 4 @ 110, mark 6 @ 105 → 40 realized,
+30 unrealized); deposits are cash flows, not profit. **Paper is the default.**
+Live needs `alpaca_environment=live`, `trading_live_enabled=true`, `--live` and
+a typed confirmation of the account id; `execute` and `close` only run from the
+terminal. Credentials are secrets (0600 config, redacted, browser-locked).
 
 ## Quickstart: exchange rates and purchasing power
 

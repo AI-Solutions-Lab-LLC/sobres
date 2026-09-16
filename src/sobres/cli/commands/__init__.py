@@ -20,6 +20,7 @@ MODULES: tuple[str, ...] = (
     "ppp",
     "run",
     "serve",
+    "trade",
     "upgrade",
     "watchlist",
 )

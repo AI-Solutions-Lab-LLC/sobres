@@ -45,9 +45,17 @@ def _v2_application_state(conn: Any) -> None:
     )
 
 
+def _v3_trading_records(conn: Any) -> None:
+    """0016: trade intents, orders and fills behind the broker port."""
+    schema.metadata.create_all(
+        conn, tables=[schema.trade_intent, schema.trade_order, schema.trade_fill]
+    )
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "initial-cache-and-kv", _v1_initial),
     Migration(2, "application-state", _v2_application_state),
+    Migration(3, "trading-records", _v3_trading_records),
 )
 
 CURRENT_VERSION = MIGRATIONS[-1].version

@@ -22,7 +22,15 @@ from sobres.data.base import FactorProvider, FxProvider, MacroProvider, PricePro
 from sobres.data.cache import ObservationCache
 from sobres.data.storage.base import OpenOptions, Storage, open_storage
 from sobres.observability import get_logger
-from sobres.settings import FIXTURE_DIR, FRED_API_KEY, IMPLAUSIBLE_MOVE, SLOW_QUERY_MS
+from sobres.settings import (
+    ALPACA_ENVIRONMENT,
+    ALPACA_KEY_ID,
+    ALPACA_SECRET_KEY,
+    FIXTURE_DIR,
+    FRED_API_KEY,
+    IMPLAUSIBLE_MOVE,
+    SLOW_QUERY_MS,
+)
 
 
 @dataclass
@@ -135,6 +143,39 @@ class Context:
         from sobres.data.ecb_provider import EcbProvider
 
         return EcbProvider(source=self._source("ecb"), cache=self.cache, refresh=self.refresh)
+
+    def broker(self) -> Any:
+        """The configured broker adapter: a test double from ``sources["broker"]``, the
+        fixture simulator under ``SOBRES_FIXTURE_DIR``, else Alpaca with the configured keys."""
+        from sobres.data.brokers.alpaca import AlpacaBroker
+
+        if "broker" in self.sources:
+            return self.sources["broker"]
+        environment = str(self.config.get(ALPACA_ENVIRONMENT.key) or "paper")
+        fixture_dir = self.config.get(FIXTURE_DIR.key)
+        if fixture_dir:
+            from sobres.data.fixtures import FixtureAlpacaSource
+
+            key = "fixture.alpaca.state"
+            source = FixtureAlpacaSource(
+                Path(str(fixture_dir)),
+                state=self.storage.kv.get(key),
+                on_change=lambda state: self.storage.kv.set(key, state),
+            )
+            return AlpacaBroker(source, environment)
+        from sobres.core.errors import ConfigurationError
+        from sobres.data.brokers.alpaca import OBTAIN_URL, LiveAlpacaSource
+
+        key_id = self.config.get(ALPACA_KEY_ID.key)
+        secret = self.config.get(ALPACA_SECRET_KEY.key)
+        if not key_id or not secret:
+            raise ConfigurationError(
+                f"{ALPACA_KEY_ID.env} / {ALPACA_SECRET_KEY.env} are not set.",
+                hint=f"create paper keys at {OBTAIN_URL} then run: "
+                "sobres config set alpaca_key_id <ID> and "
+                "sobres config set alpaca_secret_key <KEY>",
+            )
+        return AlpacaBroker(LiveAlpacaSource(str(key_id), str(secret)), environment)
 
     def ppp_provider(self) -> Any:
         from sobres.data.ppp_provider import OecdPppProvider, WorldBankPppProvider
