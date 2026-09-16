@@ -186,6 +186,8 @@ def test_risk_panel_of_a_fixed_portfolio(cli: Callable[..., Any]) -> None:
         "0.6",
         "0.4",
         *BASE,
+        "--risk-free",
+        "0",  # explicit: the panel identity below assumes a zero rate (0015)
         "--format",
         "json",
     )
@@ -215,6 +217,8 @@ def test_risk_panel_of_a_fixed_portfolio(cli: Callable[..., Any]) -> None:
         "0.6",
         "0.4",
         *BASE,
+        "--risk-free",
+        "0",
         "--format",
         "table",
     )
@@ -269,10 +273,38 @@ def test_mixed_currencies_require_a_base_and_convert_before_estimation(
     assert "provider.get_rates" not in single.stderr and '"dataset": "fx"' not in single.stderr
 
 
-def test_risk_free_from_fred_when_configured(cli: Callable[..., Any]) -> None:
-    without = json.loads(cli("optimize", "markowitz", *TICKERS, *BASE, "--format", "json").stdout)
-    assert without["risk_free"] == 0.0
-    assert any("0.0 fallback" in n for n in without["provenance"]["notes"])
+def _fixture_rf_annual_mean(start: str, end: str) -> float:
+    """Independent of the provider: read the published CSV and average RF over the window."""
+    import csv
+
+    from sobres.core.conventions import PERIODS_PER_YEAR
+    from tests.conftest import FIXTURES
+
+    path = FIXTURES / "ken_french" / "F-F_Research_Data_Factors_daily.CSV"
+    lo, hi = start.replace("-", ""), end.replace("-", "")
+    with path.open(encoding="utf-8") as handle:
+        rows = [
+            r for r in csv.reader(handle) if r and r[0].strip().isdigit() and len(r[0].strip()) == 8
+        ]
+    rf = [float(r[4]) / 100.0 for r in rows if lo <= r[0].strip() <= hi]
+    assert rf, "fixture has no RF rows in the window"
+    return sum(rf) / len(rf) * PERIODS_PER_YEAR["daily"]
+
+
+def test_risk_free_is_sourced_without_a_key_and_from_fred_with_one(
+    cli: Callable[..., Any],
+) -> None:
+    """Scenarios: Sharpe ratio definition; Selection is announced (0015)."""
+    result = cli("optimize", "markowitz", *TICKERS, *BASE, "--format", "json")
+    assert result.exit_code == 0, result.stderr
+    without = json.loads(result.stdout)
+    expected = _fixture_rf_annual_mean("2019-01-01", "2020-12-31")
+    assert expected > 0  # rates were not zero over 2019-2020
+    assert without["risk_free"] == pytest.approx(expected, abs=5e-5)  # output rounds to 4 dp (0001)
+    assert any("Ken French RF" in n for n in without["provenance"]["notes"])
+    assert not any("fallback" in n for n in without["provenance"]["notes"])
+    assert "risk-free: selected automatically" in result.stderr
+    assert "Ken French RF" in result.stderr and "pass --risk-free to override" in result.stderr
     with_key = json.loads(
         cli(
             "optimize",
@@ -293,3 +325,23 @@ def test_risk_free_from_fred_when_configured(cli: Callable[..., Any]) -> None:
         ).stdout
     )
     assert given["risk_free"] == 0.03
+
+
+def test_non_usd_without_override_names_the_flag(cli: Callable[..., Any]) -> None:
+    """Scenario: No proxy for the currency (0015)."""
+    result = cli("optimize", "markowitz", "--tickers", "VOD.L", *BASE, "--format", "json")
+    assert result.exit_code == 2, result.stderr
+    assert "no automatic risk-free proxy for GBP" in result.stderr
+    assert "--risk-free" in result.stderr
+    ok = cli(
+        "optimize",
+        "markowitz",
+        "--tickers",
+        "VOD.L",
+        *BASE,
+        "--risk-free",
+        "0.01",
+        "--format",
+        "json",
+    )
+    assert ok.exit_code == 0, ok.stderr

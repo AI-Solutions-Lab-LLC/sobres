@@ -411,7 +411,7 @@ def hedge(p: HedgeParams, ctx: Context) -> HedgeComparison:
     period_rates = (
         pd.Series(rf, index=port_u.index)
         if p.risk_free is not None
-        else prior_rates(dated_rates, pd.DatetimeIndex(port_u.index))
+        else prior_rates(dated_rates, pd.DatetimeIndex(port_u.index), fallback=None)
     )
     rf = float(period_rates.mean())
     panel_u = risk_metrics(port_u, period_rates, frequency)

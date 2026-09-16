@@ -26,8 +26,8 @@ from sobres.cli.window import default_start
 from sobres.core import backtest as bt
 from sobres.core import moments
 from sobres.core import optimize as opt
-from sobres.core.conventions import infer_frequency
-from sobres.core.errors import InsufficientDataError, UsageError
+from sobres.core.conventions import PERIODS_PER_YEAR, infer_frequency
+from sobres.core.errors import InsufficientDataError, ProviderError, UsageError
 from sobres.core.rates import prior_rates, treasury_investment_yield
 from sobres.core.returns import apply_nan_policy, portfolio_returns, simple_returns
 from sobres.core.risk import RiskPanel, risk_metrics
@@ -258,7 +258,7 @@ def load_universe(p: UniverseParams, ctx: Context) -> Universe:
     period_rates = (
         pd.Series(rf, index=returns.index)
         if p.risk_free is not None
-        else prior_rates(dated_rates, pd.DatetimeIndex(returns.index))
+        else prior_rates(dated_rates, pd.DatetimeIndex(returns.index), fallback=None)
     )
     rf = float(p.risk_free) if p.risk_free is not None else float(period_rates.mean())
     provenance = Provenance.from_attrs(
@@ -287,32 +287,92 @@ def load_universe(p: UniverseParams, ctx: Context) -> Universe:
     )
 
 
+PRIOR_QUOTE_LOOKBACK = timedelta(days=45)
+"""Fetch the proxy from this far before ``start`` so the first return date has a prior quote."""
+
+
+def _announce_risk_free(
+    rates: pd.Series, start: date, end: date, source: str, convention: str, ctx: Context
+) -> tuple[float, str, pd.Series]:
+    """Summarize a dated proxy over the window, say so, and fail if it starts too late."""
+    rates = rates.dropna().sort_index()
+    if rates.empty:
+        raise InsufficientDataError(
+            f"{source} returned no observations for {start}..{end}",
+            hint="widen --start, or pass --risk-free <annual decimal>",
+        )
+    # Coverage of each return date is checked where the dates are known:
+    # prior_rates(..., fallback=None) in the callers.
+    window = rates.loc[str(start) : str(end)]
+    if window.empty:  # the window starts after the last quote: carry the last one
+        window = rates.iloc[-1:]
+    mean = float(window.mean())
+    coverage = f"{window.index[0].date()}..{window.index[-1].date()}"
+    summary = f"{source}, {coverage}, mean {mean:.2%} annualized"
+    ctx.note(f"risk-free: selected automatically -- {summary}; pass --risk-free to override")
+    ctx.log.warning(
+        "risk_free.selected", source=source, currency="USD", coverage=coverage, mean=mean
+    )
+    return mean, f"{summary}; {convention}", rates
+
+
 def resolve_risk_free(
     override: float | None, start: date, end: date, currency: str, ctx: Context
 ) -> tuple[float, str, pd.Series]:
+    """An annual simple risk-free proxy: the override, FRED DTB3, or Ken French RF.
+
+    Never an assumed constant. A USD run without a FRED key takes the 1-month
+    Treasury bill return Ken French publishes with the factor files, which is
+    keyless and dated. Any other currency needs ``--risk-free``.
+    """
     if override is not None:
         return float(override), "given annual simple proxy", pd.Series(dtype="float64")
-    reason = "no FRED key configured"
     if currency != "USD":
-        reason = f"no automatic {currency} risk-free proxy; supply --risk-free in {currency}"
-    elif ctx.config.get(FRED_API_KEY.key):
+        raise UsageError(
+            f"no automatic risk-free proxy for {currency}",
+            hint=f"pass --risk-free <annual decimal in {currency}>, e.g. --risk-free 0.02",
+        )
+    fetch_from = start - PRIOR_QUOTE_LOOKBACK
+    attempts: list[str] = []
+    if ctx.config.get(FRED_API_KEY.key):
         from sobres.data.fred_provider import get_risk_free_rate
 
         try:
-            discount = get_risk_free_rate(ctx.macro_provider(), start, end, "3m").dropna()  # type: ignore[arg-type]
-            if not discount.empty:
-                rates = treasury_investment_yield(discount)
-                source = (
-                    "FRED DTB3: prior-date 91-day investment-yield approximation; "
-                    "latest historical observations, not point-in-time vintages; "
-                    "0.0 before first available quote"
-                )
-                return float(rates.mean()), source, rates
-            reason = "FRED returned no usable risk-free observations"
+            discount = get_risk_free_rate(ctx.macro_provider(), fetch_from, end, "3m").dropna()  # type: ignore[arg-type]
         except Exception as exc:
-            reason = f"FRED unavailable ({type(exc).__name__})"
-    ctx.log.warning("risk_free.fallback", rate=0.0, reason=reason)
-    return 0.0, f"0.0 fallback: {reason}", pd.Series(dtype="float64")
+            attempts.append(f"FRED unavailable ({type(exc).__name__})")
+        else:
+            if discount.empty:
+                attempts.append("FRED returned no usable risk-free observations")
+            else:
+                return _announce_risk_free(
+                    treasury_investment_yield(discount),
+                    start,
+                    end,
+                    "FRED DTB3 (3-month T-bill, USD)",
+                    "prior-date 91-day investment-yield approximation; latest historical "
+                    "observations, not point-in-time vintages",
+                    ctx,
+                )
+    try:
+        factors = ctx.factor_provider().get_factors("ff3", "daily", fetch_from, end)
+    except Exception as exc:
+        attempts.append(f"Ken French unavailable ({type(exc).__name__})")
+        raise ProviderError(
+            "no risk-free proxy could be fetched: " + "; ".join(attempts),
+            provider="ken_french",
+            hint="check the network, or pass --risk-free <annual decimal>",
+        ) from exc
+    # RF is a decimal daily simple return; the annual simple proxy divides back per period.
+    annual = factors["RF"] * PERIODS_PER_YEAR["daily"]
+    return _announce_risk_free(
+        annual,
+        start,
+        end,
+        "Ken French RF (1-month T-bill, USD)",
+        "daily simple return x periods per year; latest published file",
+        ctx,
+    )
 
 
 def estimate(u: Universe, p: EstimatorParams, ctx: Context) -> tuple[pd.Series, pd.DataFrame]:
