@@ -81,6 +81,13 @@ artifacts = ["src/sobres/api/static/**"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/sobres"]
 
+[tool.hatch.build.targets.sdist]
+# `legacy_code/` is the pre-sobres R/Python prototype kept for reference and for
+# the regression fixtures in `tests/fixtures/r_reference/`. It is repository
+# history, not something a consumer of the source distribution needs, and its
+# three `.rattle` datasets alone are ~16 MB — the bulk of the sdist.
+exclude = ["/legacy_code"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # `tests` is a package (tests/conftest.py, tests/data/contracts.py are imported by name),

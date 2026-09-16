@@ -11,7 +11,6 @@ import httpx
 from pydantic import Field
 
 from sobres import deploy as dep
-from sobres.api import auth
 from sobres.cli.commands.doctor import DoctorReport, build_report
 from sobres.cli.context import Context
 from sobres.doctor import run_checks
@@ -64,6 +63,8 @@ class CheckParams(Params):
     human_default=True,
 )
 def check(p: CheckParams, ctx: Context) -> DoctorReport:
+    from sobres.api import auth  # deferred: FastAPI is a `[web]` extra
+
     reports = run_checks(ctx, offline=p.offline)
     token_configured = auth.stored_token(ctx.storage.kv) is not None
     reports += dep.deployment_reports(
