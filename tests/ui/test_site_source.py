@@ -156,7 +156,7 @@ def test_hosting_inquiry_is_public_and_asks_for_nothing_confidential() -> None:
     assert "public GitHub issue" in footer and "not a service agreement" in footer
     form = (REPO / ".github" / "ISSUE_TEMPLATE" / "hosting-inquiry.yml").read_text(encoding="utf-8")
     assert "This issue is public" in form
-    for forbidden in ("API key", "account number", "statement"):
+    for forbidden in ("API keys", "account numbers", "statements"):
         assert forbidden in form  # named as things NOT to include
     for absent in ("password", "type: input\n    id: email", "SLA guaranteed"):
         assert absent not in form

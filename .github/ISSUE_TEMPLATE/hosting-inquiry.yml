@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        **This issue is public.** Anyone can read it. Do not paste API keys, account
-        numbers, statements, holdings, or anything else you would not publish.
+        **This issue is public.** Anyone can read it.
+        Do not paste API keys, account numbers, statements, holdings, or anything else you would not publish.
 
         sobres is a single-user research tool. An inquiry is a conversation about whether
         running it for you makes sense; it is not an order, a service-level agreement,
