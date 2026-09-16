@@ -1,8 +1,8 @@
 ---
 change: 0002-portfolio-optimization
 milestone: v1 (part 2 of 2) — the v1.0.0 release
-depends_on: [0001-foundation-data-and-cli, 0013-template-development-alignment]
-status: proposed
+depends_on: [0001-foundation-data-and-cli]
+status: implemented
 ---
 
 # 0002 — Portfolio optimization

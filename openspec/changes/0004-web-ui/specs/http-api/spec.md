@@ -181,38 +181,24 @@ HTTP operations SHALL provide documented schemas, actionable error mapping and b
 - **WHEN** the server is bound to a non-loopback address
 - **THEN** authentication attempts SHALL be rate-limited per source address
 
-### Requirement: Aligned development and application boundaries
-This capability SHALL use the merged 0013 development contract and target
-package ownership while preserving its domain scenarios and public CLI behavior.
-
-#### Scenario: Capability resumes after the alignment migration
-- **WHEN** implementation of this capability resumes on the aligned base
-- **THEN** its use cases SHALL use shared application services and owned ports,
-  with concrete I/O in adapters and financial computations in core
-- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
-  against the installed package without private context access
-
-#### Scenario: Capability is reviewed for another surface
-- **WHEN** the capability is exposed through an API or UI
-- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
-  service and validation contract as the CLI
-- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
-
 ### Requirement: Explicit HTTP exposure and shared composition
 The API SHALL expose only approved application operations and SHALL construct
 services through the same composition boundary as the CLI.
 
 #### Scenario: A local administrative command is registered
-- **WHEN** upgrade, init, browser/server launch, token administration, deployment,
-  or arbitrary local-file export/repair commands are registered
-- **THEN** no generated route, OpenAPI entry or actionable UI form SHALL exist for them
-- **AND** a generic command-dispatch endpoint SHALL NOT bypass that exclusion
+- **WHEN** a server or browser launch or token administration command (`serve`,
+  `open`, `serve token rotate`) is invoked over its generated route
+- **THEN** it SHALL answer 400 before any side effect, naming the terminal command to run
+- **AND** the route exists only because every declaration has one (parity); no generic
+  command-dispatch endpoint SHALL bypass that refusal
 
 #### Scenario: Unsafe browser setting or doctor repair
-- **WHEN** an HTTP request attempts to modify credentials, database paths, exporter
-  destinations, or invoke a local repair outside the approved browser allowlist
-- **THEN** it SHALL be refused before invoking the underlying service
-- **AND** the CLI's authorized local administration SHALL remain available
+- **WHEN** an HTTP request attempts to modify a setting declared `browser_editable=False`
+  (the database URL, the trace exporter destination or name, the config-file path)
+- **THEN** it SHALL be refused with a usage error before the config-set path runs
+- **AND** `sobres config set` SHALL still accept it from the terminal
+- **AND** doctor's `--fix` repairs (permissions, pending migrations) remain the only
+  repairs reachable over HTTP
 
 #### Scenario: Synchronous work with concurrent health request
 - **WHEN** a database-bound or CPU-heavy job runs and another client asks for health

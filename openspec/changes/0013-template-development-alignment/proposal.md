@@ -2,10 +2,37 @@
 change: 0013-template-development-alignment
 milestone: development infrastructure, before resuming 0002–0010
 depends_on: [0000-release-engineering, 0001-foundation-data-and-cli, 0011-rebrand-sobres, 0012-foundation-review-fixes]
-status: proposed
+status: superseded
 ---
 
 # 0013 — Align development with the AISL project template
+
+## Disposition — superseded on 2026-09-16
+
+This change is **not implemented and no longer planned**. It stays in the tree as the
+record of what was proposed and why it was set aside:
+
+- The architectural intent — pure math in `core/`, owned provider and storage protocols,
+  concrete I/O confined to adapters, transports that carry no business logic, one registry
+  declaration per command — is already what `main` does. The layout is `core/`, `data/`
+  (protocols in `data/base.py` and `data/storage/base.py`, adapters in `data/*_provider.py`
+  and `data/storage/adapters/`), `cli/`, `api/` and `registry.py`, and it is enforced by
+  `tests/architecture/test_layering.py`, not by review. The `ports/`, `application/` and
+  `adapters/` package moves in this plan would have renamed those boundaries without
+  changing any behavior or test.
+- Waves A, B and D are tooling preferences of the template (Black/isort in place of ruff
+  format, uv/Make manifests, PR-gate scripts, a private context-lake gitlink, a template
+  update mechanism) that have no user-visible outcome for this project at its current
+  stage; the commit gate in `CLAUDE.md` and `ci.yml` already runs the same checks.
+- The R0/R1/R2 "alignment prerequisite" tasks that 0013 injected into 0002–0010, and the
+  `Aligned development and application boundaries` requirement it added to their spec
+  deltas, were removed the same day. Those capabilities are accepted against the tests
+  that prove them on `main` (see each change's `tasks.md`).
+
+Two items the plan named remain valid follow-ups outside 0013 and are tracked as an
+issue: real-browser end-to-end checks for the SPA and the landing page (0004 R4, 0006 R4).
+The scenarios below are historical and are not enforced by
+`tests/architecture/test_scenarios.py` because the change is not `implemented`.
 
 ## Outcome
 

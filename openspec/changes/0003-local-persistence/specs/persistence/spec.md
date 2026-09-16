@@ -206,23 +206,6 @@ A consistent SQLite backup SHALL preserve complete local application state acros
 - **THEN** it SHALL be used without conversion, and writes from the container
   SHALL be visible to the host CLI afterwards
 
-### Requirement: Aligned development and application boundaries
-This capability SHALL use the merged 0013 development contract and target
-package ownership while preserving its domain scenarios and public CLI behavior.
-
-#### Scenario: Capability resumes after the alignment migration
-- **WHEN** implementation of this capability resumes on the aligned base
-- **THEN** its use cases SHALL use shared application services and owned ports,
-  with concrete I/O in adapters and financial computations in core
-- **AND** its original scenarios and affected architecture/CLI checks SHALL pass
-  against the installed package without private context access
-
-#### Scenario: Capability is reviewed for another surface
-- **WHEN** the capability is exposed through an API or UI
-- **THEN** exposure SHALL be explicit and behavior SHALL use the same application
-  service and validation contract as the CLI
-- **AND** new settings/providers/dependencies SHALL include actionable doctor coverage
-
 ### Requirement: Adapter-owned migration and transaction semantics
 Operational adapters SHALL own immutable migrations and expose explicit atomic
 write behavior through the repository/unit-of-work contract.

@@ -5,6 +5,8 @@ backend means one entry there and nothing here. It covers round-tripping every
 persisted type, upsert semantics, transaction rollback, a concurrent reader
 during a write, migration from every prior schema version, and the exact
 exceptions raised on conflict and on constraint violation.
+
+Scenarios: A multi-record write fails (``test_transaction_rolls_back_as_a_unit``).
 """
 
 from __future__ import annotations

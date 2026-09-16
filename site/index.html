@@ -104,6 +104,26 @@
             <p>The CLI is the image's entrypoint. Serve the UI, or run any command against the same volume.</p>
             <pre><code>docker run -v sobres:/data aisolutionslab/sobres db info</code></pre>
           </li>
+          <li class="cap">
+            <h3>Factor analysis</h3>
+            <p>CAPM and Fama-French 3 and 5 factors plus momentum, with Newey-West errors and alpha reported next to its t-statistic, never alone.</p>
+            <pre><code>sobres analyze factors NVDA --model ff5</code></pre>
+          </li>
+          <li class="cap">
+            <h3>Goal planning</h3>
+            <p>Retirement and FIRE, house, car and education goals; every answer carries a Monte Carlo or bootstrap success probability and the 10th–90th percentile outcomes, seed printed.</p>
+            <pre><code>sobres plan retire --income 120000 --expenses 60000 --simulate</code></pre>
+          </li>
+          <li class="cap">
+            <h3>Econometrics</h3>
+            <p>Stationarity diagnostics with disagreement stated, GARCH volatility with simulated bands, robust regression with VIF, and forecasts that always carry 80% and 95% prediction intervals.</p>
+            <pre><code>sobres econ volatility SPY --model garch --horizon 30</code></pre>
+          </li>
+          <li class="cap">
+            <h3>Exchange rates and PPP</h3>
+            <p>Convert once, explicitly; split a return into asset and currency; price a hedge; compare market rates with purchasing-power rates — labelled as a valuation gap, never a forecast.</p>
+            <pre><code>sobres ppp compare --base USD --vs EUR MXN</code></pre>
+          </li>
         </ol>
         <figure class="figure">
           <div id="equity" class="chart" role="img" aria-label="Equity curves of the walk-forward strategy and the equal-weight benchmark over the backtest window."></div>
@@ -151,10 +171,8 @@
         <h2 id="roadmap-title">Roadmap — not yet available</h2>
         <p class="muted">Specified in the repository, not shipped in the version above:</p>
         <ul>
-          <li>Factor analysis: CAPM, Fama-French 3 and 5 factors plus momentum, alpha with its t-statistic.</li>
-          <li>Goal planning: retirement and FIRE, house, car and education goals with Monte Carlo intervals.</li>
-          <li>Econometrics: ARIMA, GARCH and robust regression with mandatory prediction intervals.</li>
-          <li>Exchange rates and PPP: FX attribution, hedging, and purchasing-power-adjusted goals.</li>
+          <li>Multivariable price forecasting: a regularized joint VAR and a Bayesian VAR with held-out baseline comparisons (OpenSpec 0009, issue #31).</li>
+          <li>Broker execution: preview and place orders from a saved portfolio through a broker adapter, paper trading first (issue #22).</li>
         </ul>
       </section>
     </main>
@@ -163,6 +181,7 @@
       <p class="disclaimer">For research and education only. Not investment advice. Backtested and optimized figures on this page are hypothetical results computed by the tool on the stated data; they are not the performance of any account.</p>
       <p class="muted"><span data-data-note></span></p>
       <p class="muted">MIT licensed · <a href="https://github.com/AI-Solutions-Lab-LLC/sobres">github.com/AI-Solutions-Lab-LLC/sobres</a> · no cookies, no analytics, no third-party requests.</p>
+      <p class="muted">Want it run for you? <a href="https://github.com/AI-Solutions-Lab-LLC/sobres/issues/new?template=hosting-inquiry.yml" data-hosting-inquiry>Open a hosting inquiry</a> — a public GitHub issue; do not include credentials or financial records. It is a conversation, not a service agreement.</p>
     </footer>
   </body>
 </html>

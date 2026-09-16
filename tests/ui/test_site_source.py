@@ -13,7 +13,8 @@ real; Reduced motion; No information only in motion; Animation never blocks
 reading; Only shipped capabilities are claimed; Install commands are generated;
 Numbers are sourced; Disclaimer; Lighthouse budget; Bundle budget; Readable
 before JavaScript; Deferred libraries; Self-hosted assets; No tracking;
-Keyboard; Structure; Small screens; Link previews.
+Keyboard; Structure; Small screens; Link previews; Hosting inquiry;
+Publication is disabled or the repository is private.
 """
 
 from __future__ import annotations
@@ -53,7 +54,10 @@ def test_chosen_libraries_and_a_static_build() -> None:
 def test_published_automatically_with_least_privilege_and_no_broken_deploys() -> None:
     assert "permissions:\n  contents: read" in PAGES
     deploy = PAGES.split("  deploy:\n", 1)[1]
-    assert "needs: build" in deploy and "if: github.event_name != 'pull_request'" in deploy
+    assert "needs: build" in deploy
+    # Publication is disabled or the repository is private: the build and audit run on
+    # every change, the upload only when the owner has enabled Pages and armed the variable.
+    assert "if: github.event_name != 'pull_request' && vars.PAGES_ENABLED == 'true'" in deploy
     assert "pages: write" in deploy and "id-token: write" in deploy
     assert "actions/deploy-pages@v4" in deploy
     build = PAGES.split("  build:\n", 1)[1].split("  deploy:\n", 1)[0]
@@ -132,10 +136,32 @@ def test_no_information_only_in_motion_and_nothing_blocks_reading() -> None:
 def test_only_shipped_capabilities_are_claimed() -> None:
     body = INDEX.split("<main", 1)[1]
     shipped, roadmap = body.split('<section class="wrap roadmap"', 1)
-    for claim in ("Fama-French 3 and 5", "ARIMA", "Monte Carlo", "PPP"):
-        assert claim not in shipped and claim in roadmap, claim
+    # 1.1.0 ships all of these; the page may claim them, and the roadmap may not.
+    for claim in ("Fama-French 3 and 5", "Monte Carlo", "PPP", "GARCH"):
+        assert claim in shipped and claim not in roadmap, claim
+    # What is actually unshipped stays on the roadmap, named with its tracker.
+    for pending in ("VAR", "#31", "Broker", "#22"):
+        assert pending in roadmap and pending not in shipped, pending
     assert "not yet available" in roadmap.lower() and "Not shipped" not in shipped
     assert "sobres open" in shipped and "optimize backtest" in shipped
+    for command in ("analyze factors", "plan retire", "econ volatility", "ppp compare"):
+        assert command in shipped, command
+
+
+def test_hosting_inquiry_is_public_and_asks_for_nothing_confidential() -> None:
+    """Scenario: Hosting inquiry."""
+    link = re.search(r'<a href="([^"]+)" data-hosting-inquiry>', INDEX)
+    assert link and link.group(1).endswith("/issues/new?template=hosting-inquiry.yml")
+    footer = INDEX.split("<footer", 1)[1]
+    assert "public GitHub issue" in footer and "not a service agreement" in footer
+    form = (REPO / ".github" / "ISSUE_TEMPLATE" / "hosting-inquiry.yml").read_text(encoding="utf-8")
+    assert "This issue is public" in form
+    for forbidden in ("API key", "account number", "statement"):
+        assert forbidden in form  # named as things NOT to include
+    for absent in ("password", "type: input\n    id: email", "SLA guaranteed"):
+        assert absent not in form
+    assert "not an order, a service-level agreement" in form
+    assert "required: true" in form.split("id: confirm", 1)[1]
 
 
 def test_install_commands_and_version_are_generated_at_build_time() -> None:

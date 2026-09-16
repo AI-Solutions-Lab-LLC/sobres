@@ -57,16 +57,16 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 |---|---|---|---|
 | [0000](openspec/changes/0000-release-engineering/) | Release engineering | CI gate, version-gated PyPI publishing | 🔧 Upload rehearsal/activation pending (#21) |
 | [0001](openspec/changes/0001-foundation-data-and-cli/) | Foundation | `init`/`doctor` onboarding, command registry, storage port, providers, currency, observability, `sobres data` | ✅ Done |
-| [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization (v1)** | Returns, risk, Markowitz, frontier, backtest | 🔧 Review corrections; R execution/publication deferred |
-| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#25) |
-| [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#26) |
-| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#27) |
-| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#28) |
-| [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#29) |
-| [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#30) |
+| [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization** | Returns, risk, Markowitz, frontier, backtest, risk parity | ✅ Done (R script re-run deferred; see `docs/allocation-lp-reference.md`) |
+| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | ✅ Done |
+| [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | ✅ Done (real-browser e2e tracked separately) |
+| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | ✅ Done (Docker Hub publish waits on `DOCKER_RELEASE_ENABLED`) |
+| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | ✅ Done (deploy waits on `PAGES_ENABLED`) |
+| [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | ✅ Done |
+| [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | ✅ Done |
 | [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | ARIMA forecasts, GARCH volatility, stationarity diagnostics, robust regression | 🔧 ARIMA/GARCH candidate landed; the revised multivariable VAR/BVAR contract is not implemented (#31) |
-| [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#32) |
-| [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | 🔧 In progress |
+| [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | ✅ Done |
+| [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | ✅ Done (PyPI name reserved on first publish, #21) |
 
 The whole tool also runs from one container — see [docs/DEPLOYING.md](docs/DEPLOYING.md):
 

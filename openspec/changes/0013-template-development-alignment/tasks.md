@@ -1,5 +1,8 @@
 # 0013 — Implementation tasks
 
+**Superseded 2026-09-16 — none of these tasks will be worked; see the disposition in
+[proposal.md](proposal.md).** The list is kept unchanged as the record of the plan.
+
 All boxes are deliberately unchecked. This planning commit implements none of
 these tasks. Each task is one coherent commit (≤2h); normally group 1–3 related
 tasks per PR. Commands/test paths below are proposed proofs, not existing tests.

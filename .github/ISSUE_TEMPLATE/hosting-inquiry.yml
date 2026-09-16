@@ -1,0 +1,38 @@
+name: Hosting inquiry
+description: Ask about running sobres for you. This issue is public; do not include anything confidential.
+title: "Hosting inquiry: "
+labels: ["hosting-inquiry"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **This issue is public.** Anyone can read it. Do not paste API keys, account
+        numbers, statements, holdings, or anything else you would not publish.
+
+        sobres is a single-user research tool. An inquiry is a conversation about whether
+        running it for you makes sense; it is not an order, a service-level agreement,
+        a payment contract, or a multi-tenant product, and it is not investment advice.
+  - type: dropdown
+    id: shape
+    attributes:
+      label: What are you looking for?
+      options:
+        - Help running the container myself
+        - Someone to run it for me
+        - Something else (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Where would it run, for how many people, and what would you use it for? Keep it general.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirm
+      options:
+        - label: I understand this issue is public and I have not included credentials, financial records or other confidential information.
+          required: true

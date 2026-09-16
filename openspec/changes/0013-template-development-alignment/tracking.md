@@ -1,5 +1,9 @@
 # GitHub tracking and readiness
 
+**2026-09-16:** 0013 was superseded (see proposal.md). Every "implemented 0013" start
+condition below is void; 0002–0008 and 0010 were accepted against the tests on `main`,
+and their trackers #23–#30 and #32 were closed. 0009 continues under #31 and 0000 under #21.
+
 Ten changes have complete proposal/design/tasks/spec artifacts and pass strict
 validation. Their issues track implementation after plan merge and prerequisite
 completion; complete planning does not mean all ten can begin at once.

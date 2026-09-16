@@ -1,8 +1,8 @@
 ---
 change: 0005-docker-distribution
 milestone: v1.2
-depends_on: [0003-local-persistence, 0004-web-ui, 0000-release-engineering, 0013-template-development-alignment]
-status: proposed
+depends_on: [0003-local-persistence, 0004-web-ui, 0000-release-engineering]
+status: implemented
 ---
 
 # 0005 — Docker distribution

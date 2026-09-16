@@ -173,15 +173,6 @@ The landing page SHALL support keyboard and screen-reader use, narrow screens an
   and image
 - **AND** the image SHALL depict the actual product
 
-### Requirement: Aligned site development
-The site SHALL follow the merged 0013 contribution and verification contract
-while preserving its own static build and actual-product evidence.
-
-#### Scenario: Site resumes after alignment
-- **WHEN** the site is built from the amended plan
-- **THEN** its locked build SHALL use only public site inputs and reviewed product examples
-- **AND** the Python package and ordinary contributor checks SHALL remain independent of site tooling
-
 ### Requirement: One project home page with an honest hosting inquiry
 The existing site SHALL explain the shipped product and offer a hosting inquiry
 without implying an available enterprise product or collecting confidential data.

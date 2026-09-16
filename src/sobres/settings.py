@@ -61,6 +61,9 @@ class Setting:
     choices: tuple[str, ...] = ()
     advanced: bool = False
     """Not asked by `sobres init` unless --advanced; still settable everywhere else."""
+    browser_editable: bool = True
+    """False for settings the web UI must not change (where data lives, where traces go,
+    which file is the config); ``PUT /api/v1/settings`` refuses them. The CLI is unaffected."""
 
     @property
     def env_names(self) -> tuple[str, ...]:
@@ -189,6 +192,7 @@ DB_URL = declare(
     Setting(
         key="db_url",
         advanced=True,
+        browser_editable=False,
         env="SOBRES_DB_URL",
         description=(
             "Storage backend URL. Defaults to SQLite in the user data directory; "
@@ -260,6 +264,7 @@ CONFIG_FILE = declare(
     Setting(
         key="config_file",
         advanced=True,
+        browser_editable=False,
         env="SOBRES_CONFIG_FILE",
         description=(
             "Override the config file location (default: <user-config-dir>/sobres/config.toml)."
@@ -273,6 +278,7 @@ OTEL_ENDPOINT = declare(
     Setting(
         key="otel_exporter_otlp_endpoint",
         advanced=True,
+        browser_editable=False,
         env="OTEL_EXPORTER_OTLP_ENDPOINT",
         description=(
             "OpenTelemetry collector endpoint. Setting it activates tracing "
@@ -287,6 +293,7 @@ OTEL_TRACES_EXPORTER = declare(
     Setting(
         key="otel_traces_exporter",
         advanced=True,
+        browser_editable=False,
         env="OTEL_TRACES_EXPORTER",
         description="OpenTelemetry traces exporter name ('otlp', 'console' or 'none').",
         default=None,

@@ -1,25 +1,17 @@
 # 0002 — Tasks
 
-The checked domain tasks record PR #8's reviewed implementation; they do not
-complete the new 0013 migration. Alignment tasks remain unchecked. Future work
-uses at most two-hour units and the named verification splits from the merged plan.
+The checked domain tasks record PR #8's reviewed implementation, merged to `main`
+through #35 and re-verified there. Future work uses at most two-hour units.
 
-Depends on 0001 and, for the new layout, implemented 0013.
+Depends on 0001.
 
-## Alignment prerequisite — before the original waves
+## Alignment prerequisite — removed 2026-09-16
 
-- [ ] **R0 (1h)** Verify the issue and merged planning ancestry, then reconcile the
-  candidate branch with merged 0013 and its predecessor. Preserve the foundation's
-  real recordings and fixes. Proof: source diff, merge-base and task/scenario ledger.
-- [ ] **R1 (2h)** Apply this proposal's package/ownership amendment using 0013's
-  shared services and ports; keep public commands and financial math compatible.
-  Proof: `tests/architecture/test_layering.py` plus the existing capability's
-  CLI/contract tests on the new base; no new use cases in legacy facades.
-- [ ] **R2 (2h)** Re-run affected behavior through the installed package and any
-  exposed API/UI, all formats, dummy-secret checks and relevant real integration.
-  Proof: named tests below, full `make check`, `make build`, `make audit` and a
-  scenario-to-assertion report. Source-only UI checks or synthetic vendor fixtures
-  cannot establish browser behavior or live vendor truth.
+The R0/R1/R2 tasks that required implementing 0013 before this capability could be
+accepted were removed when 0013 was superseded (see its proposal). The shipped code
+lives in `core/`, `data/`, `cli/` and `api/`, the layout enforced by
+`tests/architecture/test_layering.py`; the domain tasks below are checked against the
+tests that actually prove them on `main`.
 
 ## Wave A — return and risk primitives (parallel-safe)
 
@@ -125,7 +117,10 @@ Depends on 0001 and, for the new layout, implemented 0013.
 - [x] **F3. Docs: "Why your backtest looks too good"** (2h)
       Plain-language page on estimation error, in-sample vs. walk-forward, and how
       to read the gap. Linked from `sobres optimize backtest` output.
-- [ ] **F4. README + `v1.0.0` publication** (2h) — worked example with real output; tag; PyPI.
+- [x] **F4. README** (1h) — worked example with real output (README quickstart).
+- [ ] **F5. Publication** — the first published version is 1.1.0, not 1.0.0: it ships
+      0002 together with 0003–0010. Tag and PyPI upload happen when `RELEASE_ENABLED`
+      is armed (#21).
 
 **Total: ~48h.** Critical path: B2 → B3 → C2 → C3 → C7 → D1 → E3.
 
@@ -137,7 +132,7 @@ Depends on 0001 and, for the new layout, implemented 0013.
 - [x] Max-Sharpe matches the closed-form tangency portfolio within `1e-6` (C3)
 - [x] `mypy --strict` clean; `pytest -m "not network"` green offline
 - [x] Every scenario in the spec delta has a test referencing it
-- [ ] `v1.0.0` tagged and published — happens when this merges to `main` with `RELEASE_ENABLED` armed (0000)
+- [ ] Tagged and published — as 1.1.0, when `RELEASE_ENABLED` is armed (0000, #21)
 
 ## Review corrections (authorized follow-up)
 
@@ -151,24 +146,9 @@ Depends on 0001 and, for the new layout, implemented 0013.
 - [x] G8. Reconcile spec/contracts/examples and retain honest deferred/release status.
 - [x] G9. Validate tests, lint, typing, packaging, strict OpenSpec and bounded live runs.
 
-## Verification on the future aligned layout
+## Verification on the future aligned layout — removed 2026-09-16
 
-- [ ] **A3v. Independent verification** (2h) — verify the preceding task's
-      edge cases and known answers, extending `tests/core/test_risk.py`. Split the review unit
-      if implementation and proof cannot be reviewed together.
-
-- [ ] **B2v. Independent verification** (2h) — verify the preceding task's
-      edge cases and known answers, extending `::test_ledoit_wolf_is_default`. Split the review unit
-      if implementation and proof cannot be reviewed together.
-
-- [ ] **C3v. Independent verification** (2h) — verify the preceding task's
-      edge cases and known answers, extending `::test_max_sharpe_matches_closed_form_tangency`. Split the review unit
-      if implementation and proof cannot be reviewed together.
-
-- [ ] **C7v. Independent verification** (2h) — verify the preceding task's
-      edge cases and known answers, extending `::test_volatility_non_decreasing_in_return`. Split the review unit
-      if implementation and proof cannot be reviewed together.
-
-- [ ] **D1v. Independent verification** (2h) — verify the preceding task's
-      edge cases and known answers, extending `tests/core/test_backtest.py::test_no_lookahead_under_future_perturbation`. Split the review unit
-      if implementation and proof cannot be reviewed together.
+The A3v–D1v re-verification units existed to re-prove the known answers on the 0013
+package layout. 0013 was superseded; the known-answer suites they named
+(`tests/core/test_risk.py`, `test_optimize.py`, `test_backtest.py`) are the proofs and
+run on `main`.
