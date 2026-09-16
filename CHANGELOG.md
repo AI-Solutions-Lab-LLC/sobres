@@ -11,60 +11,16 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
-### Changed
-- **The risk-free rate is always sourced, never an assumed zero (change 0015).**
-  Without a FRED key, USD runs take the 1-month Treasury bill return Ken French
-  publishes with the factor files -- keyless, dated, already a recorded
-  provider. With a key, FRED DTB3 as before; a FRED failure falls through to
-  Ken French rather than to zero. The selection is announced on stderr and in
-  provenance. A non-USD run without `--risk-free` is a usage error naming the
-  flag, and a source that does not cover the window is insufficient data.
-- **`sobres init` asks one question (change 0014).** Settings now carry an
-  `advanced` tier; the wizard prompts only for the FRED key and says how many
-  advanced settings it did not ask. `sobres init --advanced` walks all of them,
-  and `--set`, `sobres config set`, the environment and the settings page reach
-  them as before.
-- **`--start` has a default.** Every window-taking command runs without dates:
-  `start` is five years before `end`, which defaults to today; the resolved
-  window is in the result's provenance.
-- **Usage errors show a worked example.** Every command with a required
-  parameter declares one, and the hint leads with it:
-  `try: sobres analyze stock NVDA --fill drop  (or: sobres analyze stock --help)`.
-
-### Removed
-- **`legacy_code/`** and its three `.rattle` datasets (16 MB). The pre-sobres R
-  optimizer and `yfinance` puller were fully ported; the allocation LP they
-  solved is now documented in `docs/allocation-lp-reference.md`, including two
-  places where the original code and its comments disagreed. The files remain in
-  git history. The sdist exclusion added earlier is no longer needed and is gone.
-
-### Fixed
-- **`risk_parity` no longer fails to converge on a low-volatility asset.** With
-  roughly equal expected returns and one volatility far below the others -- a bond
-  fund among equities -- SLSQP's QP subproblem reported its constraints as
-  incompatible from the equal-weight start, so the objective raised instead of
-  returning weights. It now retries from the inverse-volatility weights, which are
-  the exact equal-risk-contribution solution for a diagonal covariance. Cases that
-  already converged are unaffected: the original start is still tried first.
-- **A base `pip install sobres` works again.** `cli/commands/serve.py` imported
-  `sobres.api` at module scope, and `sobres.api` imports FastAPI from the `[web]`
-  extra. Because command registration imports every module under `cli/commands/`,
-  a base install failed on *every* command with `ModuleNotFoundError: fastapi` --
-  `--version` and `--help` included. The import is now deferred into the two
-  functions that use it. CI gained a base-install smoke job (no extras) that runs
-  the keyless `init`/`doctor`/`data` path, and an architecture test forbids any
-  command module from importing an optional dependency at module scope.
-- **The source distribution no longer ships `legacy_code/`.** Hatchling's default
-  sdist included every non-ignored path, so the pre-sobres R/Python prototype and
-  its three `.rattle` datasets made up 15.5 MB of a 16.9 MB sdist. Excluding it
-  takes the sdist to 1.45 MB, 91% smaller. The wheel was never affected, and the
-  built SPA still ships in both.
+Nothing yet.
 
 ## [1.1.0] - 2026-09-16
 
 First release published to PyPI. 1.0.0 was prepared but never uploaded, so this
 is the first version available as `pip install sobres`. It carries the whole
-foundation and portfolio optimization from 1.0.0 plus the two changes below.
+foundation and portfolio optimization from 1.0.0 plus everything below:
+persistence, the web UI and API, the Docker image, the landing page, factor
+analysis, goal planning, ARIMA/GARCH econometrics, exchange rates and PPP,
+and the onboarding and correctness fixes that followed the merge.
 
 ### Added
 - **Exchange rates and purchasing power parity (change 0010).** `sobres fx
@@ -104,7 +60,47 @@ foundation and portfolio optimization from 1.0.0 plus the two changes below.
   CAPM beta, current fundamentals with the point-in-time caveat).
   `core/factors.py` is numpy-only; `statsmodels` stays an extra.
 
+### Changed
+- **The risk-free rate is always sourced, never an assumed zero (change 0015).**
+  Without a FRED key, USD runs take the 1-month Treasury bill return Ken French
+  publishes with the factor files -- keyless, dated, already a recorded
+  provider. With a key, FRED DTB3 as before; a FRED failure falls through to
+  Ken French rather than to zero. The selection is announced on stderr and in
+  provenance. A non-USD run without `--risk-free` is a usage error naming the
+  flag, and a source that does not cover the window is insufficient data.
+- **`sobres init` asks one question (change 0014).** Settings now carry an
+  `advanced` tier; the wizard prompts only for the FRED key and says how many
+  advanced settings it did not ask. `sobres init --advanced` walks all of them,
+  and `--set`, `sobres config set`, the environment and the settings page reach
+  them as before.
+- **`--start` has a default.** Every window-taking command runs without dates:
+  `start` is five years before `end`, which defaults to today; the resolved
+  window is in the result's provenance.
+- **Usage errors show a worked example.** Every command with a required
+  parameter declares one, and the hint leads with it:
+  `try: sobres analyze stock NVDA --fill drop  (or: sobres analyze stock --help)`.
+
 ### Fixed
+- **`risk_parity` no longer fails to converge on a low-volatility asset.** With
+  roughly equal expected returns and one volatility far below the others -- a bond
+  fund among equities -- SLSQP's QP subproblem reported its constraints as
+  incompatible from the equal-weight start, so the objective raised instead of
+  returning weights. It now retries from the inverse-volatility weights, which are
+  the exact equal-risk-contribution solution for a diagonal covariance. Cases that
+  already converged are unaffected: the original start is still tried first.
+- **A base `pip install sobres` works again.** `cli/commands/serve.py` imported
+  `sobres.api` at module scope, and `sobres.api` imports FastAPI from the `[web]`
+  extra. Because command registration imports every module under `cli/commands/`,
+  a base install failed on *every* command with `ModuleNotFoundError: fastapi` --
+  `--version` and `--help` included. The import is now deferred into the two
+  functions that use it. CI gained a base-install smoke job (no extras) that runs
+  the keyless `init`/`doctor`/`data` path, and an architecture test forbids any
+  command module from importing an optional dependency at module scope.
+- **The source distribution no longer ships `legacy_code/`.** Hatchling's default
+  sdist included every non-ignored path, so the pre-sobres R/Python prototype and
+  its three `.rattle` datasets made up 15.5 MB of a 16.9 MB sdist. Excluding it
+  takes the sdist to 1.45 MB, 91% smaller. The wheel was never affected, and the
+  built SPA still ships in both.
 - Cached factor frames came back with an empty `Mkt-RF` column: the
   observation cache upper-cased symbols before asking the provider. Keys are
   still stored upper-cased; the caller's casing is now restored on the way out.
@@ -144,6 +140,13 @@ foundation and portfolio optimization from 1.0.0 plus the two changes below.
   the analytical commands; `sobres db export` (SQLite backup API) and
   `sobres db repair` (recovery into a new file, original untouched);
   migrations tested against recorded prior-version fixtures.
+
+### Removed
+- **`legacy_code/`** and its three `.rattle` datasets (16 MB). The pre-sobres R
+  optimizer and `yfinance` puller were fully ported; the allocation LP they
+  solved is now documented in `docs/allocation-lp-reference.md`, including two
+  places where the original code and its comments disagreed. The files remain in
+  git history. The sdist exclusion added earlier is no longer needed and is gone.
 
 ## [1.0.0] - 2026-09-12
 
