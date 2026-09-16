@@ -59,13 +59,13 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0000](openspec/changes/0000-release-engineering/) | Release engineering | CI gate, version-gated PyPI publishing | 🔧 Upload rehearsal/activation pending (#21) |
 | [0001](openspec/changes/0001-foundation-data-and-cli/) | Foundation | `init`/`doctor` onboarding, command registry, storage port, providers, currency, observability, `sobres data` | ✅ Done |
 | [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization (v1)** | Returns, risk, Markowitz, frontier, backtest | 🔧 Review corrections; R execution/publication deferred |
-| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | Candidate in #9; alignment pending |
-| [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | Candidate in #10; alignment pending |
-| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | Candidate in #11; alignment pending |
-| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | Candidate in #12; alignment pending |
-| [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | Candidate in #13; alignment pending |
-| [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | Candidate in #14; alignment pending |
-| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Multivariable VAR/BVAR, elastic-net, boosted trees; GARCH | Revised plan in #15; candidate replacement/alignment pending |
+| [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#25) |
+| [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#26) |
+| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#27) |
+| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#28) |
+| [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#29) |
+| [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | 🔧 Implementation landed; 0013 alignment and task re-verification pending (#30) |
+| [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | ARIMA forecasts, GARCH volatility, stationarity diagnostics, robust regression | 🔧 ARIMA/GARCH candidate landed; the revised multivariable VAR/BVAR contract is not implemented (#31) |
 | [0010](openspec/changes/0010-currency-and-ppp/) | Exchange rates & PPP | FX attribution, hedging, PPP-adjusted goals | 📋 Planned |
 | [0011](openspec/changes/0011-rebrand-sobres/) | Rebrand | One name everywhere: `sobres` | 🔧 In progress |
 
@@ -329,3 +329,15 @@ sobres is a research and education tool. It is not investment advice, not a
 recommendation to buy or sell any security, and carries no warranty of accuracy.
 Data comes from third-party sources that may be delayed, revised, or wrong.
 Backtested results are hypothetical and do not indicate future performance.
+
+## Revised econometrics plan
+
+[OpenSpec 0009](openspec/changes/0009-econometrics-forecasting/proposal.md) replaces
+standalone ARIMA forecasts with joint VAR/BVAR and direct elastic-net/boosted-tree
+stock-price forecasts. It retains GARCH volatility and robust diagnostics. The
+[research catalog](openspec/changes/0009-econometrics-forecasting/research.md)
+records influential and recent sources, predictor choices and their limits.
+These models are planned, not shipped: #31 tracks implementation and #15 contains
+an older ARIMA candidate that must be replaced. The default proposal uses a keyless
+four-variable preset, 20 trading sessions, chronological evaluation and mandatory
+uncertainty bounds; see the design for exact formulas and guards.

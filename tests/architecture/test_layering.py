@@ -177,3 +177,36 @@ def test_test_taxonomy_directories_and_markers() -> None:
 def test_network_tests_are_marked() -> None:
     for path in (TESTS / "network").rglob("test_*.py"):
         assert "pytest.mark.network" in path.read_text(encoding="utf-8"), path
+
+
+def _module_scope_imports(path: Path) -> set[str]:
+    """Every module imported at import time, ignoring imports inside functions."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    names: set[str] = set()
+    for node in tree.body:  # top level only -- deferred imports live in function bodies
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+            names.add(node.module)
+    return names
+
+
+def test_no_command_module_imports_an_extra_at_module_scope() -> None:
+    """A base `pip install sobres` must be able to register every command.
+
+    `cli/commands/__init__.py` imports every command module eagerly, so one
+    module-scope import of an optional dependency takes down the whole CLI --
+    `--version` and `--help` included. That shipped once: `serve.py` imported
+    `sobres.api`, which imports FastAPI from the `[web]` extra.
+    """
+    optional = {"fastapi", "uvicorn", "starlette", "sobres.api", "cvxpy", "statsmodels"}
+    offenders: list[str] = []
+    for path in sorted((SRC / "cli" / "commands").glob("*.py")):
+        for imported in _module_scope_imports(path):
+            root = imported.split(".")[0]
+            if imported in optional or (root in optional and root != "sobres"):
+                offenders.append(f"{path.relative_to(REPO).as_posix()} imports {imported}")
+    assert not offenders, (
+        "optional dependencies must be imported inside the function that uses them, "
+        "not at module scope: " + "; ".join(offenders)
+    )
