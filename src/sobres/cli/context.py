@@ -175,7 +175,9 @@ class Context:
                 "sobres config set alpaca_key_id <ID> and "
                 "sobres config set alpaca_secret_key <KEY>",
             )
-        return AlpacaBroker(LiveAlpacaSource(str(key_id), str(secret)), environment)
+        return AlpacaBroker(
+            LiveAlpacaSource(str(key_id), str(secret)), environment, clock=self.clock
+        )
 
     def ppp_provider(self) -> Any:
         from sobres.data.ppp_provider import OecdPppProvider, WorldBankPppProvider

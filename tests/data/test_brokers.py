@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -211,3 +211,42 @@ def test_validate_credentials_never_raises() -> None:
         client=httpx.Client(transport=_Transport(200, {}, raise_exc=httpx.ConnectError("x"))),
     )
     assert not down.ok
+
+
+def test_the_fixture_account_is_stamped_from_the_fixture_not_the_wall_clock() -> None:
+    """A simulated account must not age: its quotes would go stale on a date nobody picked.
+
+    `size_orders` rejects a quote older than five minutes relative to
+    `account.as_of`. When the account was stamped with the wall clock and the
+    quotes came from a file, every `trade` command and every test over them
+    started failing five minutes after the fixture's newest quote -- which is
+    what happened once real time passed it.
+    """
+    source = FixtureAlpacaSource(FIXTURES)
+    broker = AlpacaBroker(source, "paper")
+
+    account = broker.account()
+    newest_quote = max(q.as_of for q in broker.quotes(["AAPL", "MSFT"]).values())
+
+    assert account.as_of == source.as_of
+    assert account.as_of >= newest_quote
+    assert account.as_of - newest_quote < timedelta(minutes=5)
+    # Two reads a moment apart report the same instant: nothing here follows a clock.
+    assert broker.account().as_of == account.as_of
+
+
+def test_a_live_source_still_stamps_the_account_with_the_wall_clock() -> None:
+    """Only a source that knows the instant it represents overrides the clock."""
+    source = _source(_Transport(200, {"account_number": "L1", "cash": "1", "currency": "USD"}))
+    assert not hasattr(source, "as_of")
+
+    before = datetime.now(UTC)
+    account = AlpacaBroker(source, "paper").account()
+
+    assert before <= account.as_of <= datetime.now(UTC)
+
+
+def test_an_explicit_clock_wins_over_both() -> None:
+    frozen = datetime(2020, 1, 1, tzinfo=UTC)
+    broker = AlpacaBroker(FixtureAlpacaSource(FIXTURES), "paper", clock=lambda: frozen)
+    assert broker.account().as_of == frozen
