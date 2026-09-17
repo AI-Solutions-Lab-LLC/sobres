@@ -5,7 +5,7 @@
 | What | Value |
 |---|---|
 | Repository | `AI-Solutions-Lab-LLC/sobres` — https://github.com/AI-Solutions-Lab-LLC/sobres |
-| PyPI distribution | `sobres` (first publish, 1.1.0, waits on `RELEASE_ENABLED`; see #21) |
+| PyPI distribution | `sobres` (first publish: 1.1.0) |
 | Import package | `sobres` (`src/sobres/`) |
 | Console script | `sobres` |
 | Container image | `aisolutionslab/sobres` on Docker Hub |
@@ -293,7 +293,8 @@ command to remember and no window where `main` is "about to be" released.
 | Every published version is tagged and has a GitHub release | the publish job creates both, from the CHANGELOG section |
 | Nothing publishes from a red build | `release.yml` calls `ci.yml` via `workflow_call`; one definition of green |
 | Nothing publishes from an unreviewed commit | `main` is protected: pull request required, `All checks passed` required, admin-only merge, linear history |
-| Publishing is off until deliberately armed | the repository variable `RELEASE_ENABLED` must be `true` |
+| The declared version is the only gate | no arming variable; a publish fires when `__about__.py` names a version the index lacks |
+| A publish can still be held for a human | required reviewers on the `pypi` environment, not a workflow edit |
 
 Pre-1.0 the minor version carries breaking changes. From v1.0.0 — shipped by 0002 —
 the CLI's command surface, its `--format json` shapes, and the `sobres.core` public
@@ -335,6 +336,6 @@ Credentials, by index and registry:
 Change 0013 recorded the AISL project-template revision (52e8426) and a private
 context-lake pin as a baseline; it was superseded (see its proposal) and no private
 context is needed to build, test or release this repository. 0000's organization-token
-publishing contract (`PYPI_PROD` / `PYPI_TEST`, no OIDC, `RELEASE_ENABLED`) stands, tracked
-by #21. The landing page deploys only when `PAGES_ENABLED` is `true`; the container image
-publishes only when `DOCKER_RELEASE_ENABLED` is `true`.
+publishing contract (`PYPI_PROD` / `PYPI_TEST`, no OIDC) stands. Change 0017 removed the
+three arming variables: the landing page deploys on every push to `main` that changes
+`site/`, and PyPI and the container image publish on every version bump.

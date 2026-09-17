@@ -198,7 +198,8 @@ to `main` that does not change the version publishes nothing.
   `PYPI_PROD` for PyPI and `PYPI_TEST` for TestPyPI, both organization-level
   secrets. Never copy them to repository secrets, never print them, and never
   request `id-token: write` or claim PEP 740 attestations on a token upload.
-  `RELEASE_ENABLED` must be `true` for a PyPI publish to fire.
+  The declared version is the only gate: there is no arming variable, and a
+  publish fires whenever `__about__.py` names a version the index does not have.
 - Never make `pip-audit` soft-fail. An unfixable advisory gets a named
   `--ignore-vuln` with a written reason — see `docs/RELEASING.md`.
 - The distribution, the import package, and the CLI are all `sobres`.

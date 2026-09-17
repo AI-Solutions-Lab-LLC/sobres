@@ -60,8 +60,8 @@ the milestone plans in [`openspec/changes/`](openspec/changes/).
 | [0002](openspec/changes/0002-portfolio-optimization/) | **Portfolio optimization** | Returns, risk, Markowitz, frontier, backtest, risk parity | ✅ Done (R script re-run deferred; see `docs/allocation-lp-reference.md`) |
 | [0003](openspec/changes/0003-local-persistence/) | Local persistence | Saved portfolios, goals, run history, `sobres db` | ✅ Done |
 | [0004](openspec/changes/0004-web-ui/) | Web UI | FastAPI + React SPA derived from the registry, `sobres serve`, `sobres open` | ✅ Done (real-browser e2e tracked separately) |
-| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | ✅ Done (Docker Hub publish waits on `DOCKER_RELEASE_ENABLED`) |
-| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | ✅ Done (deploy waits on `PAGES_ENABLED`) |
+| [0005](openspec/changes/0005-docker-distribution/) | Docker | One image on Docker Hub, `sobres deploy` | ✅ Done |
+| [0006](openspec/changes/0006-landing-page/) | Landing page | Animated dark GitHub Pages site | ✅ Done — [live](https://ai-solutions-lab-llc.github.io/sobres/) |
 | [0007](openspec/changes/0007-equity-factor-analysis/) | Factor analysis | CAPM, Fama-French 3/5 + momentum | ✅ Done |
 | [0008](openspec/changes/0008-goal-planning/) | Goal planning | Retirement/FIRE, house, car, education, Monte Carlo | ✅ Done |
 | [0009](openspec/changes/0009-econometrics-forecasting/) | Econometrics | Joint VAR/BVAR price forecasts with held-out controls, GARCH volatility, stationarity diagnostics, robust regression | ✅ Done (elastic-net/boosted trees and the macro preset deferred) |
@@ -360,13 +360,12 @@ check, **All checks passed**, gates merges.
 ### Releases
 
 Releasing is a version bump. Change `__version__` in
-`src/sobres/__about__.py`, add a `CHANGELOG.md` section, merge to `main` —
-once `RELEASE_ENABLED=true`, the pipeline re-runs the full gate on that commit
-and publishes using the organization `PYPI_PROD` token, then tags and creates
-the GitHub release. TestPyPI uses `PYPI_TEST`. Token uploads do not produce
-PEP 740 attestations. Release rehearsal and activation remain tracked in
-[issue #21](https://github.com/AI-Solutions-Lab-LLC/sobres/issues/21). Any push to `main` that doesn't change the
-version publishes nothing.
+`src/sobres/__about__.py`, add a `CHANGELOG.md` section, merge to `main`. The
+pipeline re-runs the full gate on that commit and publishes using the
+organization `PYPI_PROD` token, then tags, creates the GitHub release, and
+pushes the container image. TestPyPI uses `PYPI_TEST`. Token uploads do not
+produce PEP 740 attestations. Any push to `main` that doesn't change the
+version publishes nothing — the declared version is the only gate.
 
 See **[docs/RELEASING.md](docs/RELEASING.md)** for the one-time setup and the
 failure playbook.
