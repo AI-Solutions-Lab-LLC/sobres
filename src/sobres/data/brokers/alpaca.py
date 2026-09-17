@@ -15,7 +15,7 @@ https://docs.alpaca.markets/reference/stocklatesttradesingle (checked 2026-09-16
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
@@ -156,7 +156,12 @@ def parse_order(doc: dict[str, Any]) -> BrokerOrder:
 class AlpacaBroker:
     name = PROVIDER_NAME
 
-    def __init__(self, source: AlpacaSource, environment: str = "paper") -> None:
+    def __init__(
+        self,
+        source: AlpacaSource,
+        environment: str = "paper",
+        clock: Callable[[], datetime] | None = None,
+    ) -> None:
         if environment not in TRADING_URLS:
             raise ConfigurationError(
                 f"alpaca environment must be paper or live, got {environment!r}",
@@ -164,6 +169,21 @@ class AlpacaBroker:
             )
         self.environment = environment
         self._source = source
+        # The account payload carries no timestamp, so we stamp one. It is the
+        # clock the staleness check measures quotes against, which makes it a
+        # dependency and not a detail: a source with frozen quote timestamps and
+        # a wall clock here goes stale minutes after the fixture was written, and
+        # every trade test starts failing on a date nobody chose.
+        #
+        # A source that knows the instant it represents (the fixture simulator)
+        # supplies it; a live source does not, and gets the wall clock.
+        source_as_of = getattr(source, "as_of", None)
+        if clock is not None:
+            self._clock: Callable[[], datetime] = clock
+        elif isinstance(source_as_of, datetime):
+            self._clock = lambda: source_as_of
+        else:
+            self._clock = lambda: datetime.now(UTC)
         self._base = TRADING_URLS[environment]
 
     @property
@@ -209,7 +229,7 @@ class AlpacaBroker:
             cash=_num(doc.get("cash"), 0.0) or 0.0,
             buying_power=_num(doc.get("buying_power"), 0.0) or 0.0,
             equity=_num(doc.get("equity"), 0.0) or 0.0,
-            as_of=datetime.now(UTC),
+            as_of=self._clock(),
         )
 
     def positions(self) -> list[BrokerPosition]:
@@ -239,7 +259,7 @@ class AlpacaBroker:
                     provider=self.name,
                     hint="check the symbol and the market-data entitlement",
                 )
-            when = _when(trade.get("t")) or datetime.now(UTC)
+            when = _when(trade.get("t")) or self._clock()
             out[symbol.upper()] = Quote(symbol.upper(), float(trade["p"]), when, source=self.name)
         return out
 

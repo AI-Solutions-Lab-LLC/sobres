@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -186,6 +186,15 @@ class FixtureAlpacaSource:
         }
         self._account = base
         self._quotes = json.loads((self.root / "quotes.json").read_text(encoding="utf-8"))
+        # The instant this simulated account represents: the newest quote it can
+        # serve. A caller that stamps snapshots with the wall clock instead would
+        # see these quotes age past any staleness threshold, and the simulator
+        # would stop working on a date nobody picked. `clock` is read by
+        # AlpacaBroker, which prefers a source's own time over the wall clock.
+        self.as_of = max(
+            datetime.fromisoformat(str(doc["trade"]["t"]).replace("Z", "+00:00"))
+            for doc in self._quotes.values()
+        )
 
     def _save(self) -> None:
         if self._on_change is not None:
