@@ -1,0 +1,2 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"event": "optimize.concentration", "level": "warning", "logger": "sobres.cli", "message": "MSFT takes 62.7% of the portfolio: unconstrained mean-variance solutions concentrate; consider --max-weight", "run_id": "4d2d677ec221", "timestamp": "2026-09-13T19:13:50.082544Z"}

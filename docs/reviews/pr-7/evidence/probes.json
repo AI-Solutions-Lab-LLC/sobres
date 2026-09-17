@@ -1,0 +1,43 @@
+{
+  "base_install_prices": {
+    "exit": 4,
+    "missing_yfinance": true
+  },
+  "config_set_secret": {
+    "exit": 0,
+    "dummy_secret_in_stderr": true,
+    "dummy_secret_in_stdout": false
+  },
+  "market_factor": {
+    "direct": 0.0296,
+    "cold_cache_missing": true,
+    "warm_cache_missing": true
+  },
+  "refresh_withdrawn_observation": {
+    "expected": "missing",
+    "actual": 11.0
+  },
+  "all_missing_date": {
+    "input_rows": 2,
+    "cached_rows": 1
+  },
+  "weekend_extension": {
+    "error": "UnknownTickerError",
+    "message": "yfinance: no data returned for ticker 'AAPL'\n  next: check the symbol spelling and exchange suffix (e.g. NESN.SW, 7203.T)"
+  },
+  "unknown_currency": {
+    "input_currency": null,
+    "output_currency": "USD",
+    "output_value": 100.0
+  },
+  "migration_backup": {
+    "error": "no such table: user_authored"
+  },
+  "init_failed_doctor": {
+    "report_exit": 1,
+    "process_exit": 0,
+    "failed_checks": [
+      "config-file"
+    ]
+  }
+}

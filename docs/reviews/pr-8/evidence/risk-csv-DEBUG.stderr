@@ -1,0 +1,10 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.risk", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"base": null, "end": "2020-12-31", "fill": "ffill", "risk_free": 0.0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"], "weights": [0.6, 0.4]}, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.646155Z"}
+{"elapsed_ms": 1.26, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "schema_version", "rows": 1, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.787538Z"}
+{"elapsed_ms": 1.002, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "fetched_ranges", "rows": null, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.788786Z"}
+{"elapsed_ms": 0.201, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "fetched_ranges", "rows": null, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.789106Z"}
+{"elapsed_ms": 46.123, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "read_observations", "rows": null, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.835333Z"}
+{"elapsed_ms": 0.592, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "get_series_meta", "rows": null, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.836793Z"}
+{"elapsed_ms": 0.141, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "get_series_meta", "rows": null, "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.837018Z"}
+{"dataset": "prices_adj_close", "elapsed_ms": 49.311, "end": "2020-12-31", "event": "cache.get", "level": "debug", "logger": "sobres.cache", "provider": "yfinance", "rows": 518, "run_id": "1fcfdc1bad74", "start": "2019-01-01", "status": "hit", "symbols": ["AAPL", "MSFT"], "timestamp": "2026-09-13T19:14:43.837086Z"}
+{"command": "optimize.risk", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "1fcfdc1bad74", "timestamp": "2026-09-13T19:14:43.839810Z"}

@@ -1,0 +1,13 @@
+macOS-26.5.1-arm64-arm-64bit-Mach-O
+{"assets": 6, "operation": "min_variance", "seconds": 0.0032233749516308308, "calls": 1, "nfev": 70, "nit": 10}
+{"assets": 6, "operation": "max_sharpe", "seconds": 0.0207344169029966, "calls": 11, "nfev": 932, "nit": 123}
+{"assets": 6, "operation": "frontier50", "seconds": 0.16220037499442697, "calls": 61, "nfev": 3859, "nit": 541}
+{"assets": 20, "operation": "min_variance", "seconds": 0.004604540998116136, "calls": 1, "nfev": 336, "nit": 16}
+{"assets": 20, "operation": "max_sharpe", "seconds": 0.10815908398944885, "calls": 11, "nfev": 7181, "nit": 324}
+{"assets": 20, "operation": "frontier50", "seconds": 0.43843545904383063, "calls": 61, "nfev": 22117, "nit": 1035}
+{"assets": 50, "operation": "min_variance", "seconds": 0.01651229104027152, "calls": 1, "nfev": 969, "nit": 19}
+{"assets": 50, "operation": "max_sharpe", "seconds": 0.6267976670060307, "calls": 11, "nfev": 36696, "nit": 698}
+{"assets": 50, "operation": "frontier50", "seconds": 1.570117042050697, "calls": 61, "nfev": 87840, "nit": 1700}
+{"assets": 100, "operation": "min_variance", "seconds": 0.048736208002083004, "calls": 1, "nfev": 3333, "nit": 33}
+{"assets": 100, "operation": "max_sharpe", "seconds": 3.5114622080000117, "calls": 11, "nfev": 135488, "nit": 1319}
+{"assets": 100, "operation": "frontier50", "seconds": 7.507861207937822, "calls": 61, "nfev": 282986, "nit": 2779}

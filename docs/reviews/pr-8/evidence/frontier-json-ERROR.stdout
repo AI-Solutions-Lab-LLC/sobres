@@ -1,0 +1,90 @@
+{
+  "provenance": {
+    "provider": "yfinance",
+    "field": "adj_close",
+    "return_kind": "total return",
+    "currency": "USD",
+    "start": "2019-01-03",
+    "end": "2020-12-31",
+    "cache": "hit",
+    "fetched_at": "2026-09-13T19:14:07.323598+00:00",
+    "flags": [],
+    "notes": [
+      "risk-free rate 0.0000% (given)",
+      "survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents",
+      "in-sample: estimated on the same data it is evaluated on; see `sobres optimize backtest`"
+    ]
+  },
+  "estimators": {
+    "expected_return": "mean_historical",
+    "covariance": "ledoit_wolf",
+    "shrinkage": 0.44233077507779367,
+    "psd_repair": null
+  },
+  "n_points": 5,
+  "columns": [
+    "ret",
+    "vol",
+    "sharpe",
+    "AAPL",
+    "MSFT",
+    "min_variance",
+    "max_sharpe"
+  ],
+  "rows": [
+    {
+      "ret": 0.16363009243487173,
+      "vol": 0.19569697522714105,
+      "sharpe": 0.8361401204333894,
+      "AAPL": 0.46776903700681655,
+      "MSFT": 0.5322309629931834,
+      "min_variance": true,
+      "max_sharpe": false
+    },
+    {
+      "ret": 0.16949279523695845,
+      "vol": 0.1991719372169937,
+      "sharpe": 0.8509873308723185,
+      "AAPL": 0.37259886188926333,
+      "MSFT": 0.6274011381107366,
+      "min_variance": false,
+      "max_sharpe": true
+    },
+    {
+      "ret": 0.1708340059524257,
+      "vol": 0.2009206035143941,
+      "sharpe": 0.8502562851409463,
+      "AAPL": 0.35082677775511223,
+      "MSFT": 0.6491732222448878,
+      "min_variance": false,
+      "max_sharpe": false
+    },
+    {
+      "ret": 0.17803791946997963,
+      "vol": 0.215834281993742,
+      "sharpe": 0.8248824877372435,
+      "AAPL": 0.23388451850340897,
+      "MSFT": 0.766115481496591,
+      "min_variance": false,
+      "max_sharpe": false
+    },
+    {
+      "ret": 0.1852418329875336,
+      "vol": 0.23862806040897563,
+      "sharpe": 0.7762785008186155,
+      "AAPL": 0.11694225925170443,
+      "MSFT": 0.8830577407482956,
+      "min_variance": false,
+      "max_sharpe": false
+    },
+    {
+      "ret": 0.1924457465050876,
+      "vol": 0.26729352911915966,
+      "sharpe": 0.719979069973277,
+      "AAPL": 0.0,
+      "MSFT": 1.0,
+      "min_variance": false,
+      "max_sharpe": false
+    }
+  ]
+}

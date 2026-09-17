@@ -1,0 +1,88 @@
+{
+  "provenance": {
+    "provider": "yfinance",
+    "field": "adj_close",
+    "return_kind": "total return",
+    "currency": "USD",
+    "start": "2019-01-03",
+    "end": "2020-12-31",
+    "cache": "hit",
+    "fetched_at": "2026-09-13T19:14:38.643956+00:00",
+    "flags": [],
+    "notes": [
+      "risk-free rate 0.0000% (given)",
+      "survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents"
+    ]
+  },
+  "rows": [
+    {
+      "metric": "annualized_return",
+      "value": 0.14397434916366847
+    },
+    {
+      "metric": "volatility",
+      "value": 0.2049955493153215
+    },
+    {
+      "metric": "sharpe",
+      "value": 0.7023291463865344
+    },
+    {
+      "metric": "sortino",
+      "value": 1.0627663147725381
+    },
+    {
+      "metric": "calmar",
+      "value": 0.6237879384006544
+    },
+    {
+      "metric": "max_drawdown",
+      "value": -0.23080656149397172
+    },
+    {
+      "metric": "drawdown_peak",
+      "value": "2019-01-03"
+    },
+    {
+      "metric": "drawdown_trough",
+      "value": "2019-07-18"
+    },
+    {
+      "metric": "drawdown_recovery",
+      "value": "2019-10-31"
+    },
+    {
+      "metric": "var_95",
+      "value": -0.020003269213142313
+    },
+    {
+      "metric": "cvar_95",
+      "value": -0.024654002446360637
+    },
+    {
+      "metric": "skew",
+      "value": 0.12137711205582151
+    },
+    {
+      "metric": "kurtosis",
+      "value": -0.29502838173007273
+    },
+    {
+      "metric": "n_obs",
+      "value": 517
+    },
+    {
+      "metric": "risk_free",
+      "value": 0.0
+    }
+  ],
+  "columns": [
+    "metric",
+    "value"
+  ],
+  "weights": {
+    "AAPL": 0.6,
+    "MSFT": 0.4
+  },
+  "currency": "USD"
+}

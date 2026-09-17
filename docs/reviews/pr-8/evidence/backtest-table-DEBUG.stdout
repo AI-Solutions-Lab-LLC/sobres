@@ -1,0 +1,31 @@
+out-of-sample window: 2019-01-02 → 2020-12-31
+rebalance quarterly, lookback 60 observations, 8 rebalances
+transaction costs 10 bps: total turnover 3.1326, total cost 0.3133% of value
+benchmark: equal weight on the same schedule and costs
+why the in-sample number looked better: docs/why-your-backtest-looks-too-good.md
+source: yfinance (adj_close)
+prices are total return
+currency: USD
+window: 2018-09-18 → 2020-12-31
+cache: hit
+risk-free rate 0.0000% (given)
+survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃metric            ┃   strategy ┃  benchmark┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│annualized_return │     0.3644 │     0.1589│
+│volatility        │     0.2491 │     0.1974│
+│sharpe            │     1.4625 │     0.8051│
+│sortino           │     2.2479 │     1.2213│
+│calmar            │     2.3346 │     0.9592│
+│max_drawdown      │    -0.1561 │    -0.1657│
+│drawdown_peak     │ 2019-01-08 │ 2019-01-03│
+│drawdown_trough   │ 2019-04-10 │ 2019-07-23│
+│drawdown_recovery │ 2019-05-13 │ 2019-10-22│
+│var_95            │    -0.0240 │    -0.0196│
+│cvar_95           │    -0.0295 │    -0.0239│
+│skew              │     0.1816 │     0.1263│
+│kurtosis          │     0.5463 │    -0.2199│
+│n_obs             │        518 │        518│
+└──────────────────┴────────────┴───────────┘
+For research and education only. Not investment advice.

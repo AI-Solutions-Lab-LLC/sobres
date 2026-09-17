@@ -1,0 +1,18 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.backtest", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"allow_short": false, "base": null, "cost_bps": 10.0, "covariance": "ledoit_wolf", "end": "2020-12-31", "fill": "ffill", "lookback": "60", "max_weight": null, "objective": "max_sharpe", "rebalance": "quarterly", "returns_estimator": "mean_historical", "risk_free": 0.0, "seed": 0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"]}, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.516310Z"}
+{"elapsed_ms": 1.038, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "schema_version", "rows": 1, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.617431Z"}
+{"elapsed_ms": 0.886, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "fetched_ranges", "rows": null, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.618536Z"}
+{"elapsed_ms": 0.187, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "fetched_ranges", "rows": null, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.618829Z"}
+{"elapsed_ms": 41.449, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "read_observations", "rows": null, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.660368Z"}
+{"elapsed_ms": 0.637, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "get_series_meta", "rows": null, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.661563Z"}
+{"elapsed_ms": 0.14, "event": "storage.op", "level": "debug", "logger": "sobres.storage.sqlite", "op": "get_series_meta", "rows": null, "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.661785Z"}
+{"dataset": "prices_adj_close", "elapsed_ms": 44.203, "end": "2020-12-31", "event": "cache.get", "level": "debug", "logger": "sobres.cache", "provider": "yfinance", "rows": 593, "run_id": "3e8c5e048b20", "start": "2018-09-17", "status": "hit", "symbols": ["AAPL", "MSFT"], "timestamp": "2026-09-13T19:14:24.661851Z"}
+{"done": 1, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.674570Z", "total": 8}
+{"done": 2, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.682518Z", "total": 8}
+{"done": 3, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.688675Z", "total": 8}
+{"done": 4, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.693975Z", "total": 8}
+{"done": 5, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.705724Z", "total": 8}
+{"done": 6, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.711586Z", "total": 8}
+{"done": 7, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.721982Z", "total": 8}
+{"done": 8, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.727962Z", "total": 8}
+{"command": "optimize.backtest", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "3e8c5e048b20", "timestamp": "2026-09-13T19:14:24.743358Z"}

@@ -1,0 +1,11 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.backtest", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"allow_short": false, "base": null, "cost_bps": 10.0, "covariance": "ledoit_wolf", "end": "2020-12-31", "fill": "ffill", "lookback": "60", "max_weight": null, "objective": "max_sharpe", "rebalance": "quarterly", "returns_estimator": "mean_historical", "risk_free": 0.0, "seed": 0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"]}, "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.283281Z"}
+{"done": 1, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.464988Z", "total": 8}
+{"done": 2, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.475671Z", "total": 8}
+{"done": 3, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.484160Z", "total": 8}
+{"done": 4, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.489908Z", "total": 8}
+{"done": 5, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.504051Z", "total": 8}
+{"done": 6, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.511573Z", "total": 8}
+{"done": 7, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.524036Z", "total": 8}
+{"done": 8, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.529382Z", "total": 8}
+{"command": "optimize.backtest", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "b7500ab1e539", "timestamp": "2026-09-13T19:14:23.544180Z"}

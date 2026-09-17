@@ -1,0 +1,66 @@
+{
+  "core": {
+    "initial_loss_drawdown": {
+      "observed": {
+        "max_drawdown": 0.0,
+        "peak": "2020-01-01",
+        "trough": "2020-01-01",
+        "recovery": "2020-01-02"
+      },
+      "expected": -0.5
+    },
+    "frontier_count": {
+      "requested": 5,
+      "returned": 6
+    },
+    "non_psd_solve": {
+      "eigenvalues": [
+        -1.0,
+        3.0
+      ],
+      "returned_weights": {
+        "A": 0.5,
+        "B": 0.5
+      },
+      "repair": null
+    },
+    "implicit_missing_as_zero": [
+      0.05,
+      0.1
+    ],
+    "gap_bridge_daily_returns": {
+      "frequency": "daily",
+      "returns": [
+        0.10000000000000009,
+        0.20999999999999996,
+        0.10000000000000009,
+        0.09999999999999987,
+        0.10000000000000009,
+        0.10000000000000009
+      ]
+    }
+  },
+  "lookahead": {
+    "prior_prices_and_rates_identical": true,
+    "runs": [
+      {
+        "future_dtb3_percent": 0.0,
+        "first_trade": "2020-05-20",
+        "first_weights": {
+          "A": 0.5812508650759509,
+          "B": 0.41874913492404914
+        },
+        "risk_free_note": "risk-free rate 0.0000% (FRED DTB3 mean over the window)"
+      },
+      {
+        "future_dtb3_percent": 20.0,
+        "first_trade": "2020-05-20",
+        "first_weights": {
+          "A": 0.5096659421423148,
+          "B": 0.49033405785768525
+        },
+        "risk_free_note": "risk-free rate 8.8889% (FRED DTB3 mean over the window)"
+      }
+    ]
+  }
+}
