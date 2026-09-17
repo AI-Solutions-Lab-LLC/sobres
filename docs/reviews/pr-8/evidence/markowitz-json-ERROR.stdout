@@ -1,0 +1,51 @@
+{
+  "provenance": {
+    "provider": "yfinance",
+    "field": "adj_close",
+    "return_kind": "total return",
+    "currency": "USD",
+    "start": "2019-01-03",
+    "end": "2020-12-31",
+    "cache": "hit",
+    "fetched_at": "2026-09-13T19:13:53.902491+00:00",
+    "flags": [],
+    "notes": [
+      "risk-free rate 0.0000% (given)",
+      "survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents",
+      "in-sample: estimated on the same data it is evaluated on; see `sobres optimize backtest`",
+      "seed: 0"
+    ]
+  },
+  "rows": [
+    {
+      "ticker": "AAPL",
+      "weight": 0.37259886188926333,
+      "risk_contribution": 0.2876353095419442
+    },
+    {
+      "ticker": "MSFT",
+      "weight": 0.6274011381107366,
+      "risk_contribution": 0.7123646904580558
+    }
+  ],
+  "columns": [
+    "ticker",
+    "weight",
+    "risk_contribution"
+  ],
+  "expected_return": 0.16949279523695845,
+  "volatility": 0.1991719372169937,
+  "sharpe": 0.8509873308723185,
+  "objective": "max_sharpe",
+  "estimators": {
+    "expected_return": "mean_historical",
+    "covariance": "ledoit_wolf",
+    "shrinkage": 0.44233077507779367,
+    "psd_repair": null
+  },
+  "risk_free": 0.0,
+  "currency": "USD",
+  "warnings": [
+    "MSFT takes 62.7% of the portfolio: unconstrained mean-variance solutions concentrate; consider --max-weight"
+  ]
+}

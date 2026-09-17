@@ -1,0 +1,28 @@
+weights: AAPL 0.6000, MSFT 0.4000
+source: yfinance (adj_close)
+prices are total return
+currency: USD
+window: 2019-01-03 → 2020-12-31
+cache: hit
+risk-free rate 0.0000% (given)
+survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents
+┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃metric            ┃      value┃
+┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│annualized_return │     0.1440│
+│volatility        │     0.2050│
+│sharpe            │     0.7023│
+│sortino           │     1.0628│
+│calmar            │     0.6238│
+│max_drawdown      │    -0.2308│
+│drawdown_peak     │ 2019-01-03│
+│drawdown_trough   │ 2019-07-18│
+│drawdown_recovery │ 2019-10-31│
+│var_95            │    -0.0200│
+│cvar_95           │    -0.0247│
+│skew              │     0.1214│
+│kurtosis          │    -0.2950│
+│n_obs             │        517│
+│risk_free         │     0.0000│
+└──────────────────┴───────────┘
+For research and education only. Not investment advice.

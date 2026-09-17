@@ -1,0 +1,11 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.backtest", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"allow_short": false, "base": null, "cost_bps": 10.0, "covariance": "ledoit_wolf", "end": "2020-12-31", "fill": "ffill", "lookback": "60", "max_weight": null, "objective": "max_sharpe", "rebalance": "quarterly", "returns_estimator": "mean_historical", "risk_free": 0.0, "seed": 0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"]}, "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.464683Z"}
+{"done": 1, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.599956Z", "total": 8}
+{"done": 2, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.605285Z", "total": 8}
+{"done": 3, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.610030Z", "total": 8}
+{"done": 4, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.616177Z", "total": 8}
+{"done": 5, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.625870Z", "total": 8}
+{"done": 6, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.631877Z", "total": 8}
+{"done": 7, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.641208Z", "total": 8}
+{"done": 8, "event": "backtest.progress", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.647010Z", "total": 8}
+{"command": "optimize.backtest", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "a4858e102e32", "timestamp": "2026-09-13T19:14:18.659355Z"}

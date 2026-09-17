@@ -1,0 +1,4 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+error: internal error (ValueError: expected non-negative integer)
+  next: rerun with --debug and report the run id 4a6c239da8e7
+  run id: 4a6c239da8e7

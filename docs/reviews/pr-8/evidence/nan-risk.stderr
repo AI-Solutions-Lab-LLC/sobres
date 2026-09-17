@@ -1,0 +1,4 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+error: internal error (ValueError: no weight for ['AAPL', 'MSFT'])
+  next: rerun with --debug and report the run id 2a8319d28f31
+  run id: 2a8319d28f31

@@ -1,0 +1,20 @@
+objective: max_sharpe
+estimators: mean_historical expected returns, ledoit_wolf covariance, shrinkage 0.442
+expected return 16.9493%, volatility 19.9172%, sharpe 0.85 (risk-free 0.0000%)
+warning: MSFT takes 62.7% of the portfolio: unconstrained mean-variance solutions concentrate; consider --max-weight
+source: yfinance (adj_close)
+prices are total return
+currency: USD
+window: 2019-01-03 → 2020-12-31
+cache: hit
+risk-free rate 0.0000% (given)
+survivorship: a ticker list chosen today reflects survivors, so results over past windows are biased upward; no free source provides point-in-time constituents
+in-sample: estimated on the same data it is evaluated on; see `sobres optimize backtest`
+seed: 0
+┏━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ticker ┃ weight ┃ risk_contribution┃
+┡━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│AAPL   │ 0.3726 │            0.2876│
+│MSFT   │ 0.6274 │            0.7124│
+└───────┴────────┴──────────────────┘
+For research and education only. Not investment advice.

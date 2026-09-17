@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0 -- /private/tmp/sobres-pr7-review/.venv/bin/python
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /private/tmp/sobres-pr7-review
+configfile: pyproject.toml
+plugins: cov-7.1.0, anyio-4.15.1, hypothesis-6.168.0
+collecting ... collected 4 items
+
+tests/network/test_live_providers.py::test_yfinance_live_matches_fixture_shape PASSED [ 25%]
+tests/network/test_live_providers.py::test_ecb_live_matches_fixture_shape PASSED [ 50%]
+tests/network/test_live_providers.py::test_ken_french_live_matches_fixture_shape PASSED [ 75%]
+tests/network/test_live_providers.py::test_fred_live_matches_fixture_shape SKIPPED [100%]
+
+=============================== warnings summary ===============================
+tests/network/test_live_providers.py::test_yfinance_live_matches_fixture_shape
+  /private/tmp/sobres-pr7-review/src/sobres/data/yfinance_provider.py:74: DeprecationWarning: 'raise_errors' deprecated, do: yf.config.debug.hide_exceptions = False
+    frame = t.history(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=================== 3 passed, 1 skipped, 1 warning in 3.07s ====================

@@ -1,0 +1,3 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+error: max_sharpe did not converge from any starting point: Inequality constraints incompatible
+  run id: 06683922219a

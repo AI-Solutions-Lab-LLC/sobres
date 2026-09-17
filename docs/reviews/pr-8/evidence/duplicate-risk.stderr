@@ -1,0 +1,4 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+error: internal error (TypeError: Cannot pass DataFrame to 'pandas.array')
+  next: rerun with --debug and report the run id 46ed2930d332
+  run id: 46ed2930d332

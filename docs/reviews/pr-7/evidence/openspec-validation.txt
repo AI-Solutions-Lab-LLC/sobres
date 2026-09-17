@@ -1,0 +1,43 @@
+Change '0001-foundation-data-and-cli' has issues
+✗ [ERROR] cli-shell/spec.md: ADDED "`sobres cache` command group" is missing requirement text
+✗ [ERROR] cli-shell/spec.md: ADDED "Not-advice disclaimer" is missing requirement text
+✗ [ERROR] command-registry/spec.md: ADDED "One declaration per command" is missing requirement text
+✗ [ERROR] command-registry/spec.md: ADDED "Parameter models are the validation layer" is missing requirement text
+✗ [ERROR] command-registry/spec.md: ADDED "Results are typed" is missing requirement text
+✗ [ERROR] command-registry/spec.md: ADDED "Introspection" is missing requirement text
+✗ [ERROR] command-registry/spec.md: ADDED "Stability" is missing requirement text
+✗ [ERROR] currency/spec.md: ADDED "Every monetary series declares its currency" is missing requirement text
+⚠ [WARNING] currency/spec.md: ADDED "Unambiguous rate representation" should contain SHALL or MUST (RFC 2119 best practice for English specs)
+✗ [ERROR] currency/spec.md: ADDED "Exchange-rate data" is missing requirement text
+✗ [ERROR] currency/spec.md: ADDED "Conversion is explicit and correct" is missing requirement text
+✗ [ERROR] currency/spec.md: ADDED "Currency appears in output" is missing requirement text
+⚠ [WARNING] market-data/spec.md: ADDED "Data quality is checked on ingest" should contain SHALL or MUST (RFC 2119 best practice for English specs)
+✗ [ERROR] market-data/spec.md: ADDED "Corporate actions and history" is missing requirement text
+✗ [ERROR] market-data/spec.md: ADDED "Missing data has a policy, never a default" is missing requirement text
+⚠ [WARNING] observability/spec.md: ADDED "Logs never contaminate output" should contain SHALL or MUST (RFC 2119 best practice for English specs)
+✗ [ERROR] observability/spec.md: ADDED "Structured logging" is missing requirement text
+✗ [ERROR] observability/spec.md: ADDED "Secrets never reach a log or a span" is missing requirement text
+✗ [ERROR] observability/spec.md: ADDED "What gets logged" is missing requirement text
+✗ [ERROR] observability/spec.md: ADDED "Tracing" is missing requirement text
+⚠ [WARNING] observability/spec.md: ADDED "Instrumentation respects the architecture" should contain SHALL or MUST (RFC 2119 best practice for English specs)
+✗ [ERROR] observability/spec.md: ADDED "Configuration and operation" is missing requirement text
+✗ [ERROR] onboarding/spec.md: ADDED "`sobres init`" is missing requirement text
+✗ [ERROR] onboarding/spec.md: ADDED "`sobres doctor`" is missing requirement text
+✗ [ERROR] onboarding/spec.md: ADDED "`sobres upgrade`" is missing requirement text
+✗ [ERROR] onboarding/spec.md: ADDED "Onboarding is tested end to end" is missing requirement text
+⚠ [WARNING] storage/spec.md: ADDED "Backend conformance suite" should contain SHALL or MUST (RFC 2119 best practice for English specs)
+✗ [ERROR] storage/spec.md: ADDED "Migrations are backend-neutral" is missing requirement text
+✗ [ERROR] storage/spec.md: ADDED "Transactions and failure semantics" is missing requirement text
+✗ [ERROR] storage/spec.md: ADDED "SQLite as the default adapter" is missing requirement text
+✗ [ERROR] storage/spec.md: ADDED "Provider protocols are the same pattern" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Math is tested against known answers" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Architecture is tested, not reviewed" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Fixtures, not mocks, at the data boundary" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Conformance and parity suites" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Invariants across every command" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Property-based tests where they earn their place" is missing requirement text
+✗ [ERROR] testing/spec.md: ADDED "Coverage and speed" is missing requirement text
+Next steps:
+  - Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements
+  - Each requirement MUST include at least one #### Scenario: block
+  - Debug parsed deltas: openspec show 0001-foundation-data-and-cli --json --deltas-only

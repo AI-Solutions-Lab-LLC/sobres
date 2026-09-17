@@ -1,0 +1,4 @@
+Usage: sobres optimize backtest [OPTIONS]
+Try 'sobres optimize backtest --help' for help.
+
+Error: No such option: --target (Possible options: --start)

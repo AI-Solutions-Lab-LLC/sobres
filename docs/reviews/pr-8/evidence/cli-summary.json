@@ -1,0 +1,332 @@
+[
+  {
+    "case": "capm",
+    "exit": 2,
+    "seconds": 1.5490775839425623,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: the capm estimator needs a benchmark return series\n  run id: db04f8b0a8d0\n"
+  },
+  {
+    "case": "target-backtest",
+    "exit": 2,
+    "seconds": 1.1354654160095379,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: target_return needs --target\n  run id: 19a921a5733f\n"
+  },
+  {
+    "case": "target-backtest-option",
+    "exit": 2,
+    "seconds": 1.1174596248893067,
+    "stderr_tail": "Usage: sobres optimize backtest [OPTIONS]\nTry 'sobres optimize backtest --help' for help.\n\nError: No such option: --target (Possible options: --start)\n"
+  },
+  {
+    "case": "duplicate-risk",
+    "exit": 1,
+    "seconds": 1.0948239160934463,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: internal error (TypeError: Cannot pass DataFrame to 'pandas.array')\n  next: rerun with --debug and report the run id 46ed2930d332\n  run id: 46ed2930d332\n"
+  },
+  {
+    "case": "nan-risk",
+    "exit": 1,
+    "seconds": 1.138906667008996,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: internal error (ValueError: no weight for ['AAPL', 'MSFT'])\n  next: rerun with --debug and report the run id 2a8319d28f31\n  run id: 2a8319d28f31\n"
+  },
+  {
+    "case": "negative-seed",
+    "exit": 1,
+    "seconds": 1.2038972919108346,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: internal error (ValueError: expected non-negative integer)\n  next: rerun with --debug and report the run id 4a6c239da8e7\n  run id: 4a6c239da8e7\n"
+  },
+  {
+    "case": "nan-riskfree",
+    "exit": 1,
+    "seconds": 1.2761462499620393,
+    "stderr_tail": "hint: no configuration found; run `sobres init` to set up keys and storage\nerror: max_sharpe did not converge from any starting point: Inequality constraints incompatible\n  run id: 06683922219a\n"
+  },
+  {
+    "case": "markowitz-table-ERROR",
+    "exit": 0,
+    "seconds": 1.1837093330686912,
+    "rows": null
+  },
+  {
+    "case": "markowitz-table-WARNING",
+    "exit": 0,
+    "seconds": 1.4506802499527112,
+    "rows": null
+  },
+  {
+    "case": "markowitz-table-INFO",
+    "exit": 0,
+    "seconds": 1.2582064169691876,
+    "rows": null
+  },
+  {
+    "case": "markowitz-table-DEBUG",
+    "exit": 0,
+    "seconds": 1.519376958021894,
+    "rows": null
+  },
+  {
+    "case": "markowitz-json-ERROR",
+    "exit": 0,
+    "seconds": 1.092504500062205,
+    "rows": 2
+  },
+  {
+    "case": "markowitz-json-WARNING",
+    "exit": 0,
+    "seconds": 1.0328543330542743,
+    "rows": 2
+  },
+  {
+    "case": "markowitz-json-INFO",
+    "exit": 0,
+    "seconds": 1.0008952090283856,
+    "rows": 2
+  },
+  {
+    "case": "markowitz-json-DEBUG",
+    "exit": 0,
+    "seconds": 1.017727458034642,
+    "rows": 2
+  },
+  {
+    "case": "markowitz-csv-ERROR",
+    "exit": 0,
+    "seconds": 1.1311499159783125,
+    "rows": null
+  },
+  {
+    "case": "markowitz-csv-WARNING",
+    "exit": 0,
+    "seconds": 1.2343229999532923,
+    "rows": null
+  },
+  {
+    "case": "markowitz-csv-INFO",
+    "exit": 0,
+    "seconds": 1.0592508339323103,
+    "rows": null
+  },
+  {
+    "case": "markowitz-csv-DEBUG",
+    "exit": 0,
+    "seconds": 1.1045861250022426,
+    "rows": null
+  },
+  {
+    "case": "frontier-table-ERROR",
+    "exit": 0,
+    "seconds": 1.1331142090493813,
+    "rows": null
+  },
+  {
+    "case": "frontier-table-WARNING",
+    "exit": 0,
+    "seconds": 1.2642054170137271,
+    "rows": null
+  },
+  {
+    "case": "frontier-table-INFO",
+    "exit": 0,
+    "seconds": 1.1863270830363035,
+    "rows": null
+  },
+  {
+    "case": "frontier-table-DEBUG",
+    "exit": 0,
+    "seconds": 1.1238386249169707,
+    "rows": null
+  },
+  {
+    "case": "frontier-json-ERROR",
+    "exit": 0,
+    "seconds": 1.104007708025165,
+    "rows": 6
+  },
+  {
+    "case": "frontier-json-WARNING",
+    "exit": 0,
+    "seconds": 1.1223328750347719,
+    "rows": 6
+  },
+  {
+    "case": "frontier-json-INFO",
+    "exit": 0,
+    "seconds": 1.1210353749338537,
+    "rows": 6
+  },
+  {
+    "case": "frontier-json-DEBUG",
+    "exit": 0,
+    "seconds": 1.0730441249907017,
+    "rows": 6
+  },
+  {
+    "case": "frontier-csv-ERROR",
+    "exit": 0,
+    "seconds": 1.135702040977776,
+    "rows": null
+  },
+  {
+    "case": "frontier-csv-WARNING",
+    "exit": 0,
+    "seconds": 1.3154450000729412,
+    "rows": null
+  },
+  {
+    "case": "frontier-csv-INFO",
+    "exit": 0,
+    "seconds": 1.3312684160191566,
+    "rows": null
+  },
+  {
+    "case": "frontier-csv-DEBUG",
+    "exit": 0,
+    "seconds": 1.021945417043753,
+    "rows": null
+  },
+  {
+    "case": "backtest-table-ERROR",
+    "exit": 0,
+    "seconds": 1.0537779170554131,
+    "rows": null
+  },
+  {
+    "case": "backtest-table-WARNING",
+    "exit": 0,
+    "seconds": 1.0347704589366913,
+    "rows": null
+  },
+  {
+    "case": "backtest-table-INFO",
+    "exit": 0,
+    "seconds": 1.0529170839581639,
+    "rows": null
+  },
+  {
+    "case": "backtest-table-DEBUG",
+    "exit": 0,
+    "seconds": 1.1673057080479339,
+    "rows": null
+  },
+  {
+    "case": "backtest-json-ERROR",
+    "exit": 0,
+    "seconds": 1.143498916993849,
+    "rows": 14
+  },
+  {
+    "case": "backtest-json-WARNING",
+    "exit": 0,
+    "seconds": 1.1586055409861729,
+    "rows": 14
+  },
+  {
+    "case": "backtest-json-INFO",
+    "exit": 0,
+    "seconds": 1.4454314169706777,
+    "rows": 14
+  },
+  {
+    "case": "backtest-json-DEBUG",
+    "exit": 0,
+    "seconds": 1.199019583989866,
+    "rows": 14
+  },
+  {
+    "case": "backtest-csv-ERROR",
+    "exit": 0,
+    "seconds": 1.2273479589493945,
+    "rows": null
+  },
+  {
+    "case": "backtest-csv-WARNING",
+    "exit": 0,
+    "seconds": 1.1994478340493515,
+    "rows": null
+  },
+  {
+    "case": "backtest-csv-INFO",
+    "exit": 0,
+    "seconds": 1.1845327499322593,
+    "rows": null
+  },
+  {
+    "case": "backtest-csv-DEBUG",
+    "exit": 0,
+    "seconds": 1.3044156660325825,
+    "rows": null
+  },
+  {
+    "case": "risk-table-ERROR",
+    "exit": 0,
+    "seconds": 1.0389415420359,
+    "rows": null
+  },
+  {
+    "case": "risk-table-WARNING",
+    "exit": 0,
+    "seconds": 1.094048541970551,
+    "rows": null
+  },
+  {
+    "case": "risk-table-INFO",
+    "exit": 0,
+    "seconds": 1.0841942500555888,
+    "rows": null
+  },
+  {
+    "case": "risk-table-DEBUG",
+    "exit": 0,
+    "seconds": 1.200783749925904,
+    "rows": null
+  },
+  {
+    "case": "risk-json-ERROR",
+    "exit": 0,
+    "seconds": 1.1519765419652686,
+    "rows": 15
+  },
+  {
+    "case": "risk-json-WARNING",
+    "exit": 0,
+    "seconds": 1.0840993750607595,
+    "rows": 15
+  },
+  {
+    "case": "risk-json-INFO",
+    "exit": 0,
+    "seconds": 1.160130082978867,
+    "rows": 15
+  },
+  {
+    "case": "risk-json-DEBUG",
+    "exit": 0,
+    "seconds": 1.2398648330708966,
+    "rows": 15
+  },
+  {
+    "case": "risk-csv-ERROR",
+    "exit": 0,
+    "seconds": 1.3876354590756819,
+    "rows": null
+  },
+  {
+    "case": "risk-csv-WARNING",
+    "exit": 0,
+    "seconds": 1.2352265419904143,
+    "rows": null
+  },
+  {
+    "case": "risk-csv-INFO",
+    "exit": 0,
+    "seconds": 1.239659082959406,
+    "rows": null
+  },
+  {
+    "case": "risk-csv-DEBUG",
+    "exit": 0,
+    "seconds": 1.276055333088152,
+    "rows": null
+  }
+]

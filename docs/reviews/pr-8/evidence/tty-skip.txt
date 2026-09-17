@@ -1,0 +1,12 @@
+Independent actual exec PTY, installed base wheel at PR head:
+
+sobres init --offline
+fred_api_key (enter to skip):
+
+Sent one newline after the prompt was visible.
+
+Observed:
+fred_api_key (enter to skip):
+
+The optional prompt repeated instead of advancing. Ctrl-C interrupted the wizard.
+Temporary SOBRES_CONFIG_FILE and SOBRES_DB_URL were used; no real key was entered.

@@ -1,0 +1,73 @@
+........................................................................ [ 15%]
+........................................................................ [ 31%]
+........................................................................ [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 79%]
+........................................................................ [ 95%]
+.....................                                                    [100%]
+=============================== warnings summary ===============================
+tests/architecture/test_scenarios.py::test_every_scenario_has_a_test
+  /private/tmp/sobres-pr8-review.7emJ3R/head/tests/architecture/test_scenarios.py:55: UserWarning: 268 scenario(s) in proposed changes have no test yet
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.12.13-final-0 _______________
+
+Name                                             Stmts   Miss Branch BrPart  Cover   Missing
+--------------------------------------------------------------------------------------------
+src/sobres/__about__.py                              1      0      0      0   100%
+src/sobres/__init__.py                               2      0      0      0   100%
+src/sobres/cli/__init__.py                           0      0      0      0   100%
+src/sobres/cli/commands/__init__.py                  3      0      2      0   100%
+src/sobres/cli/commands/cache.py                    26      0      2      0   100%
+src/sobres/cli/commands/commands.py                 11      0      0      0   100%
+src/sobres/cli/commands/config.py                   38      0      2      0   100%
+src/sobres/cli/commands/data.py                     64      2      8      2    94%   101, 117
+src/sobres/cli/commands/doctor.py                   52      1     10      1    97%   59
+src/sobres/cli/commands/init.py                    111      4     48      3    96%   92-93, 134->137, 156-157
+src/sobres/cli/commands/optimize.py                264     13     40      7    93%   72, 121->125, 132-133, 139, 163->167, 165-166, 176, 432-437
+src/sobres/cli/commands/upgrade.py                  34      0     10      0   100%
+src/sobres/cli/context.py                          100      9     18      3    88%   92, 139-141, 146-153, 161
+src/sobres/cli/main.py                              97      3     28      2    96%   121, 150, 167
+src/sobres/cli/render.py                            90     11     44      4    84%   33, 40, 48, 60, 109-115
+src/sobres/config.py                               132      3     30      0    98%   92-93, 180
+src/sobres/core/__init__.py                          0      0      0      0   100%
+src/sobres/core/allocate.py                         46      0     12      0   100%
+src/sobres/core/backtest.py                        119      2     26      0    99%   146-147
+src/sobres/core/conventions.py                      18      0      4      0   100%
+src/sobres/core/errors.py                           39      0      2      0   100%
+src/sobres/core/moments.py                         105      0     22      1    99%   194->196
+src/sobres/core/optimize.py                        203      4     64      5    97%   63, 149->156, 240, 284, 330
+src/sobres/core/returns.py                          60      0     14      0   100%
+src/sobres/core/risk.py                            103      0     14      0   100%
+src/sobres/data/__init__.py                          2      0      0      0   100%
+src/sobres/data/align.py                            34      0     14      0   100%
+src/sobres/data/base.py                             88      0     28      0   100%
+src/sobres/data/cache.py                           108      1     46      1    99%   156
+src/sobres/data/currency.py                        152      1     52      0    99%   273
+src/sobres/data/ecb_provider.py                     87      1     20      1    98%   120
+src/sobres/data/fixtures.py                         64      2     10      2    95%   56, 93
+src/sobres/data/fred_provider.py                   108      2     24      2    97%   144, 171
+src/sobres/data/gaps.py                             48      0     18      0   100%
+src/sobres/data/ken_french.py                      106      1     28      1    99%   125
+src/sobres/data/providers.py                        12      1      0      0    92%   53
+src/sobres/data/storage/__init__.py                  2      0      0      0   100%
+src/sobres/data/storage/adapters/__init__.py         1      0      0      0   100%
+src/sobres/data/storage/adapters/migrations.py      13      0      0      0   100%
+src/sobres/data/storage/adapters/schema.py          37      0     10      0   100%
+src/sobres/data/storage/adapters/sqlite.py         311      6     70      7    97%   130-132, 244, 249->exit, 267->265, 276->275, 523, 526
+src/sobres/data/storage/base.py                    107      3      6      0    97%   68, 259-260
+src/sobres/data/yfinance_provider.py               107      2     28      4    96%   142, 152->151, 163, 191->197
+src/sobres/doctor.py                               275      9     86      3    96%   297, 409->412, 445->449, 469-470, 512-515, 519, 523
+src/sobres/observability/__init__.py                 3      0      0      0   100%
+src/sobres/observability/logging.py                 64      0     12      0   100%
+src/sobres/observability/redaction.py               29      0     10      0   100%
+src/sobres/observability/tracing.py                120      3     30      2    97%   122-129, 155->exit
+src/sobres/registry.py                             241      5     82      4    97%   44, 154-155, 250, 267->269, 379
+src/sobres/results.py                              108      1     22      1    98%   124
+src/sobres/settings.py                              95      4     24      2    95%   70, 101, 167-169
+--------------------------------------------------------------------------------------------
+TOTAL                                             4040     94   1020     58    97%
+Required test coverage of 90% reached. Total coverage: 96.72%
+453 passed, 4 deselected, 1 warning in 31.82s

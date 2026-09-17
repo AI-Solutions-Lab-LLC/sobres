@@ -1,0 +1,3 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.risk", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"base": null, "end": "2020-12-31", "fill": "ffill", "risk_free": 0.0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"], "weights": [0.6, 0.4]}, "run_id": "ed6a7acce101", "timestamp": "2026-09-13T19:14:37.336131Z"}
+{"command": "optimize.risk", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "ed6a7acce101", "timestamp": "2026-09-13T19:14:37.480326Z"}

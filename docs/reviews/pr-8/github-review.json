@@ -1,0 +1,55 @@
+{
+  "commit_id": "21724ce35c6a4b3f5d89db265517bf77a38d425f",
+  "event": "REQUEST_CHANGES",
+  "body": "Request changes. The Python 3.12 suite passes (453 tests, 96.72% coverage), but independent probes reproduce lookahead through future risk-free rates, omitted initial drawdowns, and incorrect daily returns after dropping gaps. CAPM and target backtests are unusable through their exposed CLI options. Please fix the findings below, incorporate the foundation corrections already on local main, and resolve the documented spec discrepancies before treating 0002 as ready for v1.0.0. This review also checks packaging: PyPI/TestPyPI currently return 404 for sobres and RELEASE_ENABLED is false. Homebrew requires a separate formula/tap; publishing to PyPI does not create one. Full local report includes reproductions, performance results, release criteria, and self-test instructions.",
+  "comments": [
+    {
+      "path": "src/sobres/cli/commands/optimize.py",
+      "line": 479,
+      "side": "RIGHT",
+      "body": "[P1] Use only risk-free observations available before each rebalance\n\nThe strategy closes over `u.risk_free`, computed once from the entire fetched window, including future out-of-sample dates. Changing only DTB3 at/after the first trade changes the allocation on that trade, despite identical prior prices and rates. The independent synthetic reproduction moves A from 58.1251% to 50.9666% on 2020-05-20. This invalidates the no-lookahead guarantee; the existing test perturbs only the return frame supplied to a different strategy. Resolve a lagged/as-of risk-free input separately for each rebalance, retain explicit constant overrides, and test future-rate perturbations through this handler. Separate the rate used for decisions from any ex-post reporting average."
+    },
+    {
+      "path": "src/sobres/core/risk.py",
+      "line": 109,
+      "side": "RIGHT",
+      "body": "[P1] Include starting capital in the drawdown high-water mark\n\nFor returns `[-0.5, 0.1, 0.1]`, `max_drawdown` reports 0.0 and a recovery on the second date. Starting from 1.0, wealth is 0.50, 0.55, 0.605: the correct maximum drawdown is -50%, with no recovery. The running peak begins after the first loss and therefore excludes initial capital. This understates losses in both the risk command and the backtest, and corrupts Calmar. Include initial wealth, define how its timestamp is represented, and add first-period-loss, unrecovered-loss, and first-period-cost regression cases. Relevant scenario: Max drawdown."
+    },
+    {
+      "path": "src/sobres/cli/commands/optimize.py",
+      "line": 140,
+      "side": "RIGHT",
+      "body": "[P1] Preserve return intervals when dropping missing prices\n\n`--fill drop` removes price rows before calculating returns. On a daily series growing 10% per trading day, an interior missing price creates a 21% two-session return that is then treated as one daily observation. The probe returns `[0.1, 0.21, 0.1, 0.1, 0.1, 0.1]` with frequency `daily`. This biases means, volatility, and annualization used by every optimization command. Compute period returns on the original trading index before dropping invalid intervals, or explicitly represent and annualize irregular intervals. Add a hand-calculated interior-gap test through `load_universe`, and report the dates/observations lost. Relevant scenarios: Return computation and conventions; Missing observations; Filling is explicit."
+    },
+    {
+      "path": "src/sobres/cli/commands/optimize.py",
+      "line": 173,
+      "side": "RIGHT",
+      "body": "[P2] Provide the benchmark required by the exposed CAPM estimator\n\n`--returns-estimator capm` is offered by the shared model, but `estimate` supplies neither a benchmark nor the resolved risk-free rate to `expected_returns`. A fixture-backed Markowitz command exits 2 with 'the capm estimator needs a benchmark return series'; there is no benchmark option that repairs the invocation. Frontier and backtest have the same missing input. Add a declared benchmark parameter and align/convert its returns, forwarding the appropriate risk-free input, or explicitly narrow the CLI's advertised choices pending a scoped follow-up. Test every estimator through the generated CLI. Relevant scenarios: Available estimators; Markowitz; parameter validation before the handler."
+    },
+    {
+      "path": "src/sobres/cli/commands/optimize.py",
+      "line": 409,
+      "side": "RIGHT",
+      "body": "[P2] Make target objectives usable in the backtest interface\n\nBacktestParams accepts `target_return` and `target_risk`, but declares no target parameter and the strategy does not pass one to the solver. Selecting `target_return` exits 2 asking for `--target`; adding `--target 0.1` exits 2 because that option does not exist. Supply the target field with cross-field validation and pass it at each solve, or restrict the objective choices to the supported backtest subset and document that scope. Test both target objectives through actual CLI parsing and an out-of-sample run. Relevant scenarios: Supported objectives; Backtest; Cross-field rules live in the model."
+    },
+    {
+      "path": "src/sobres/core/optimize.py",
+      "line": 184,
+      "side": "RIGHT",
+      "body": "[P2] Condition or reject covariance at the public optimizer boundary\n\nThe public `optimize` function directly uses the supplied covariance; only the separate estimator path conditions it. For `sigma=[[1,2],[2,1]]` (eigenvalues -1 and 3), min-variance returns 50/50 with variance 1.5, no repair, and status 'optimal', although an endpoint has variance 1.0. The proposal explicitly promises never to solve silently on a broken covariance, and core is part of the v1 compatibility surface. Condition/reject non-finite, asymmetric, or non-PSD input at this boundary and return repair provenance. Test direct-library calls as well as estimator-produced matrices."
+    },
+    {
+      "path": "src/sobres/cli/commands/optimize.py",
+      "line": 542,
+      "side": "RIGHT",
+      "body": "[P2] Reject non-finite weights and invalid seeds before fetching data\n\nThe sum validator accepts `[NaN, NaN]` and `[Infinity, -Infinity]` because comparisons with NaN are false. `optimize risk --weights nan nan` consequently fetches data and exits 1 as an internal 'no weight' error. Similarly, the newly exposed `--seed -1` reaches NumPy and exits 1 after fetching; a NaN risk-free override becomes a solver failure. Use finite numeric types and nonnegative seed constraints in the parameter models, with usage exit 2 before provider calls. Test NaN, infinity, negative seeds, and target/lookback cross-field constraints. Duplicate tickers also trigger an inherited provider failure and should be rejected or deliberately aggregated."
+    },
+    {
+      "path": "src/sobres/core/optimize.py",
+      "line": 397,
+      "side": "RIGHT",
+      "body": "[P2] Return the requested number of frontier portfolios\n\nThe implementation produces `n_points` grid portfolios and then appends the max-Sharpe portfolio. `--points 5` returns six rows while the JSON declares `n_points: 5`; `--points 50` returns 51, contrary to Frontier generation. The CLI test explicitly asserts this contradictory extra row. Include the named points within the requested count, deduplicate coincident extrema, and test actual row count and metadata. If an additional named point is the intended product choice, agree and update the contract, option description, and metadata together."
+    }
+  ]
+}

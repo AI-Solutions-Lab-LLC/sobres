@@ -1,0 +1,3 @@
+hint: no configuration found; run `sobres init` to set up keys and storage
+{"command": "optimize.frontier", "event": "command.start", "level": "info", "logger": "sobres.cli", "params": {"allow_short": false, "base": null, "covariance": "ledoit_wolf", "end": "2020-12-31", "fill": "ffill", "max_weight": null, "points": 5, "returns_estimator": "mean_historical", "risk_free": 0.0, "seed": 0, "start": "2019-01-01", "tickers": ["AAPL", "MSFT"]}, "run_id": "c860fa1c664d", "timestamp": "2026-09-13T19:14:04.962755Z"}
+{"command": "optimize.frontier", "event": "command.done", "level": "info", "logger": "sobres.cli", "run_id": "c860fa1c664d", "timestamp": "2026-09-13T19:14:05.139382Z"}
