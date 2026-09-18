@@ -66,8 +66,9 @@ boundary. It also extends the single-file **local** persistence convention with
 explicit artifact and operational ports for that profile; it does not advertise
 Firestore as a drop-in replacement for all Sobres repositories. See
 [design.md](design.md). Release-engineering changes and open PR #53 are independent.
-No private template/context material is needed. Issue: none created; this planning
-PR is the tracking item. Planning PR URL is recorded in its GitHub description.
+No private template/context material is needed. Issue: none created;
+[planning PR #70](https://github.com/AI-Solutions-Lab-LLC/sobres/pull/70) is the
+tracking item.
 
 ## Scope and non-goals
 
