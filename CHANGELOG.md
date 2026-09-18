@@ -11,7 +11,16 @@ describe. See [docs/RELEASING.md](docs/RELEASING.md).
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Publication is armed. The `PAGES_ENABLED`, `RELEASE_ENABLED` and
+  `DOCKER_RELEASE_ENABLED` repository variables are gone: the landing page
+  deploys on every push to `main` that touches `site/`, and PyPI and the
+  container image publish whenever `src/sobres/__about__.py` names a version the
+  index does not have. Quality gates are unchanged — a red CI run, a failed
+  Lighthouse audit, a missing CHANGELOG section or a failed Trivy scan still
+  publishes nothing. To hold a release for a human, add required reviewers to
+  the `pypi` environment (see [docs/RELEASING.md](docs/RELEASING.md)).
 
 ## [1.1.0] - 2026-09-16
 

@@ -55,9 +55,10 @@ def test_published_automatically_with_least_privilege_and_no_broken_deploys() ->
     assert "permissions:\n  contents: read" in PAGES
     deploy = PAGES.split("  deploy:\n", 1)[1]
     assert "needs: build" in deploy
-    # Publication is disabled or the repository is private: the build and audit run on
-    # every change, the upload only when the owner has enabled Pages and armed the variable.
-    assert "if: github.event_name != 'pull_request' && vars.PAGES_ENABLED == 'true'" in deploy
+    # The build and audit run on every change; the upload happens on main alone,
+    # and no repository variable can suppress it.
+    assert "if: github.event_name != 'pull_request'" in deploy
+    assert "PAGES_ENABLED" not in PAGES
     assert "pages: write" in deploy and "id-token: write" in deploy
     assert "actions/deploy-pages@v4" in deploy
     build = PAGES.split("  build:\n", 1)[1].split("  deploy:\n", 1)[0]

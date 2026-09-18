@@ -45,7 +45,6 @@ jobs:
         name: Compare the declared version against the index
         env:
           TARGET: ${{ inputs.target || 'pypi' }}
-          RELEASE_ENABLED: ${{ vars.RELEASE_ENABLED }}
         run: python .github/scripts/check_release.py >> "$GITHUB_OUTPUT"
 
       - name: Summary
@@ -151,12 +150,12 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # The container image: same commit, same version gate, the exact wheel that
-  # went to PyPI. Disarmed until DOCKER_RELEASE_ENABLED=true, like PyPI.
+  # went to PyPI.
   # ---------------------------------------------------------------------------
   docker:
     name: Publish the container image
     needs: [decide, build, publish]
-    if: needs.decide.outputs.publish == 'true' && needs.decide.outputs.target == 'pypi' && vars.DOCKER_RELEASE_ENABLED == 'true'
+    if: needs.decide.outputs.publish == 'true' && needs.decide.outputs.target == 'pypi'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -272,15 +271,10 @@ jobs:
     steps:
       - name: No release for this push
         env:
-          REASON: ${{ needs.decide.outputs.reason }}
           VERSION: ${{ needs.decide.outputs.version }}
           TARGET: ${{ needs.decide.outputs.target }}
         run: |
-          if [ "$REASON" = "disabled" ]; then
-            message="Publishing is disabled (RELEASE_ENABLED != true). No upload was attempted."
-          else
-            message="Version ${VERSION} already exists on ${TARGET}. No upload is needed."
-          fi
+          message="Version ${VERSION} already exists on ${TARGET}. No upload is needed."
           echo "$message"
           {
             echo "### No release"

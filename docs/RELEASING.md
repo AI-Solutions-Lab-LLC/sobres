@@ -67,18 +67,7 @@ On `pypi`, add yourself under **Required reviewers**. Every publish then waits
 for a one-click approval, which is the cheapest possible safeguard against an
 accidental release. Optionally restrict the environment to the `main` branch.
 
-### 3. Arm the pipeline
-
-Settings → Secrets and variables → Actions → **Variables** → New variable:
-
-| Name | Value |
-|---|---|
-| `RELEASE_ENABLED` | `true` |
-
-This is the kill switch. Set it to anything else to stop all PyPI publishing
-without touching a workflow file.
-
-### 4. Protect `main`
+### 3. Protect `main`
 
 Settings → Branches → Add rule for `main`:
 
@@ -95,9 +84,8 @@ shrink without ever editing the protection rule.
 
 Actions → Release → **Run workflow** → target `testpypi`.
 
-This runs the same build and publish path against TestPyPI. It works before
-`RELEASE_ENABLED` is set, so you can prove the whole pipeline end to end without
-touching real PyPI. Verify with:
+This runs the same build and publish path against TestPyPI, so you can prove
+the whole pipeline end to end without touching real PyPI. Verify with:
 
 ```bash
 pip install --index-url https://test.pypi.org/simple/ \
@@ -169,12 +157,14 @@ The decision gate skips an existing version, so a rerun does not repair missing
 artifacts. Verify and recover the exact missing artifact deliberately; never
 assume a green skipped run completed the release.
 
-**Need to stop everything.** Set `RELEASE_ENABLED` to `false`.
+**Need to stop everything.** There is no kill-switch variable. Add required
+reviewers to the `pypi` environment (Settings → Environments), which holds every
+publish for approval, or revoke the `PYPI_PROD` organization token.
 
 ## Verifying distribution
 
-A disabled production switch reports `reason=disabled`; an existing version
-reports `reason=already-published`. Neither means an upload occurred. After an
+An existing version reports `reason=already-published`, which does not mean an
+upload occurred. After an
 authorized release, verify the public version page, wheel/sdist hashes, GitHub
 release, and a base-only installation followed by actual keyless data and
 optimization commands. Arming the variable alone does not trigger a workflow.

@@ -100,14 +100,11 @@ refuses to overwrite an existing version tag, and only then pushes for both
 architectures with a BuildKit provenance attestation and an SBOM. That
 attestation is a build attestation, not an OIDC-signed identity.
 
-Publishing is disarmed until two things exist:
+Publishing rides the same version gate as PyPI and needs two credentials:
 
 | Where | Name | Value |
 |---|---|---|
-| Settings → Secrets → Actions (repository) | `DOCKERHUB_USERNAME` | the Docker Hub account |
-| Settings → Secrets → Actions (repository) | `DOCKERHUB_TOKEN` | a scoped access token with write access to `aisolutionslab/sobres` only — never the password |
-| Settings → Variables → Actions | `DOCKER_RELEASE_ENABLED` | `true` |
+| Organization → Secrets → Actions | `DOCKERHUB_USERNAME` | the Docker Hub account |
+| Organization → Secrets → Actions | `DOCKERHUB_TOKEN` | a scoped access token with write access to `aisolutionslab/sobres` only — never the password |
 
-The secrets are repository-level because only this repository publishes an
-image; they move to the organization the day a second one does. Only the push
-job reads them.
+Only the push job reads them.

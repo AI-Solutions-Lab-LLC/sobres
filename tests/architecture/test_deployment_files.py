@@ -70,7 +70,7 @@ def test_release_publishes_the_image_on_the_same_gate() -> None:
     docker_job = RELEASE.split("  docker:\n", 1)[1].split("  github-release:", 1)[0]
     assert "needs: [decide, build, publish]" in docker_job
     assert "needs.decide.outputs.publish == 'true'" in docker_job
-    assert "vars.DOCKER_RELEASE_ENABLED == 'true'" in docker_job  # disarmed by default
+    assert "DOCKER_RELEASE_ENABLED" not in RELEASE  # the version gate is the only gate
     assert "name: release-dist" in docker_job and "WHEEL_SOURCE=prebuilt" in docker_job
     assert 'test "$reported" = "$VERSION"' in docker_job  # version parity before any push
     assert "docker manifest inspect" in docker_job  # never overwrite an exact tag

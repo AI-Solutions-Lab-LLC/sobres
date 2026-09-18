@@ -98,20 +98,6 @@ def main() -> None:
     if target not in INDEXES:
         fail(f"TARGET must be one of {sorted(INDEXES)}, got {target!r}")
 
-    # Arming switch. Publishing to real PyPI stays off until the repository
-    # variable RELEASE_ENABLED is set to "true", so merging the pipeline itself
-    # cannot fire a publish before upload credentials are configured. TestPyPI
-    # runs (workflow_dispatch) are always allowed -- that is how you rehearse.
-    enabled = os.environ.get("RELEASE_ENABLED", "").strip().lower() == "true"
-    if target == "pypi" and not enabled:
-        note("Releases to PyPI are not armed (repository variable RELEASE_ENABLED != 'true').")
-        note("See docs/RELEASING.md for the organization token setup.")
-        emit("version", read_version())
-        emit("target", target)
-        emit("publish", "false")
-        emit("reason", "disabled")
-        return
-
     version = read_version()
     if not VERSION_RE.match(version):
         fail(
