@@ -34,7 +34,8 @@ Cloud SQL. These additions are explicit scope even though absent from the guide.
 
 ## What changes
 
-- Versioned earnings and options data contracts with verified vendor entitlements.
+- Versioned earnings and options data contracts with verified vendor entitlements,
+  designed against at least two vendors so vendor individuality stays in adapters.
 - A mechanical ATM-straddle baseline, explicit timing/liquidity/risk rules,
   optional overlay experiments, and a bounded statistical challenger.
 - Event and portfolio backtests with spreads, costs, overlapping positions,
@@ -44,6 +45,12 @@ Cloud SQL. These additions are explicit scope even though absent from the guide.
 - A restricted hosted-options profile: Cloud Run service and Jobs, Firestore for
   small durable operational records, Cloud Storage for immutable research artifacts.
   Local Sobres continues to use SQLite. No SQLite file is opened on a bucket mount.
+- Terraform-managed infrastructure driven from the terminal-only CLI
+  (`deploy cloud-run check|plan|apply|destroy`), with `gcloud` and Terraform
+  prerequisites diagnosed by doctor and secret values stored by the owner in
+  Secret Manager through the `gcloud` CLI, never by the app.
+- Human-gated owner tasks (vendor keys or documentation, cloud project and
+  secrets, budgets) that block the implementation waves depending on them.
 - Deployment, backup/restore, job-recovery, identity, and cost acceptance tests.
 
 ## Existing foundations and contract changes
@@ -85,16 +92,18 @@ platform, Cloud SQL, always-on VM, or claims of guaranteed profitability.
 
 ## Delivery and decision gates
 
-1. Resolve the policy decisions in [questions.md](questions.md); validate actual
-   data access, historical earnings confirmations, and display rights first.
+1. Resolve the policy decisions in [questions.md](questions.md) and complete the
+   human-gated tasks H1–H3 in [hosting.md](hosting.md); validate actual data
+   access, historical earnings confirmations, and display rights first.
 2. Implement offline domain contracts and known-answer math; ingest a bounded,
    licensed historical universe; run the locked baseline and challengers.
 3. Publish all results, including failures. Insufficient evidence leaves the app
    in research/demo mode and suppresses actionable recommendations.
 4. Add local UI, persistent recommendation/model state and paper tracking.
-5. Add the restricted cloud profile and deploy the tested image using the owner's
-   selected project, budget, identity configuration, and licensed data. Verify
-   restart/restore and a paper journey.
+5. Add the restricted cloud profile and deploy the tested image through Terraform
+   from the CLI using the owner's selected project, budget, identity configuration,
+   and licensed data. Verify restart/restore, a paper journey and destroy of the
+   smoke environment.
 
 ## Risks and proposed defaults
 

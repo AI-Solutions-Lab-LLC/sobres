@@ -225,7 +225,8 @@ An unsuccessful challenger leaves the rule baseline intact or no model promoted.
 | Area | Responsibility |
 |---|---|
 | `core/options/` | Pure feature math, eligibility, sizing, simulated fills/accounting, evaluation; injected frames/clock values/seed, no I/O or logging |
-| `data/options/`, `data/earnings/` | Owned provider ports and adapters, calendars, entitlement and quality normalization |
+| `data/options/`, `data/earnings/` | Owned `OptionsDataSource`/`EarningsCalendarSource` ports, one adapter module per vendor, calendars, entitlement and quality normalization; vendor field names, units, pagination and auth never leave the adapter |
+| `deploy/terraform/` and `cli/commands/deploy.py` | Versioned Terraform root and bootstrap modules for the hosted profile; the CLI wraps the `terraform` and `gcloud` binaries as subprocesses and never reimplements them |
 | `data/storage/base.py`, `data/storage/adapters/` | Domain repositories, transactions, SQLite and limited Firestore implementations; database SDK imports only here |
 | `data/artifacts/` | Artifact protocol, GCS adapter and a deterministic fake |
 | Shared command handlers following existing CLI context pattern | Fetch → core → persist/publish orchestration, reused by API and Jobs; no numerical policy in adapters |
@@ -234,10 +235,11 @@ An unsuccessful challenger leaves the rule baseline intact or no model promoted.
 
 Proposed commands (not available yet): `sobres options calendar`, `options scan`,
 `options backtest`, `options recommendations`, `options models`, `options promote`,
-`options position record`, and `deploy cloud-run`. Define typed Pydantic
+`options position record`, `deploy cloud-run check`, `deploy cloud-run plan`,
+`deploy cloud-run apply` and `deploy cloud-run destroy`. Define typed Pydantic
 parameters/results once; emit table/json/csv with consistent units/reason codes.
-Publication/promotion actions require explicit permissions; deployment
-generation is terminal-only. No shell/cloud command execution through HTTP.
+Publication/promotion actions require explicit permissions; every `deploy`
+command is terminal-only. No shell/cloud command execution through HTTP.
 
 Hosted exposure is a declared profile allowlist shared by schema, routes, forms
 and parity tests. Full desktop portfolio/equity/broker/settings/database-export
@@ -253,6 +255,46 @@ not selected as a general `SOBRES_DB_URL` backend with missing repositories.
 GCS is immutable dataset/report storage behind its own artifact port, not a cache
 sidecar bypassing SQLite. Local artifacts can be BLOB-backed in the existing
 SQLite store; cloud references carry checksum, generation, schema and retention.
+
+### 6.1 Provider abstraction needs more than one vendor
+
+The options and earnings ports are only credible once at least two vendors sit
+behind them. Design the ports from vendor documentation or live keys for at
+least two candidates (Q12, human task H1); a port designed against one vendor's
+payload is that vendor's schema under another name. Each adapter publishes a
+capability declaration naming which required inputs it supplies: historical
+bid/ask with sizes and timestamps, contract identity (OCC symbol or vendor ID
+plus strike/expiry/right/multiplier/deliverable), corporate-action versions,
+underlying quote, vendor IV/Greeks with method, OI/volume publication times,
+earnings confirmation timestamps and revisions, rate limits, pagination and
+history depth. One recorded-fixture conformance suite runs over every adapter;
+a missing capability is declared and shown as unavailable (OD1, OD6, OD9),
+never emulated. A vendor whose sample cannot supply pre-announcement
+regular-session bid/ask with timestamps cannot validate the baseline.
+
+### 6.2 Terraform-driven deployment from the CLI
+
+The hosted profile is provisioned only through Terraform, invoked by the CLI:
+`sobres deploy cloud-run check|plan|apply|destroy`. The CLI shells out to the
+`terraform` and `gcloud` binaries on `PATH`, at pinned minimum versions, and
+streams their output. It never recreates resources with SDK calls and never
+runs through HTTP or the SPA. `sobres doctor` diagnoses the cloud profile's
+prerequisites: `gcloud` installed and authenticated (active account and
+application-default credentials), project and region set, `terraform` inside
+the pinned range, the state bucket reachable, the named Secret Manager secrets
+present (existence only; values are never read) and the runtime service
+accounts' IAM bindings. Every failing line carries its fix, including the exact
+`gcloud` command for a missing secret.
+
+`plan` writes a saved plan file and prints the resource summary. `apply` applies
+exactly that saved plan and rejects a stale one. `destroy` runs a destroy plan,
+prints every resource it will remove, requires the project ID typed back, and
+leaves the artifact bucket, the backup bucket, the Firestore database and the
+state bucket in place unless `--include-data` is passed and confirmed a second
+time after a verified export. Secret values are never inputs to the CLI or to
+Terraform: the human adds them with `gcloud secrets` (H2) and Terraform manages
+only the secret containers and access bindings. [hosting.md](hosting.md) lists
+the module layout and the practices it must follow.
 
 ## 7. Model/recommendation publication
 

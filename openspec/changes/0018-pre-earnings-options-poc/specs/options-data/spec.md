@@ -55,3 +55,14 @@ normalization versions needed to reproduce its output.
 - **WHEN** an IV solver lacks dividend/rate/exercise inputs, violates price bounds or fails to converge
 - **THEN** the result SHALL be unavailable with a diagnostic, not a zero/default IV
 - **AND** its provider or solver convention SHALL remain visible in every dependent feature
+
+### Requirement: Vendor-agnostic data ports
+
+Options and earnings data SHALL enter the system only through owned ports whose
+design was checked against at least two vendors, with each adapter declaring the
+capabilities it supplies.
+
+#### Scenario: OD9 Provider individuality stays in its adapter
+- **WHEN** a second vendor adapter is added, or vendors differ in field names, units, symbology, pagination, rate limits or authentication
+- **THEN** core math and command handlers SHALL see only owned types, and the recorded-fixture conformance suite SHALL pass on every adapter
+- **AND** an input a vendor cannot supply SHALL be declared unavailable in its capability declaration and surfaced as such, never emulated from other fields

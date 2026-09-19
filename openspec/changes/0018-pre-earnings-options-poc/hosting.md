@@ -167,24 +167,87 @@ nonessential research when application quotas exhaust and show the reason.
 Preserve status/exit information. Never claim the entire product is free because
 the web process can scale to zero.
 
+## Terraform layout and practices
+
+All hosted resources are declared in a versioned Terraform root module under
+`deploy/terraform/` (proposed) and applied only through `sobres deploy cloud-run`.
+Nothing in the hosted profile is created by hand in the console; anything found
+created by hand is imported with `terraform import` or destroyed before acceptance.
+
+- **Pinned versions.** `required_version` for Terraform and `~>` constraints for
+  the `google` provider, with the dependency lock file committed. `sobres doctor`
+  reports a binary outside the pinned range with the install command as its fix.
+- **Remote state with locking.** A GCS backend bucket with object versioning,
+  created once by a tiny bootstrap module; the GCS backend locks state natively.
+  One state per environment (`smoke`, `poc`) through the backend prefix, never a
+  shared local state. The CLI refuses to run against local state.
+- **Plan, then apply that plan.** `plan -out` to a saved file, review, then
+  `apply <planfile>`. An apply without a saved plan, or with a plan older than
+  the current state serial, is rejected. `plan -detailed-exitcode` is the drift
+  check run before every apply and during the first-week review.
+- **No secrets in Terraform.** Secret Manager secrets (the containers), their
+  IAM bindings and the Cloud Run references are Terraform resources; secret
+  versions (the values) are added by the human with `gcloud secrets versions add`
+  and never appear in `.tfvars`, variables, outputs or state. Variables that
+  could carry credentials are `sensitive = true` and read from the environment.
+- **Least privilege.** Separate service accounts for the web service, the jobs
+  and the scheduler invoker, each with only the roles the module lists; no
+  downloaded service-account keys anywhere. The deploying human uses their own
+  `gcloud` identity with a scoped deployer role.
+- **Protected data.** The artifact bucket, the backup bucket and the Firestore
+  database carry `lifecycle { prevent_destroy = true }`. `deploy cloud-run destroy`
+  removes compute, schedules, IAM and secret containers by default and removes
+  data resources only with `--include-data`, a second typed confirmation and a
+  verified export on record.
+- **Labels and naming.** Every resource is labelled `app=sobres`,
+  `profile=options-poc` and `env=<name>`; names derive from one prefix variable so
+  a second environment is a variable change, not a copied module.
+- **Immutable images.** The service and jobs reference an image digest, never a
+  floating tag; a rollback is an apply with the previous digest.
+- **CI never applies.** CI runs `terraform fmt -check` and `terraform validate`
+  on the module with no credentials. Plan, apply and destroy happen only from a
+  human's terminal through the CLI.
+- **Outputs feed the CLI.** The service URL, job names, bucket names and secret
+  names are Terraform outputs the CLI reads for `doctor`, the runbook and the
+  acceptance record; nothing is retyped by hand.
+
+## Human-gated prerequisites
+
+These are owner actions. No implementation task that depends on one may be marked
+done before it, and none of them is performed by CI or by an agent.
+
+| ID | Owner action | Unblocks |
+|---|---|---|
+| H1 | Obtain API keys, or complete API documentation with sample payloads, for at least two candidate options/earnings data vendors. Confirm each sample carries historical bid/ask with sizes and timestamps, contract identity fields, corporate-action handling and earnings confirmation timestamps, so the port can be designed against real differences and the data is what options research needs. Record the capability matrix under Q12. | A2 and the provider ports in `design.md` §6.1 |
+| H2 | Create or select the GCP project and billing account. Install and authenticate the `gcloud` CLI and Terraform at the pinned versions, run the bootstrap module for the state bucket, then create the Secret Manager secrets and add their values with `gcloud secrets create` and `gcloud secrets versions add --data-file=-`, typed or piped locally. Values are never committed and never passed to the Sobres CLI. | D4 |
+| H3 | Approve the hosting, data and one-time history budgets (Q5) and the budget-alert recipients (Q11). | B6 and D4 |
+
 ## Deployment implementation and acceptance runbook
 
-The implementation PR adds reproducible infrastructure configuration and an
-operator runbook with these steps and saved outputs:
+The implementation PR adds the Terraform modules, the `deploy cloud-run` commands
+and an operator runbook with these steps and saved outputs:
 
-1. Confirm project/billing region, Google sign-in client/allowlist, licensed data
-   and cost caps; inventory existing free-tier usage.
-2. Provision private regional bucket, Firestore, scoped identities, secrets,
-   service, jobs, two schedules and budget alerts from reviewed configuration.
-   Run `sobres doctor`/`deploy check` for the selected cloud profile.
-3. Deploy image digest with bootstrap identity configuration; run a fixture-backed
-   smoke in an isolated namespace and a bounded real-provider quote/event probe.
+1. Complete H1–H3. Run `sobres doctor` for the cloud profile: it must confirm
+   `gcloud` authentication and project, the Terraform version, the state bucket,
+   the named secrets and the licensed-data settings, printing no secret values.
+2. Run `sobres deploy cloud-run plan` for the `poc` environment and review the
+   saved plan: bucket, Firestore, service accounts, secret containers, service,
+   jobs, two schedules and budget alerts. Then `sobres deploy cloud-run apply`
+   of that plan.
+3. Deploy the image digest through the module variables; run a fixture-backed
+   smoke in the isolated `smoke` environment and a bounded real-provider
+   quote/event probe.
 4. Open HTTPS URL on a fresh browser: unauthorized access fails; allowed login
    shows evidence, recommendation state and paper-position confirmation flows.
 5. Kill an active worker, force scale-to-zero/revision replacement and retry job
    dispatch; verify state survival, fenced publication and no duplicate publication.
 6. Perform backup/restore to a fresh namespace; demonstrate rollback to the prior
-   digest plus a compatible model version.
-7. Record measured first-week usage and extrapolated monthly costs; revise quotas
-   or pause expansion if they exceed approved budgets. Save deployment URL and
-   evidence before calling hosting complete.
+   digest plus a compatible model version by re-applying the previous digest.
+7. Run `sobres deploy cloud-run destroy` for the `smoke` environment: confirm the
+   printed resource list and the typed project confirmation, that data resources
+   survive without `--include-data`, and that a following `plan` reports nothing
+   left to destroy. The same command retires the `poc` environment later, with
+   `--include-data` only after a verified export.
+8. Record measured first-week usage and extrapolated monthly costs; revise quotas
+   or pause expansion if they exceed approved budgets. Save the deployment URL,
+   Terraform outputs and evidence before calling hosting complete.

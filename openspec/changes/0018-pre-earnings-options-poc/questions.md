@@ -17,10 +17,11 @@ gate. A missing commercial entitlement or budget is never inferred as approval.
 | Q9 | Is next-session EOD research acceptable? How quickly must earnings changes, exit reminders and material-news changes arrive? | Daily research; hourly session-time event rechecks; deadline reminders; publish stale status on failures; no real-time guarantee | Provider selection and schedules |
 | Q10 | Are boards/news sentiment necessary for the first usable version? Any existing licenses or vendor models? | Official calendars/filings first; social and learned text sentiment optional, unavailable shown explicitly | Overlay acquisition |
 | Q11 | Which GCP project/region and owner should host it, who receives billing alerts, and what recovery/data-retention targets are acceptable? | `us-central1`, daily tested logical backup, 24h recovery point, 4h manual recovery, bounded 30-day rolling backups; costs recorded | Cloud deployment |
+| Q12 | For which options/earnings data vendors can the owner obtain API keys or complete API documentation with sample payloads (at least two), and do the samples carry historical bid/ask with timestamps, contract identity and earnings confirmation times? | Two candidates minimum, drawn from the vendors in `research.md` or ones the owner already has; capability matrix recorded here before A2 (human task H1) | Provider port design |
 
 ## Blocking launch decisions
 
-Q4–Q5 and Q7–Q11 must be resolved where they affect enabled features. The
+Q4–Q5 and Q7–Q12 must be resolved where they affect enabled features. The
 research UI may ship with fixture/demo or unvalidated evidence clearly labelled;
 recommendation promotion stays disabled until its gates pass. Research
 must remain reportable if the strategy fails Q6. No threshold may be loosened

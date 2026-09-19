@@ -12,6 +12,16 @@ the implementation branch; resolve applicable Q decisions; keep new scenarios
 `proposed` until their assertions and observed behavior pass. Scenario references
 below are future proof locations, not tests that exist today.
 
+## Human-gated tasks (owner)
+
+Defined in [hosting.md](hosting.md#human-gated-prerequisites). They are owner
+actions, never CI or agent work, and the tasks they unblock stay open until the
+owner records them as done.
+
+- [ ] **H1** — API keys or complete API documentation for at least two options/earnings vendors, with sample data confirmed to carry historical bid/ask, timestamps, contract identity and earnings confirmation times (Q12). Unblocks A2.
+- [ ] **H2** — GCP project/billing, authenticated `gcloud` CLI and Terraform at pinned versions, bootstrap state bucket, secrets created and their values added through `gcloud secrets`. Unblocks D4.
+- [ ] **H3** — Approved hosting, data and one-time history budgets and alert recipients. Unblocks B6 and D4.
+
 ## Wave A — data feasibility before platform spend
 
 ### A1 Contract and entitlement
@@ -21,13 +31,14 @@ below are future proof locations, not tests that exist today.
 
 Proof: `tests/data/test_options_contracts.py`: OD1, OD2, OD4; real sample field/rights report; no purchase without owner-selected budget
 
-### A2 Imported and provider observations
+### A2 Imported and provider observations (blocked by H1)
 
 - [ ] Implement licensed file import with idempotent hashes and actionable quality errors.
-- [ ] Implement the selected bounded vendor adapter and rate-limit/retry behavior.
+- [ ] Design the owned options/earnings ports and capability declarations against at least two vendors' documented payloads, and build the recorded-fixture conformance suite that every adapter must pass.
+- [ ] Implement the selected bounded vendor adapters and rate-limit/retry behavior.
 - [ ] Add provider settings/doctor and recorded payload fixtures.
 
-Proof: `tests/data/test_options_providers.py`: OD3, OD6; shared fake/recorded-provider contract; bounded live sample separately recorded
+Proof: `tests/data/test_options_providers.py`: OD3, OD6, OD9; shared fake/recorded-provider contract over every adapter; bounded live sample separately recorded
 
 ### A3 Events, sessions and revisions
 
@@ -130,13 +141,14 @@ Proof: `tests/data/test_cloud_artifacts.py`, `tests/api/test_cloud_jobs.py`: OH3
 
 Proof: `tests/api/test_hosted_options.py`: OP2, OP6, OH1, OH6; browser access and guessed-route probes; no auto-generated token disclosure
 
-### D4 Deployment and recovery
+### D4 Deployment and recovery (blocked by H2, H3)
 
-- [ ] Add reproducible reviewed service/Jobs/schedules/IAM/secrets/budget configuration and doctor/preflight.
+- [ ] Add the Terraform root and bootstrap modules (pinned versions, GCS remote state, least-privilege service accounts, protected data resources, labels, digest-pinned images) with `terraform fmt -check` and `validate` in CI.
+- [ ] Add registry-declared `deploy cloud-run check|plan|apply|destroy` wrapping the `terraform` and `gcloud` binaries, plus doctor checks for `gcloud` authentication, Terraform version, state bucket and named secrets.
 - [ ] Add fenced logical backup and isolated restore runbook.
-- [ ] Run the complete hosted acceptance journey and record URL, image digest and measured cost evidence.
+- [ ] Run the complete hosted acceptance journey, including destroy of the smoke environment, and record URL, image digest, Terraform outputs and measured cost evidence.
 
-Proof: OH7–OH9, all `hosting.md` runbook steps; abrupt termination, revision rollback, restore, no live trading; external account setup billed separately from commit work
+Proof: `tests/cli/test_deploy_cloud_run.py` with fake `terraform`/`gcloud` binaries: OH10–OH12; OH7–OH9 and all `hosting.md` runbook steps; abrupt termination, revision rollback, restore, no live trading; external account setup billed separately from commit work
 
 
 ## Required implementation gates
@@ -152,6 +164,9 @@ Proof: OH7–OH9, all `hosting.md` runbook steps; abrupt termination, revision r
   existing local/Compose paths. Test base wheel in a fresh environment.
 - Live provider and Google cloud evidence requires actual configured access
   and bounded owner-approved spend. Fixtures prove code behavior only.
+- Terraform plan, apply and destroy run only from a human's terminal through the
+  CLI; CI validates the module without credentials and never applies. Secret
+  values enter Google Cloud only through the owner's `gcloud` session (H2).
 - Do not mark the change implemented until every required POC scenario and
   deployment journey is demonstrated. Optional/deferred structures or unavailable
   social experiments remain explicitly out of promoted scope.

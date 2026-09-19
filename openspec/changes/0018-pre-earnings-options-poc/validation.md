@@ -12,7 +12,7 @@ release edits were preserved. This change modifies Markdown only.
 | Word source extraction / SHA-256 | Read paragraphs and table cells; source fingerprint recorded in `source-analysis.md` |
 | `OPENSPEC_TELEMETRY=0 openspec validate 0018-pre-earnings-options-poc --strict --no-interactive` | Pass, OpenSpec 1.13.0 |
 | `OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive` | 18 passed, 0 failed; inherited archive advisories in 0014/0015 because accepted spec targets do not yet exist |
-| Relative Markdown links / scenario/task inventory | No broken local links; 39 new scenarios, 35 unchecked implementation tasks |
+| Relative Markdown links / scenario/task inventory | No broken local links; 43 new scenarios, 37 unchecked implementation tasks and 3 human-gated tasks |
 | `python -m pytest tests/architecture/test_scenarios.py -q` | 2 passed; expected warning for 105 proposed scenarios across the repository lacking implementation tests |
 | `ruff check .` / `ruff format --check .` | Pass; 196 Python files already formatted, none changed |
 | `python -m mypy` in fresh Python 3.12 dev environment | Pass, 89 source files |
@@ -35,7 +35,7 @@ or ignored errors. The user's installed environment was not modified.
 The full application coverage suite, builds, live market-data probes, empirical
 backtests, and browser deployment were not run for this documentation-only
 PR. They are implementation gates in `tasks.md`, not completed evidence. No
-performance, cloud deployment or provider entitlement is claimed. All 39 scenarios
+performance, cloud deployment or provider entitlement is claimed. All 43 scenarios
 are specified contracts with planned proof locations, not implemented scenarios.
 
 Source facts/pricing were checked against linked primary sources. The original
@@ -51,7 +51,18 @@ cost line remain. Scenarios OP6–OP8 were removed and OP9 became OP6 (secret
 privacy); Q9 was removed and Q10–Q12 became Q9–Q11. Re-run after the edit:
 `openspec validate --all --strict` passed all 18 items,
 `tests/architecture/test_scenarios.py` passed (2 tests) and `git diff --check`
-was clean. The scenario and task counts above are the revised figures.
+was clean.
+
+Same day, at the owner's request: deployment is specified as Terraform driven
+from the terminal-only `deploy cloud-run check|plan|apply|destroy` commands with
+`gcloud` CLI access diagnosed by doctor, Terraform practices are listed in
+`hosting.md`, destroy runs through the same CLI with data resources protected,
+secret values are added by the owner through `gcloud secrets`, and human-gated
+tasks H1–H3 gate A2, B6 and D4. H1 requires keys or documentation for at least
+two data vendors so the provider ports abstract real differences and the data
+is confirmed fit for options research. Scenarios OD9 and OH10–OH12 and Q12 were
+added. The checks above were re-run with the same results. The scenario and
+task counts above are the revised figures.
 
 ## Repeat the planning checks
 

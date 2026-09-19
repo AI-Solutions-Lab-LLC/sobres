@@ -49,7 +49,7 @@ runtime secrets, health checks and a reproducible immutable-image deployment.
 - **AND** browser sessions SHALL use secure cookie/CSRF controls without a local shared-token bypass
 
 #### Scenario: OH7 Deploy and diagnose the actual image
-- **WHEN** the generated deployment is applied with the chosen project, region, digest, port, secrets and cost limits
+- **WHEN** the saved Terraform plan is applied through `deploy cloud-run apply` with the chosen project, region, digest, port, secret names and cost limits
 - **THEN** the HTTPS app SHALL become reachable with working readiness checks, and doctor SHALL diagnose missing cloud/provider/auth prerequisites actionably without printing secrets
 - **AND** recorded acceptance SHALL include a browser journey and bounded provider probe, not only a successful container build
 
@@ -67,3 +67,25 @@ measured cost controls with separately budgeted market data.
 - **WHEN** deployment preflight or the first-week usage review runs
 - **THEN** it SHALL show workload limits and separate hosting, storage/build/logging and market data cost assumptions against approved budgets
 - **AND** it SHALL explicitly distinguish application quotas from non-capping billing alerts and disclose already-consumed free-tier allowances
+
+### Requirement: Terraform-managed infrastructure through the CLI
+
+Hosted resources SHALL be created, changed and destroyed only by Terraform invoked
+from the terminal-only `deploy cloud-run` commands, with `gcloud` and Terraform
+prerequisites diagnosed before any plan runs and secret values never handled by
+the CLI or by Terraform.
+
+#### Scenario: OH10 Plan then apply the saved plan
+- **WHEN** an operator runs `deploy cloud-run plan` and then `deploy cloud-run apply`
+- **THEN** the CLI SHALL first verify `gcloud` authentication, project, the pinned Terraform version and the remote state bucket, write a saved plan with a resource summary, and apply exactly that plan
+- **AND** an apply without a saved plan, with a stale plan, against local state, or issued through HTTP SHALL be refused with an actionable reason
+
+#### Scenario: OH11 Destroy through the CLI protects data
+- **WHEN** an operator runs `deploy cloud-run destroy` for an environment
+- **THEN** the CLI SHALL print every resource the destroy plan removes, require the project ID typed back, and leave the artifact bucket, backup bucket, Firestore database and state bucket in place
+- **AND** those data resources SHALL be removed only with `--include-data`, a second typed confirmation and a recorded verified export, after which a further plan SHALL report nothing left to destroy
+
+#### Scenario: OH12 Secrets by name only
+- **WHEN** doctor, plan or apply runs with a required Secret Manager secret missing, or with one present whose value was added by the owner through `gcloud secrets`
+- **THEN** the missing secret SHALL be reported with the exact `gcloud secrets create` and `versions add` commands as its fix, and the present secret SHALL be referenced by name in Terraform and the runtime binding
+- **AND** no secret value SHALL be read, printed, placed in Terraform variables, outputs or state, or accepted as a CLI argument
