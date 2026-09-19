@@ -218,7 +218,7 @@ done before it, and none of them is performed by CI or by an agent.
 
 | ID | Owner action | Unblocks |
 |---|---|---|
-| H1 | Obtain API keys, or complete API documentation with sample payloads, for at least two candidate options/earnings data vendors. Confirm each sample carries historical bid/ask with sizes and timestamps, contract identity fields, corporate-action handling and earnings confirmation timestamps, so the port can be designed against real differences and the data is what options research needs. Record the capability matrix under Q12. | A2 and the provider ports in `design.md` §6.1 |
+| H1 | Obtain API keys, or complete API documentation with sample payloads, for the two vendors chosen under Q12 (Massive and ThetaData). Confirm each sample carries historical bid/ask with sizes and timestamps, contract identity fields, corporate-action handling and earnings confirmation timestamps, so the port can be designed against real differences and the data is what options research needs. Record the capability matrix under Q12. | A2 and the provider ports in `design.md` §6.1 |
 | H2 | Create or select the GCP project and billing account. Install and authenticate the `gcloud` CLI and Terraform at the pinned versions, run the bootstrap module for the state bucket, then create the Secret Manager secrets and add their values with `gcloud secrets create` and `gcloud secrets versions add --data-file=-`, typed or piped locally. Values are never committed and never passed to the Sobres CLI. | D4 |
 | H3 | Approve the hosting, data and one-time history budgets (Q5) and the budget-alert recipients (Q11). | B6 and D4 |
 

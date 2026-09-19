@@ -259,8 +259,8 @@ SQLite store; cloud references carry checksum, generation, schema and retention.
 ### 6.1 Provider abstraction needs more than one vendor
 
 The options and earnings ports are only credible once at least two vendors sit
-behind them. Design the ports from vendor documentation or live keys for at
-least two candidates (Q12, human task H1); a port designed against one vendor's
+behind them. Design the ports from vendor documentation or live keys for the
+two chosen vendors, Massive and ThetaData (Q12, human task H1); a port designed against one vendor's
 payload is that vendor's schema under another name. Each adapter publishes a
 capability declaration naming which required inputs it supplies: historical
 bid/ask with sizes and timestamps, contract identity (OCC symbol or vendor ID

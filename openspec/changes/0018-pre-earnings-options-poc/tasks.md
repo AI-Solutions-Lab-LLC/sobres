@@ -18,7 +18,7 @@ Defined in [hosting.md](hosting.md#human-gated-prerequisites). They are owner
 actions, never CI or agent work, and the tasks they unblock stay open until the
 owner records them as done.
 
-- [ ] **H1** — API keys or complete API documentation for at least two options/earnings vendors, with sample data confirmed to carry historical bid/ask, timestamps, contract identity and earnings confirmation times (Q12). Unblocks A2.
+- [ ] **H1** — API keys or complete API documentation for Massive and ThetaData (chosen under Q12), with sample data confirmed to carry historical bid/ask, timestamps, contract identity and earnings confirmation times (Q12). Unblocks A2.
 - [ ] **H2** — GCP project/billing, authenticated `gcloud` CLI and Terraform at pinned versions, bootstrap state bucket, secrets created and their values added through `gcloud secrets`. Unblocks D4.
 - [ ] **H3** — Approved hosting, data and one-time history budgets and alert recipients. Unblocks B6 and D4.
 

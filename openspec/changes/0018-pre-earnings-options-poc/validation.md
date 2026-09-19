@@ -62,7 +62,8 @@ tasks H1–H3 gate A2, B6 and D4. H1 requires keys or documentation for at least
 two data vendors so the provider ports abstract real differences and the data
 is confirmed fit for options research. Scenarios OD9 and OH10–OH12 and Q12 were
 added. The checks above were re-run with the same results. The scenario and
-task counts above are the revised figures.
+task counts above are the revised figures. Q12 was then answered by the owner:
+Massive and ThetaData are the two vendors for H1.
 
 ## Repeat the planning checks
 
