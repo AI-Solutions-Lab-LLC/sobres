@@ -263,6 +263,14 @@ Each is one OpenSpec change under `openspec/changes/`.
 | 0014 | `onboarding-defaults` | `init` asks one question, `--start` defaults to five years, usage errors show an example |
 | 0015 | `risk-free-proxy` | Risk-free rate sourced from FRED or Ken French; never an assumed zero |
 | 0016 | `broker-execution` | Saved portfolio → orders through a Sobres-owned broker port; Alpaca adapter, fake broker, average-cost P&L; paper first, live gated |
+| 0018 | `pre-earnings-options-poc` | **Proposed, not implemented** — point-in-time options backtests, pre-earnings paper recommendations, and a cheap restricted Cloud Run profile provisioned by Terraform from the CLI; see the change's decision gates |
+
+0018 extends the CLI/API/UI through a new `options` command family. It does not
+turn 0016's equity broker into an options executor or use 0009's stock forecasts
+as evidence of options profitability. Its proposed cloud profile uses scoped
+Firestore operational repositories and immutable GCS artifacts; SQLite remains
+the local default. This is an explicit proposed storage/profile extension, not
+an assertion that the present full application already runs durably on Cloud Run.
 
 0001 → 0002 is the v1.0.0 release. 0003 → 0006 turn it into a deployable product
 with a UI. 0007–0009 then add analytics to a UI that already exists, rather than
