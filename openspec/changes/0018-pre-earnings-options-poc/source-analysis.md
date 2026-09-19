@@ -22,7 +22,7 @@ preserves requirements without committing the private original document.
 | 11 | Market sentiment, skew, put/call context | Optional risk-on/neutral/risk-off experiment with explicit versioned thresholds; no five-product averaging |
 | 12 | High/low/ATH distance, IVR saturation cuts | Split-aware trailing features, ATH only with full history, holdout segmentation; `options-backtesting` |
 | 13 | Conservative and midpoint backtests, macro skips, costs, worst events | Event ledger + overlapping portfolio returns + stressed fills; `options-backtesting` |
-| Owner's call | Deployed website, recommendations, new-model/recommendation SMS | Required authenticated hosted POC, durable publication and alert lifecycle; `options-publication`, `options-hosting` |
+| Owner's call | Deployed website, recommendations, visible new-model/recommendation changes | Required authenticated hosted POC and durable publication lifecycle; `options-publication`, `options-hosting` |
 
 ## Conflicts that need an explicit resolution
 

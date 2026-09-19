@@ -8,7 +8,7 @@ are the acceptance contract; this design defines the initial algorithm precisely
 
 Use owned dataclasses/frames for `EarningsEventVersion`, `OptionContract`,
 `OptionQuote`, `FeatureSnapshot`, `StrategyVersion`, `BacktestManifest`,
-`RecommendationRevision`, `PaperPosition`, and `NotificationIntent`.
+`RecommendationRevision`, and `PaperPosition`.
 
 - Event identity: stable issuer/security ID, fiscal quarter, event version,
   announced release timestamp, BMO/AMC, source URL, confirmation status,
@@ -227,17 +227,16 @@ An unsuccessful challenger leaves the rule baseline intact or no model promoted.
 | `core/options/` | Pure feature math, eligibility, sizing, simulated fills/accounting, evaluation; injected frames/clock values/seed, no I/O or logging |
 | `data/options/`, `data/earnings/` | Owned provider ports and adapters, calendars, entitlement and quality normalization |
 | `data/storage/base.py`, `data/storage/adapters/` | Domain repositories, transactions, SQLite and limited Firestore implementations; database SDK imports only here |
-| `data/artifacts/`, `data/notifications/` | Artifact and SMS protocols, GCS/Twilio adapters and deterministic fakes |
+| `data/artifacts/` | Artifact protocol, GCS adapter and a deterministic fake |
 | Shared command handlers following existing CLI context pattern | Fetch → core → persist/publish orchestration, reused by API and Jobs; no numerical policy in adapters |
 | `registry.py`, `settings.py`, `doctor.py` | One command/setting/check declaration; model validators for cross-field rules, credentials redacted, cloud/provider prerequisites diagnosed |
-| Existing `api/` and `frontend/` | Auth, bounded job dispatch, rendering and forms, evidence links, recommendation/model/alert history |
+| Existing `api/` and `frontend/` | Auth, bounded job dispatch, rendering and forms, evidence links, recommendation/model history |
 
 Proposed commands (not available yet): `sobres options calendar`, `options scan`,
 `options backtest`, `options recommendations`, `options models`, `options promote`,
-`options position record`, `options alerts status`, `options alerts subscribe`,
-`options alerts unsubscribe`, and `deploy cloud-run`. Define typed Pydantic
+`options position record`, and `deploy cloud-run`. Define typed Pydantic
 parameters/results once; emit table/json/csv with consistent units/reason codes.
-Publication/promotion/subscription actions require explicit permissions; deployment
+Publication/promotion actions require explicit permissions; deployment
 generation is terminal-only. No shell/cloud command execution through HTTP.
 
 Hosted exposure is a declared profile allowlist shared by schema, routes, forms
@@ -248,18 +247,17 @@ Split API construction so hosted startup never opens an ephemeral default SQLite
 database or starts the existing thread worker for durable cloud jobs.
 
 The new operational ports cover hosted users/roles, shared watchlist/config,
-paper allocations/positions, runs/job checkpoints, publication pointers and
-alert outbox. SQLite implements the same new ports for local use. Firestore
+paper allocations/positions, runs/job checkpoints and publication pointers. SQLite implements the same new ports for local use. Firestore
 implements only these capabilities and must pass shared behavioral tests; it is
 not selected as a general `SOBRES_DB_URL` backend with missing repositories.
 GCS is immutable dataset/report storage behind its own artifact port, not a cache
 sidecar bypassing SQLite. Local artifacts can be BLOB-backed in the existing
 SQLite store; cloud references carry checksum, generation, schema and retention.
 
-## 7. Model/recommendation publication and SMS
+## 7. Model/recommendation publication
 
 Publish artifacts first under immutable IDs, verify checksums, then atomically
-commit a revision/current pointer plus durable notification intents. Uncommitted
+commit a revision/current pointer. Uncommitted
 objects are harmless orphans removed only after a grace period. A revision carries
 event/model IDs, contracts, as-of times, expiration/deadline, gate reasons, size,
 max debit/loss, evidence summary, missing inputs and research disclaimer.
@@ -268,14 +266,3 @@ Lifecycle: candidate → published → revised/invalidated/expired; paper positi
 separately open/closed/overdue. New event times invalidate unsafe old revisions;
 links always show current status and retain history. Model states are
 draft/evaluated/rejected/promoted/retired with evidence and owner audit trail.
-
-Create SMS only for consented subscriptions to published eligible recommendations,
-material state changes, deadline reminders or promoted model versions. Daily
-ranking noise/retraining is not a new alert. Logical key is recipient + event
-type + immutable revision. Record queued/claimed/submitted/delivered/failed/unknown
-separately. Transactional claims have lease/fencing tokens. Never send inside a
-retryable database transaction. A provider timeout after submission becomes
-unknown and is reconciled; absent safe provider idempotency, do not blindly resend.
-No exactly-once delivery claim. STOP cancels pending sends; signed webhooks are
-idempotent and re-check consent before dispatch. Phone numbers are restricted
-personal data; logs contain masked identifiers, not message bodies or credentials.

@@ -46,7 +46,7 @@ or begin forward paper collection; ship research/demo mode. Do not invent
 historical spreads from OHLC, backfill current IV as history, or call synthetic
 fixtures a historical strategy validation. Buying data remains a Q4/Q5 decision.
 
-## Infrastructure and messaging
+## Infrastructure
 
 Official calendar/filing starting points: [FOMC meeting calendars](https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm),
 [BLS release schedule](https://www.bls.gov/schedule/) for CPI/employment,
@@ -62,13 +62,8 @@ separate requirement for each candidate.
   establishes ephemeral storage/lifecycle constraints. These motivate the storage
   split and Jobs design; merely wrapping the present SQLite container is insufficient.
 - [Firestore transaction contention](https://firebase.google.com/docs/firestore/transaction-data-contention)
-  documents retryable transactions. Publish/allocate in transactions but send SMS
-  outside them, with durable idempotency and uncertainty handling.
-- [Twilio Messaging Policy](https://www.twilio.com/en-us/legal/messaging-policy)
-  requires recipient consent and an opt-out path. [Advanced Opt-Out](https://www.twilio.com/docs/messaging/tutorials/advanced-opt-out)
-  documents STOP handling and callback metadata. These become product requirements,
-  not a claim of universal legal compliance. Recipient countries and sender
-  registration remain launch decisions.
+  documents retryable transactions. Publish/allocate in transactions and keep
+  provider and artifact I/O outside them, with durable idempotency.
 - Live pricing sources and the workload calculation are in [hosting.md](hosting.md).
 
 Social/network collection is optional. The POC does not assume public web content

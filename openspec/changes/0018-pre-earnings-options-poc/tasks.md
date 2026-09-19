@@ -83,14 +83,14 @@ Proof: `tests/core/test_options_models.py`: OB4, OB5, OB8, OD6; same-event compa
 Proof: Re-run command + data hashes + event/portfolio CSV + report; OD7, OB1–OB8. Acquisition/run time is external to the 1–2h orchestration commits; no fabricated metrics
 
 
-## Wave C — usable local research and alert workflow
+## Wave C — usable local research workflow
 
 ### C1 New operational repositories
 
 - [ ] Define domain transactions and implement SQLite migrations/repositories for models, recommendations and paper allocations.
-- [ ] Add job, consent and outbox repositories with leases/fencing and WAL-safe export coverage.
+- [ ] Add job repositories with leases/fencing and WAL-safe export coverage.
 
-Proof: `tests/data/test_options_storage.py` and shared conformance: EO7–EO8, OP3–OP7; transactions, stale leases, rollback, cache-clear preservation and committed-WAL backup
+Proof: `tests/data/test_options_storage.py` and shared conformance: EO7–EO8, OP3–OP5; transactions, stale leases, rollback, cache-clear preservation and committed-WAL backup
 
 ### C2 Registry and research UI
 
@@ -100,13 +100,11 @@ Proof: `tests/data/test_options_storage.py` and shared conformance: EO7–EO8, O
 
 Proof: `tests/cli/test_options.py`, `tests/api/test_options.py`, browser assertions: OP1–OP4, EO8; all formats/log levels and cross-field validators; actual rendered journey
 
-### C3 Publication and SMS adapter
+### C3 Publication
 
-- [ ] Implement artifact-first publication, promotion audit and transactional outbox orchestration.
-- [ ] Implement fake and selected SMS provider with signed status callbacks, claims and uncertain-send reconciliation.
-- [ ] Implement consent/STOP, preferences, segment accounting and masking.
+- [ ] Implement artifact-first publication, promotion audit and retained revision history.
 
-Proof: `tests/data/test_options_notifications.py`: OP3–OP9; crash between commit/send, STOP-before-dispatch, duplicate callbacks, timeout after acceptance, Unicode/multipart cost cases
+Proof: `tests/data/test_options_publication.py`: OP3–OP6; crash between upload and pointer commit, orphan cleanup, rollback audit, redaction at every log level
 
 
 ## Wave D — cloud profile and deployment
@@ -116,7 +114,7 @@ Proof: `tests/data/test_options_notifications.py`: OP3–OP9; crash between comm
 - [ ] Implement new operational ports in Firestore with schema/version/error translation.
 - [ ] Run the shared conformance suite against emulator and a bounded real-project namespace.
 
-Proof: OH1, OH2, EO7, OP5–OP7; adapter work split further per domain if necessary; never claim generic `Storage` support
+Proof: OH1, OH2, EO7, OP5; adapter work split further per domain if necessary; never claim generic `Storage` support
 
 ### D2 Artifacts and cloud jobs
 
@@ -130,13 +128,13 @@ Proof: `tests/data/test_cloud_artifacts.py`, `tests/api/test_cloud_jobs.py`: OH3
 - [ ] Implement allowlisted Google identity/roles and secure session/CSRF boundary.
 - [ ] Construct restricted registry/UI/startup profile without default SQLite or thread-worker initialization.
 
-Proof: `tests/api/test_hosted_options.py`: OP2, OP9, OH1, OH6; browser access and guessed-route probes; no auto-generated token disclosure
+Proof: `tests/api/test_hosted_options.py`: OP2, OP6, OH1, OH6; browser access and guessed-route probes; no auto-generated token disclosure
 
 ### D4 Deployment and recovery
 
 - [ ] Add reproducible reviewed service/Jobs/schedules/IAM/secrets/budget configuration and doctor/preflight.
-- [ ] Add fenced logical backup, isolated restore and disabled-send reconciliation runbook.
-- [ ] Run the complete hosted acceptance journey and record URL, image digest, real SMS/STOP and measured cost evidence.
+- [ ] Add fenced logical backup and isolated restore runbook.
+- [ ] Run the complete hosted acceptance journey and record URL, image digest and measured cost evidence.
 
 Proof: OH7–OH9, all `hosting.md` runbook steps; abrupt termination, revision rollback, restore, no live trading; external account setup billed separately from commit work
 
@@ -150,10 +148,10 @@ Proof: OH7–OH9, all `hosting.md` runbook steps; abrupt termination, revision r
   frontend build/client drift, container quickstart, workflow lint and dependency
   audit where affected. Run Black 100 and isort Black-profile 100 on every Python
   edit as required by AGENTS.md. No unrelated reformatting.
-- New cloud/data/SMS extras must not break base-wheel keyless init/doctor or
+- New cloud/data extras must not break base-wheel keyless init/doctor or
   existing local/Compose paths. Test base wheel in a fresh environment.
-- Live provider, Google cloud and SMS evidence requires actual configured access
-  and bounded owner-approved spend/recipients. Fixtures prove code behavior only.
+- Live provider and Google cloud evidence requires actual configured access
+  and bounded owner-approved spend. Fixtures prove code behavior only.
 - Do not mark the change implemented until every required POC scenario and
   deployment journey is demonstrated. Optional/deferred structures or unavailable
   social experiments remain explicitly out of promoted scope.

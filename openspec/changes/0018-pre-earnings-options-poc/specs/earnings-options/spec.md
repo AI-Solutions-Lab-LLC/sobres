@@ -21,7 +21,7 @@ and independently validated.
 
 #### Scenario: EO3 Calendar revision after entry
 - **WHEN** a release is moved earlier or a macro red day conflicts with a held pair's exit
-- **THEN** the current recommendation SHALL be invalidated or moved to an earlier feasible exit with a revision and alert intent
+- **THEN** the current recommendation SHALL be invalidated or moved to an earlier feasible exit with a recorded revision
 - **AND** an impossible or already-missed exit SHALL be recorded as a breach/exit-unconfirmed state, never a retroactive safe fill
 
 #### Scenario: EO4 No qualifying setup or no ramp

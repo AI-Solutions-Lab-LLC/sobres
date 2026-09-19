@@ -12,7 +12,7 @@ release edits were preserved. This change modifies Markdown only.
 | Word source extraction / SHA-256 | Read paragraphs and table cells; source fingerprint recorded in `source-analysis.md` |
 | `OPENSPEC_TELEMETRY=0 openspec validate 0018-pre-earnings-options-poc --strict --no-interactive` | Pass, OpenSpec 1.13.0 |
 | `OPENSPEC_TELEMETRY=0 openspec validate --all --strict --no-interactive` | 18 passed, 0 failed; inherited archive advisories in 0014/0015 because accepted spec targets do not yet exist |
-| Relative Markdown links / scenario/task inventory | No broken local links; 42 new scenarios, 37 unchecked implementation tasks |
+| Relative Markdown links / scenario/task inventory | No broken local links; 39 new scenarios, 35 unchecked implementation tasks |
 | `python -m pytest tests/architecture/test_scenarios.py -q` | 2 passed; expected warning for 105 proposed scenarios across the repository lacking implementation tests |
 | `ruff check .` / `ruff format --check .` | Pass; 196 Python files already formatted, none changed |
 | `python -m mypy` in fresh Python 3.12 dev environment | Pass, 89 source files |
@@ -33,15 +33,25 @@ or ignored errors. The user's installed environment was not modified.
 ## Verification limits
 
 The full application coverage suite, builds, live market-data probes, empirical
-backtests, browser deployment, and real SMS were not run for this documentation-only
+backtests, and browser deployment were not run for this documentation-only
 PR. They are implementation gates in `tasks.md`, not completed evidence. No
-performance, cloud deployment or provider entitlement is claimed. All 42 scenarios
+performance, cloud deployment or provider entitlement is claimed. All 39 scenarios
 are specified contracts with planned proof locations, not implemented scenarios.
 
 Source facts/pricing were checked against linked primary sources. The original
 Word file was not committed; its estimates and unsupported percentage claims
 were not treated as verified financial results. No subscription, cloud resource,
-trade, model promotion, or outbound SMS was created.
+trade, or model promotion was created.
+
+## Revision — 19 September 2026
+
+SMS was removed from the change at the owner's request: no notification port,
+outbox, consent/opt-out handling, provider callbacks, segment budget or messaging
+cost line remain. Scenarios OP6–OP8 were removed and OP9 became OP6 (secret
+privacy); Q9 was removed and Q10–Q12 became Q9–Q11. Re-run after the edit:
+`openspec validate --all --strict` passed all 18 items,
+`tests/architecture/test_scenarios.py` passed (2 tests) and `git diff --check`
+was clean. The scenario and task counts above are the revised figures.
 
 ## Repeat the planning checks
 

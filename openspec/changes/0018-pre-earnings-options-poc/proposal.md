@@ -5,18 +5,18 @@ depends_on: [0001-foundation-data-and-cli, 0003-local-persistence, 0004-web-ui, 
 status: proposed
 ---
 
-# 0018 — Pre-earnings options research, hosted recommendations, and SMS
+# 0018 — Pre-earnings options research and hosted recommendations
 
 ## Outcome
 
 Sharon can open a deployed Sobres website, see explainable pre-earnings options
-research candidates and their historical evidence, and receive text updates when
-a validated model is promoted or a recommendation changes. Every recommended
+research candidates and their historical evidence, and see when a validated
+model is promoted or a recommendation changes. Every recommended
 strategy must first pass a reproducible, cost-aware, point-in-time backtest. An
 honest result may be **no validated strategy and no trade**.
 
 This PR is the planning contract, not an implementation or a completed backtest.
-No cloud resources, paid subscriptions, trades, or SMS are created by this PR.
+No cloud resources, paid subscriptions, or trades are created by this PR.
 Implementation acceptance remains unchecked in [tasks.md](tasks.md).
 
 ## Why
@@ -29,7 +29,7 @@ options returns: they lack historical contract quotes, event-time provenance,
 exercise/deliverable metadata, and bid/ask execution.
 
 The owner additionally requested an actual hosted website, recommendations,
-model/recommendation text updates, and very cheap Google Cloud hosting without
+visible model/recommendation changes, and very cheap Google Cloud hosting without
 Cloud SQL. These additions are explicit scope even though absent from the guide.
 
 ## What changes
@@ -40,8 +40,7 @@ Cloud SQL. These additions are explicit scope even though absent from the guide.
 - Event and portfolio backtests with spreads, costs, overlapping positions,
   chronological validation, failure accounting, and publishable evidence.
 - Registry-generated `options` commands/API forms plus research, recommendations,
-  model history, paper-position tracking, and notification views in the existing SPA.
-- Consent-based SMS with durable deduplication, delivery state, and budget controls.
+  model history and paper-position tracking views in the existing SPA.
 - A restricted hosted-options profile: Cloud Run service and Jobs, Firestore for
   small durable operational records, Cloud Storage for immutable research artifacts.
   Local Sobres continues to use SQLite. No SQLite file is opened on a bucket mount.
@@ -73,8 +72,8 @@ tracking item.
 ## Scope and non-goals
 
 Required POC: standard USD U.S. equity ATM long straddles, confirmed earnings,
-daily research, realistic historical evaluation, paper recommendations, authenticated
-website, and SMS. A frozen baseline is followed by overlay/challenger evaluation;
+daily research, realistic historical evaluation, paper recommendations and an
+authenticated website. A frozen baseline is followed by overlay/challenger evaluation;
 only a promoted, passing version can produce actionable paper candidates.
 
 Strangles, directional calls/puts, and debit spreads are captured from the guide
@@ -92,10 +91,10 @@ platform, Cloud SQL, always-on VM, or claims of guaranteed profitability.
    licensed historical universe; run the locked baseline and challengers.
 3. Publish all results, including failures. Insufficient evidence leaves the app
    in research/demo mode and suppresses actionable recommendations.
-4. Add local UI, persistent recommendation/model state, paper tracking and SMS.
+4. Add local UI, persistent recommendation/model state and paper tracking.
 5. Add the restricted cloud profile and deploy the tested image using the owner's
    selected project, budget, identity configuration, and licensed data. Verify
-   restart/restore, a paper journey, and a consenting recipient's test SMS.
+   restart/restore and a paper journey.
 
 ## Risks and proposed defaults
 
@@ -103,10 +102,10 @@ Historical quote and redistribution rights may cost more than hosting. The guide
 cheap-plan claims do not establish historical bid/ask access. Free data can prove
 plumbing, not multi-season profitability. Same-close feature selection and filling
 would introduce look-ahead. Calendar revisions, missing exits, corporate actions,
-and correlated losses need explicit treatment. SMS has fees and delivery uncertainty.
+and correlated losses need explicit treatment.
 
 Proposed infrastructure target: **$0–5/month** at tiny usage, with a **$10/month
-planning ceiling** before data/SMS; this is an estimate, not a price guarantee or
+planning ceiling** before market data; this is an estimate, not a price guarantee or
 an enforced billing cap. [hosting.md](hosting.md) separates all cost buckets.
 Decisions and thresholds below are proposed engineering defaults for Sharon to
 review; none is represented as an empirically established trading edge.
